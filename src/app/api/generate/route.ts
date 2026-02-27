@@ -159,6 +159,7 @@ async function handleBuild(body: {
 
   return NextResponse.json({
     business,
+    businessId: business.id,
     siteUrl: `/site/${slug}`,
   });
 }

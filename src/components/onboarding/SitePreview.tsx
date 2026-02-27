@@ -112,7 +112,7 @@ export default function SitePreview({
                 fontFamily: "monospace",
               }}
             >
-              nomistakes.vercel.app/site/{slug || "your-site"}
+              nm-{slug || "your-site"}.vercel.app
             </div>
           </div>
 

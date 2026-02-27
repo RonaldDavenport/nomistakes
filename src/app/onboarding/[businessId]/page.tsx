@@ -283,7 +283,7 @@ export default function OnboardingPage() {
                       }}
                       className="w-full px-4 py-3 rounded-xl bg-surface border border-white/10 text-white text-lg focus:border-brand-600/50 focus:outline-none transition-colors"
                     />
-                    <p className="text-xs text-zinc-600 mt-2">URL: nomistakes.vercel.app/site/{slugValue}</p>
+                    <p className="text-xs text-zinc-600 mt-2">URL: nm-{slugValue}.vercel.app</p>
                   </div>
 
                   <button
@@ -528,7 +528,7 @@ export default function OnboardingPage() {
                   <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
                     <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Your current URL</p>
                     <p className="text-white font-mono">
-                      {business.deployed_url || `nomistakes.vercel.app/site/${slugValue || business.slug}`}
+                      {business.deployed_url || `nm-${slugValue || business.slug}.vercel.app`}
                     </p>
                   </div>
 
