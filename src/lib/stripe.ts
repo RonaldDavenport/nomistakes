@@ -4,7 +4,16 @@
 
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
+// Lazy-initialize Stripe so the build doesn't crash when the env var is missing
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
 
 // Platform fee percentage (e.g., 0.05 = 5%)
 const PLATFORM_FEE_PERCENT = 0.05;
@@ -15,7 +24,7 @@ export async function createConnectedAccount(
   email: string
 ): Promise<{ accountId: string; onboardingUrl: string }> {
   // Create Express connected account
-  const account = await stripe.accounts.create({
+  const account = await getStripe().accounts.create({
     type: "express",
     business_type: "individual",
     business_profile: {
@@ -28,7 +37,7 @@ export async function createConnectedAccount(
   });
 
   // Create onboarding link
-  const accountLink = await stripe.accountLinks.create({
+  const accountLink = await getStripe().accountLinks.create({
     account: account.id,
     refresh_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=refresh`,
     return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?stripe=success`,
@@ -47,7 +56,7 @@ export async function getAccountStatus(accountId: string): Promise<{
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
 }> {
-  const account = await stripe.accounts.retrieve(accountId);
+  const account = await getStripe().accounts.retrieve(accountId);
   return {
     chargesEnabled: account.charges_enabled,
     payoutsEnabled: account.payouts_enabled,
@@ -83,7 +92,7 @@ export async function createCheckoutSession(
   const totalAmount = items.reduce((sum, item) => sum + item.priceInCents * item.quantity, 0);
   const platformFee = Math.round(totalAmount * PLATFORM_FEE_PERCENT);
 
-  const session = await stripe.checkout.sessions.create(
+  const session = await getStripe().checkout.sessions.create(
     {
       mode: "payment",
       line_items: lineItems,
@@ -113,7 +122,7 @@ export async function createSubscriptionCheckout(
   successUrl: string,
   cancelUrl: string
 ): Promise<{ sessionId: string; url: string }> {
-  const session = await stripe.checkout.sessions.create(
+  const session = await getStripe().checkout.sessions.create(
     {
       mode: "subscription",
       line_items: [
@@ -146,7 +155,7 @@ export async function createSubscriptionCheckout(
 
 // Get dashboard login link for a connected account
 export async function getStripeDashboardLink(accountId: string): Promise<string> {
-  const loginLink = await stripe.accounts.createLoginLink(accountId);
+  const loginLink = await getStripe().accounts.createLoginLink(accountId);
   return loginLink.url;
 }
 
