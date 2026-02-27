@@ -12,6 +12,7 @@ import {
   COLOR_PRESETS,
   LAYOUT_OPTIONS,
   ONBOARDING_AFFILIATES,
+  SOCIAL_PROOF_STATS,
   type ColorPreset,
 } from "@/lib/onboarding-data";
 import { getTrackedUrl } from "@/lib/affiliates";
@@ -207,9 +208,9 @@ export default function OnboardingPage() {
       <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
 
-          {/* Progress — compact */}
+          {/* Progress + social proof */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex gap-1.5">
                 {ONBOARDING_STEPS.map((s, i) => (
                   <div
@@ -221,6 +222,13 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <span className="text-xs text-zinc-600">{currentStep + 1}/{ONBOARDING_STEPS.length}</span>
+            </div>
+            <div className="flex items-center gap-4 text-[11px] text-zinc-600">
+              {SOCIAL_PROOF_STATS.map((stat) => (
+                <span key={stat.label}>
+                  <span className="text-zinc-400 font-semibold">{stat.value}</span>{" "}{stat.label}
+                </span>
+              ))}
             </div>
           </div>
 
