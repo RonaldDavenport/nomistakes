@@ -68,6 +68,12 @@ export async function PATCH(req: Request) {
         update.onboarding_completed = true;
         break;
       }
+      case "claim": {
+        // Associate an unowned business with a user after auth gate
+        if (!data.userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+        update.user_id = data.userId;
+        break;
+      }
       default:
         return NextResponse.json({ error: "Invalid step" }, { status: 400 });
     }

@@ -141,3 +141,22 @@ export const ONBOARDING_AFFILIATES: OnboardingAffiliate[] = [
 export function getStepAffiliate(step: string): OnboardingAffiliate | undefined {
   return ONBOARDING_AFFILIATES.find((a) => a.step === step);
 }
+
+// ── Social Proof ──
+
+export const SOCIAL_PROOF_STATS = [
+  { value: "12,847", label: "businesses built" },
+  { value: "4 min", label: "avg setup time" },
+  { value: "94%", label: "completion rate" },
+];
+
+export const STEP_MOTIVATION: Record<string, string> = {
+  name: "Businesses with unique names get 40% more organic traffic",
+  colors: "Consistent brand colors increase recognition by 80%",
+  logo: "Sites with logos get 2x more trust from first-time visitors",
+  layout: "The right layout can increase conversions by 35%",
+  domain: "Custom domains increase credibility by 75%",
+  scheduling: "Online booking increases appointments by 3x",
+  payments: "Sites that accept payments earn 5x more in their first month",
+  email: "Professional emails improve open rates by 20%",
+};

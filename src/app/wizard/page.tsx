@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import AuthGateModal from "@/components/onboarding/AuthGateModal";
 import { supabase } from "@/lib/supabase";
 import {
   SKILLS,
@@ -29,6 +30,9 @@ export default function WizardPage() {
   const [siteSlug, setSiteSlug] = useState("");
   const [businessIdResult, setBusinessIdResult] = useState("");
   const [error, setError] = useState("");
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [pendingBusinessId, setPendingBusinessId] = useState("");
+  const [pendingBusinessName, setPendingBusinessName] = useState("");
   const buildStarted = useRef(false);
 
   const progress =
@@ -144,9 +148,18 @@ export default function WizardPage() {
           if (data.business?.id) setBusinessIdResult(data.business.id);
           // Animate to 100
           setBuildProgress(100);
-          setTimeout(() => {
+          setTimeout(async () => {
             if (data.business?.id) {
-              router.push(`/onboarding/${data.business.id}`);
+              // Check if user is authenticated
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                router.push(`/onboarding/${data.business.id}`);
+              } else {
+                // Show auth gate to capture email for winbacks
+                setPendingBusinessId(data.business.id);
+                setPendingBusinessName(chosenConcept?.name || "your business");
+                setShowAuthGate(true);
+              }
             } else {
               setStep("done");
             }
@@ -433,6 +446,20 @@ export default function WizardPage() {
           )}
         </div>
       </div>
+
+      {/* Auth gate modal — shown after build for unauthenticated users */}
+      {showAuthGate && pendingBusinessId && (
+        <AuthGateModal
+          businessId={pendingBusinessId}
+          businessName={pendingBusinessName}
+          onSuccess={() => {
+            router.push(`/onboarding/${pendingBusinessId}`);
+          }}
+          onSkip={() => {
+            router.push(`/onboarding/${pendingBusinessId}`);
+          }}
+        />
+      )}
     </>
   );
 }
