@@ -73,6 +73,13 @@ export async function generateBrand(businessName: string, tagline: string, type:
 - Type: ${type}
 - Target audience: ${audience}
 
+COLOR RULES:
+- primary: A vibrant, saturated brand color (NOT pastel, NOT too dark). Must be clearly visible as button backgrounds and accent text.
+- accent: A complementary color for gradients and highlights — different hue from primary
+- secondary: A muted supporting color
+- background: Pick a background that fits the brand. Dark (#09090b to #1a1a2e) for premium/tech/modern, light (#ffffff to #f8f9fa) for friendly/clean/health. Be intentional.
+- text: Must contrast well against the background. Dark bg → light text (#fafafa). Light bg → dark text (#111111).
+
 Return a JSON object with:
 - colors: { primary: hex, secondary: hex, accent: hex, background: hex, text: hex }
 - fonts: { heading: google font name, body: google font name }
@@ -81,7 +88,7 @@ Return a JSON object with:
 - values: Array of 3 brand values (short phrases)
 
 Return ONLY valid JSON, no other text.`,
-    "You are a brand designer AI. Create cohesive, modern brand identities. Choose colors that work well together and match the business type. Pick Google Fonts that are readable and match the brand tone.",
+    "You are a brand designer AI. Create cohesive, modern brand identities. Choose vibrant, saturated primary and accent colors — never pastels or muddy tones. The background can be dark or light depending on the brand's personality. Ensure strong contrast between text and background. Pick Google Fonts that are readable and match the brand tone.",
     "claude-haiku-4-5-20251001"
   );
 
@@ -131,7 +138,8 @@ Return a JSON object with ALL of these fields:
 {
   "hero": {
     "headline": "4-8 word headline focused on the outcome/transformation the customer gets",
-    "subheadline": "One clear sentence explaining how ${businessName} delivers that outcome. Be specific."
+    "subheadline": "One clear sentence explaining how ${businessName} delivers that outcome. Be specific.",
+    "badge": "A short trust badge for above the headline (e.g., 'Trusted by 500+ teams', 'Featured on ProductHunt', 'Join 10,000+ creators')"
   },
   "about": {
     "title": "A compelling section title (not just 'About Us')",
@@ -170,6 +178,9 @@ Return a JSON object with ALL of these fields:
   "stats": [
     { "value": "A big impressive number with + or % (e.g., '500+', '97%', '3x')", "label": "What this number represents (e.g., 'Clients Served', 'Satisfaction Rate')" }
   ],
+  "social_proof": {
+    "logos": ["Array of 5-6 realistic company names that would be customers (e.g., 'Shopify', 'Notion', 'Linear', 'Stripe'). Pick companies that match the target audience."]
+  },
   "cta": {
     "headline": "Action-oriented headline creating urgency (e.g., 'Stop leaving money on the table.')",
     "subheadline": "One sentence about what happens after they take action",
@@ -192,7 +203,7 @@ Return a JSON object with ALL of these fields:
   ]
 }
 
-Generate exactly: 6 features, ${isServices ? "3" : "3-4"} products/services (with 4 included features each), 3 testimonials, 3 process steps, 4 stats, 5 FAQ items.
+Generate exactly: 6 features, ${isServices ? "3" : "3-4"} products/services (with 4 included features each), 3 testimonials, 3 process steps, 4 stats, 5-6 social proof logos, 5 FAQ items.
 
 Return ONLY valid JSON, no other text.`,
     `You are a world-class direct response copywriter who has studied David Ogilvy, Eugene Schwartz, and modern SaaS copy from companies like Linear, Stripe, and Vercel. You write copy that SELLS — not copy that fills space.

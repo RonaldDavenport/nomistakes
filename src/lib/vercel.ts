@@ -40,8 +40,8 @@ export async function createProject(name: string, slug: string): Promise<{ id: s
 
   if (!res.ok) {
     const err = await res.json();
-    // Project might already exist
-    if (err.error?.code === "project_already_exists") {
+    // Project might already exist — Vercel returns "conflict" or "project_already_exists"
+    if (err.error?.code === "project_already_exists" || err.error?.code === "conflict") {
       const existingRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}${teamParam()}`, {
         headers: headers(),
       });

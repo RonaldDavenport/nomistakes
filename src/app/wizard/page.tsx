@@ -172,38 +172,34 @@ export default function WizardPage() {
             }
           }
           setBuildProgress(100);
-          setTimeout(async () => {
-            if (bizId) {
-              // Check if user is authenticated
-              const { data: { user: authUser } } = await supabase.auth.getUser();
-              if (authUser) {
-                router.push(`/onboarding/${bizId}`);
-              } else {
-                // Show auth gate to capture email for winbacks
-                setPendingBusinessId(bizId);
-                setPendingBusinessName(chosenConcept?.name || "your business");
-                setShowAuthGate(true);
-              }
+
+          if (bizId) {
+            // Check if user is authenticated
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser) {
+              router.push(`/onboarding/${bizId}`);
             } else {
-              // API returned ok but no business id — show done
-              setStep("done");
+              // Show auth gate to capture email for winbacks
+              setPendingBusinessId(bizId);
+              setPendingBusinessName(chosenConcept?.name || "your business");
+              setShowAuthGate(true);
             }
-          }, 800);
+          } else {
+            // No business ID — show error inline
+            setError("Something went wrong creating your business. Please try again.");
+          }
         } else {
-          // API failed — show done page with local data
+          // API failed
           console.error("[wizard] Build API returned non-ok:", res.status);
+          clearInterval(interval);
           setBuildProgress(100);
-          const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-          setSiteSlug(`/site/${slug}`);
-          setTimeout(() => setStep("done"), 800);
+          setError("Build failed. Please try again.");
         }
       } catch (err) {
         console.error("[wizard] Build error:", err);
         clearInterval(interval);
         setBuildProgress(100);
-        const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        setSiteSlug(`/site/${slug}`);
-        setTimeout(() => setStep("done"), 800);
+        setError("Something went wrong. Please try again.");
       }
     }
 
@@ -435,7 +431,19 @@ export default function WizardPage() {
                 </div>
               </div>
               {error && (
-                <p className="text-red-400 text-sm mt-4">{error}</p>
+                <div className="mt-6 text-center">
+                  <p className="text-red-400 text-sm mb-4">{error}</p>
+                  <button
+                    onClick={() => {
+                      setError("");
+                      buildStarted.current = false;
+                      setStep("building");
+                    }}
+                    className="btn-primary px-6 py-3 rounded-xl text-sm font-bold text-white"
+                  >
+                    Try Again
+                  </button>
+                </div>
               )}
             </div>
           )}

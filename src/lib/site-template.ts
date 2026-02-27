@@ -9,13 +9,14 @@ interface SiteBrand {
 }
 
 interface SiteContent {
-  hero?: { headline?: string; subheadline?: string };
+  hero?: { headline?: string; subheadline?: string; badge?: string };
   about?: { title?: string; text?: string; mission?: string };
   features?: { title: string; desc: string }[];
-  products?: { name: string; desc: string; price: string; features?: string[] }[];
+  products?: { name: string; desc: string; price: string; features?: string[]; tagline?: string }[];
   testimonials?: { name: string; role: string; text: string; rating?: number }[];
   process?: { title?: string; steps?: { step: string; title: string; desc: string }[] };
   stats?: { value: string; label: string }[];
+  social_proof?: { logos?: string[] };
   cta?: { headline?: string; subheadline?: string; button_text?: string };
   seo?: { title?: string; description?: string };
   contact?: { email?: string; phone?: string; address?: string; hours?: string };
@@ -44,6 +45,12 @@ export function generateSiteFiles(config: BusinessConfig): { file: string; data:
   const headingFont = config.brand.fonts?.heading || "Inter";
   const bodyFont = config.brand.fonts?.body || "Inter";
   const isServices = config.type === "services";
+
+  // Adaptive light/dark — compute text/border base RGB from background luminance
+  const isLight = isLightColor(bg);
+  const tb = isLight ? "0,0,0" : "255,255,255"; // text & border base
+  const shadowAlpha = isLight ? "0.08" : "0.3";
+  const ctaText = isLightColor(primary) ? "#111" : "#fff";
 
   // ── package.json ──
   files.push({
@@ -167,7 +174,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
 .cta-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: ${primary};
-  color: #fff;
+  color: ${ctaText};
   padding: 14px 32px;
   border-radius: 10px;
   font-size: 15px;
@@ -192,13 +199,13 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(${tb},0.12);
   cursor: pointer;
   transition: all 0.2s ease-out;
 }
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.2);
+  background: rgba(${tb},0.05);
+  border-color: rgba(${tb},0.2);
 }
 
 /* Layout */
@@ -209,15 +216,15 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
 .card {
   padding: 32px 28px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(${tb},0.06);
+  background: rgba(${tb},0.02);
   transition: all 0.3s ease-out;
 }
 .card:hover {
   border-color: ${primary}33;
-  background: rgba(255,255,255,0.04);
+  background: rgba(${tb},0.04);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,${shadowAlpha});
 }
 
 /* Grid */
@@ -236,14 +243,14 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
 .input {
   width: 100%; padding: 14px 18px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(${tb},0.04);
+  border: 1px solid rgba(${tb},0.08);
   color: inherit; font-size: 15px; font-family: inherit;
   transition: border-color 0.2s;
   outline: none;
 }
 .input:focus { border-color: ${primary}66; }
-.input::placeholder { color: rgba(255,255,255,0.25); }
+.input::placeholder { color: rgba(${tb},0.25); }
 
 @media (min-width: 640px) {
   .grid-2 { grid-template-columns: repeat(2, 1fr); }
@@ -288,7 +295,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <nav style={{
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid rgba(${tb},0.06)",
           padding: "0 24px",
           position: "sticky",
           top: 0,
@@ -309,7 +316,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="gradient-text">${esc(config.name)}</span>
             </a>
             <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
-              ${navLinks.map(l => `<a href="${l.href}" style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.5)", transition: "color 0.2s" }}>${l.label}</a>`).join("\n              ")}
+              ${navLinks.map(l => `<a href="${l.href}" style={{ fontSize: 14, fontWeight: 500, color: "rgba(${tb},0.5)", transition: "color 0.2s" }}>${l.label}</a>`).join("\n              ")}
               <a href="/contact" className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>
                 ${isServices ? "Book a Call" : "Get Started"}
               </a>
@@ -318,7 +325,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </nav>
         {children}
         <footer style={{
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid rgba(${tb},0.06)",
           padding: "48px 24px",
         }}>
           <div style={{
@@ -329,9 +336,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               ${esc(config.name)}
             </span>
             <div style={{ display: "flex", gap: 24 }}>
-              ${navLinks.map(l => `<a href="${l.href}" style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", transition: "color 0.2s" }}>${l.label}</a>`).join("\n              ")}
+              ${navLinks.map(l => `<a href="${l.href}" style={{ fontSize: 13, color: "rgba(${tb},0.35)", transition: "color 0.2s" }}>${l.label}</a>`).join("\n              ")}
             </div>
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, marginTop: 8 }}>
+            <p style={{ color: "rgba(${tb},0.2)", fontSize: 12, marginTop: 8 }}>
               &copy; 2026 ${esc(config.name)}. All rights reserved.
             </p>
           </div>
@@ -352,7 +359,7 @@ export const revalidate = 60;
 
 export default async function Home() {
   const biz = await getBusiness();
-  if (!biz) return <div style={{ padding: 80, textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>;
+  if (!biz) return <div style={{ padding: 80, textAlign: "center", color: "rgba(${tb},0.4)" }}>Loading...</div>;
 
   const hero = biz.site_content?.hero || {};
   const features = biz.site_content?.features || [];
@@ -361,15 +368,17 @@ export default async function Home() {
   const stats = biz.site_content?.stats || [];
   const faq = biz.site_content?.faq || [];
   const cta = biz.site_content?.cta || {};
+  const socialProof = biz.site_content?.social_proof || {};
+  const products = biz.site_content?.products || [];
   const isServices = biz.type === "services";
 
   return (
     <>
       {/* ── Hero ── */}
       <section style={{
-        minHeight: "85vh",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        textAlign: "center", padding: "80px 24px 60px",
+        minHeight: "90vh",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        textAlign: "center", padding: "80px 24px 40px",
         position: "relative", overflow: "hidden",
       }}>
         {/* Background glow */}
@@ -380,15 +389,30 @@ export default async function Home() {
           filter: "blur(60px)", pointerEvents: "none",
         }} />
         <div style={{ position: "relative", maxWidth: 720, margin: "0 auto" }}>
-          <p style={{
-            fontSize: 13, fontWeight: 600, letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "${primary}", marginBottom: 20,
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          }}>
-            <span className="glow-dot" />
-            {biz.type === "services" ? "Professional Services" : "Digital Products"}
-          </p>
+          {hero.badge && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "6px 16px", borderRadius: 100,
+              border: "1px solid rgba(${tb},0.1)",
+              background: "rgba(${tb},0.04)",
+              fontSize: 13, fontWeight: 500, color: "rgba(${tb},0.6)",
+              marginBottom: 24,
+            }}>
+              <span className="glow-dot" />
+              {hero.badge}
+            </div>
+          )}
+          {!hero.badge && (
+            <p style={{
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "${primary}", marginBottom: 20,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}>
+              <span className="glow-dot" />
+              {biz.type === "services" ? "Professional Services" : "Digital Products"}
+            </p>
+          )}
           <h1 style={{
             fontSize: "clamp(2.5rem, 6vw, 4.25rem)",
             fontWeight: 800, lineHeight: 1.08,
@@ -399,7 +423,7 @@ export default async function Home() {
           </h1>
           <p style={{
             fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-            color: "rgba(255,255,255,0.55)",
+            color: "rgba(${tb},0.55)",
             lineHeight: 1.7, marginBottom: 40,
             maxWidth: 560, margin: "0 auto 40px",
           }}>
@@ -413,13 +437,115 @@ export default async function Home() {
             <a href="/about" className="btn-secondary">Learn More</a>
           </div>
         </div>
+
+        {/* ── Hero Visual — Browser Mockup ── */}
+        <div style={{
+          position: "relative", maxWidth: 900, width: "100%",
+          margin: "56px auto 0", padding: "0 24px",
+        }}>
+          <div style={{
+            borderRadius: 16, overflow: "hidden",
+            border: "1px solid rgba(${tb},0.1)",
+            boxShadow: "0 24px 80px rgba(0,0,0,${shadowAlpha}), 0 0 120px ${primary}08",
+          }}>
+            {/* Browser chrome */}
+            <div style={{
+              padding: "10px 16px",
+              background: "rgba(${tb},0.04)",
+              borderBottom: "1px solid rgba(${tb},0.06)",
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
+              </div>
+              <div style={{
+                flex: 1, margin: "0 40px", padding: "5px 12px",
+                borderRadius: 6, background: "rgba(${tb},0.04)",
+                fontSize: 11, color: "rgba(${tb},0.3)", textAlign: "center",
+              }}>
+                {biz.deployed_url || biz.name.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"}
+              </div>
+            </div>
+            {/* Dashboard/product preview gradient */}
+            <div style={{
+              height: 340, position: "relative", overflow: "hidden",
+              background: "linear-gradient(135deg, ${primary}18, ${accent}12, rgba(${tb},0.03))",
+            }}>
+              {/* Abstract UI elements to simulate a dashboard */}
+              <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <div style={{ width: 120, height: 32, borderRadius: 8, background: "${primary}22" }} />
+                  <div style={{ width: 80, height: 32, borderRadius: 8, background: "rgba(${tb},0.06)" }} />
+                  <div style={{ width: 80, height: 32, borderRadius: 8, background: "rgba(${tb},0.06)" }} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 8 }}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{
+                      padding: 20, borderRadius: 12,
+                      background: "rgba(${tb},0.04)",
+                      border: "1px solid rgba(${tb},0.06)",
+                    }}>
+                      <div style={{ width: "60%", height: 12, borderRadius: 6, background: "rgba(${tb},0.1)", marginBottom: 10 }} />
+                      <div className="gradient-text" style={{ fontSize: 28, fontWeight: 800 }}>
+                        {["$12.4K", "847", "94%"][i]}
+                      </div>
+                      <div style={{ width: "40%", height: 8, borderRadius: 4, background: "rgba(${tb},0.06)", marginTop: 8 }} />
+                    </div>
+                  ))}
+                </div>
+                <div style={{
+                  flex: 1, borderRadius: 12, marginTop: 4,
+                  background: "rgba(${tb},0.04)",
+                  border: "1px solid rgba(${tb},0.06)",
+                  minHeight: 120,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <div style={{
+                    width: "90%", height: 60,
+                    background: "linear-gradient(90deg, ${primary}33, ${accent}22, ${primary}11)",
+                    borderRadius: 8,
+                  }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
+
+      {/* ── Social Proof / Trusted By ── */}
+      {socialProof.logos && socialProof.logos.length > 0 && (
+        <section style={{
+          padding: "40px 24px",
+          borderTop: "1px solid rgba(${tb},0.05)",
+        }}>
+          <div className="container" style={{ textAlign: "center" }}>
+            <p style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(${tb},0.3)", marginBottom: 24 }}>
+              Trusted by leading companies
+            </p>
+            <div style={{
+              display: "flex", justifyContent: "center", alignItems: "center",
+              flexWrap: "wrap", gap: "24px 48px",
+            }}>
+              {socialProof.logos.map((name: string, i: number) => (
+                <span key={i} style={{
+                  fontSize: 16, fontWeight: 700, letterSpacing: "-0.02em",
+                  color: "rgba(${tb},0.2)",
+                }}>
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Stats Bar ── */}
       {stats.length > 0 && (
         <section style={{
-          borderTop: "1px solid rgba(255,255,255,0.05)",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          borderTop: "1px solid rgba(${tb},0.05)",
+          borderBottom: "1px solid rgba(${tb},0.05)",
           padding: "40px 24px",
         }}>
           <div className="container" style={{
@@ -431,7 +557,7 @@ export default async function Home() {
                 <p className="gradient-text" style={{ fontSize: 36, fontWeight: 800, lineHeight: 1, marginBottom: 4 }}>
                   {s.value}
                 </p>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 500 }}>{s.label}</p>
+                <p style={{ color: "rgba(${tb},0.4)", fontSize: 13, fontWeight: 500 }}>{s.label}</p>
               </div>
             ))}
           </div>
@@ -440,7 +566,7 @@ export default async function Home() {
 
       {/* ── Features / Why Us ── */}
       {features.length > 0 && (
-        <section className="section" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
           <div className="container">
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
@@ -465,7 +591,7 @@ export default async function Home() {
                     {["\\u2728", "\\u26A1", "\\u{1F680}", "\\u{1F3AF}", "\\u{1F4A1}", "\\u{1F50D}"][i % 6]}
                   </div>
                   <h3 style={{ fontWeight: 600, fontSize: 17, marginBottom: 8 }}>{f.title}</h3>
-                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7 }}>{f.desc}</p>
+                  <p style={{ color: "rgba(${tb},0.5)", fontSize: 14, lineHeight: 1.7 }}>{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -473,9 +599,140 @@ export default async function Home() {
         </section>
       )}
 
+      {/* ── Video / Showcase Section ── */}
+      <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
+        <div className="container">
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
+              See It In Action
+            </p>
+            <h2 style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>
+              {isServices ? "How we deliver results" : "Watch how it works"}
+            </h2>
+          </div>
+          {biz.video_url ? (
+            <div style={{
+              position: "relative", paddingBottom: "56.25%", height: 0,
+              borderRadius: 16, overflow: "hidden",
+              border: "1px solid rgba(${tb},0.1)",
+              boxShadow: "0 16px 64px rgba(0,0,0,${shadowAlpha})",
+            }}>
+              <iframe
+                src={biz.video_url}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          ) : (
+            <div style={{
+              borderRadius: 16, overflow: "hidden",
+              border: "1px solid rgba(${tb},0.1)",
+              background: "linear-gradient(135deg, ${primary}08, ${accent}06)",
+              padding: "80px 32px",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              textAlign: "center", position: "relative",
+              boxShadow: "0 16px 64px rgba(0,0,0,${shadowAlpha})",
+            }}>
+              {/* Play button placeholder */}
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                background: "${primary}",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 24,
+                boxShadow: "0 8px 32px ${primary}44",
+                cursor: "pointer",
+              }}>
+                <div style={{
+                  width: 0, height: 0,
+                  borderTop: "14px solid transparent",
+                  borderBottom: "14px solid transparent",
+                  borderLeft: "22px solid ${ctaText}",
+                  marginLeft: 4,
+                }} />
+              </div>
+              <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
+                {isServices ? "See our process in action" : "Product walkthrough"}
+              </p>
+              <p style={{ color: "rgba(${tb},0.4)", fontSize: 14 }}>
+                Video coming soon
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Featured Products/Services Preview ── */}
+      {products.length > 0 && (
+        <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
+          <div className="container">
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
+                {isServices ? "Our Services" : "Featured Products"}
+              </p>
+              <h2 style={{ fontSize: "clamp(1.75rem, 4vw, 2.75rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>
+                {isServices ? "Choose your path" : "What we offer"}
+              </h2>
+            </div>
+            <div className="grid-3">
+              {products.slice(0, 3).map((p: any, i: number) => (
+                <div key={i} style={{
+                  borderRadius: 16, overflow: "hidden",
+                  border: "1px solid rgba(${tb},0.08)",
+                  transition: "all 0.3s ease-out",
+                  display: "flex", flexDirection: "column",
+                }}>
+                  {/* Card visual header */}
+                  <div style={{
+                    height: 140, position: "relative",
+                    background: "linear-gradient(135deg, ${primary}" + (15 + i * 8).toString(16).padStart(2, "0") + ", ${accent}" + (10 + i * 6).toString(16).padStart(2, "0") + ")",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <span style={{ fontSize: 48, opacity: 0.4 }}>
+                      {["\\u{1F3AF}", "\\u{1F680}", "\\u{1F4A1}"][i % 3]}
+                    </span>
+                    {i === 0 && products.length > 1 && (
+                      <span style={{
+                        position: "absolute", top: 12, right: 12,
+                        fontSize: 11, fontWeight: 700, textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        padding: "4px 10px", borderRadius: 6,
+                        background: "${primary}", color: "${ctaText}",
+                      }}>
+                        Most Popular
+                      </span>
+                    )}
+                  </div>
+                  {/* Card body */}
+                  <div style={{ padding: "24px 24px 28px", flex: 1, display: "flex", flexDirection: "column" }}>
+                    <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{p.name}</h3>
+                    <p className="gradient-text" style={{ fontWeight: 800, fontSize: 24, marginBottom: 12 }}>
+                      {p.price}
+                    </p>
+                    <p style={{ color: "rgba(${tb},0.5)", fontSize: 13, lineHeight: 1.7, flex: 1, marginBottom: 20 }}>
+                      {p.desc}
+                    </p>
+                    <a href={isServices ? "/contact" : "/${isServices ? "services" : "products"}"} className="cta-btn" style={{ width: "100%", padding: "12px", fontSize: 14 }}>
+                      {isServices ? "Get Started" : "Learn More"}
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {products.length > 3 && (
+              <div style={{ textAlign: "center", marginTop: 32 }}>
+                <a href={isServices ? "/services" : "/products"} className="btn-secondary" style={{ padding: "12px 28px" }}>
+                  View All {isServices ? "Services" : "Products"} &rarr;
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* ── Testimonials ── */}
       {testimonials.length > 0 && (
-        <section className="section" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
           <div className="container">
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
@@ -493,7 +750,7 @@ export default async function Home() {
                       {"\\u2605".repeat(t.rating)}{"\\u2606".repeat(5 - t.rating)}
                     </div>
                   )}
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.7, flex: 1, marginBottom: 20 }}>
+                  <p style={{ color: "rgba(${tb},0.6)", fontSize: 14, lineHeight: 1.7, flex: 1, marginBottom: 20 }}>
                     &ldquo;{t.text}&rdquo;
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -507,7 +764,7 @@ export default async function Home() {
                     </div>
                     <div>
                       <p style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</p>
-                      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{t.role}</p>
+                      <p style={{ color: "rgba(${tb},0.4)", fontSize: 12 }}>{t.role}</p>
                     </div>
                   </div>
                 </div>
@@ -519,7 +776,7 @@ export default async function Home() {
 
       {/* ── Process / How It Works ── */}
       {process.steps && process.steps.length > 0 && (
-        <section className="section" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
           <div className="container">
             <div style={{ textAlign: "center", marginBottom: 56 }}>
               <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
@@ -529,20 +786,24 @@ export default async function Home() {
                 {process.title || "Simple. Effective. Done."}
               </h2>
             </div>
-            <div className="grid-3">
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, maxWidth: 700, margin: "0 auto" }}>
               {process.steps.map((s: any, i: number) => (
-                <div key={i} style={{ textAlign: "center", padding: "32px 24px" }}>
+                <div key={i} style={{
+                  display: "flex", gap: 24, padding: "32px 0",
+                  borderBottom: i < (process.steps?.length || 0) - 1 ? "1px solid rgba(${tb},0.06)" : "none",
+                }}>
                   <div style={{
-                    width: 56, height: 56, borderRadius: 16,
+                    width: 48, height: 48, minWidth: 48, borderRadius: 14,
                     background: "${primary}12", border: "1px solid ${primary}22",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    margin: "0 auto 20px",
-                    fontSize: 22, fontWeight: 800, color: "${primary}",
+                    fontSize: 20, fontWeight: 800, color: "${primary}",
                   }}>
                     {s.step}
                   </div>
-                  <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 10 }}>{s.title}</h3>
-                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7 }}>{s.desc}</p>
+                  <div>
+                    <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 6 }}>{s.title}</h3>
+                    <p style={{ color: "rgba(${tb},0.5)", fontSize: 14, lineHeight: 1.7 }}>{s.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -552,7 +813,7 @@ export default async function Home() {
 
       {/* ── FAQ ── */}
       {faq.length > 0 && (
-        <section className="section" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <section className="section" style={{ borderTop: "1px solid rgba(${tb},0.05)" }}>
           <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 24px" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
@@ -566,11 +827,11 @@ export default async function Home() {
               {faq.map((f: any, i: number) => (
                 <div key={i} style={{
                   padding: "24px 28px", borderRadius: 14,
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(${tb},0.06)",
+                  background: "rgba(${tb},0.02)",
                 }}>
                   <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 10 }}>{f.question}</h3>
-                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7 }}>{f.answer}</p>
+                  <p style={{ color: "rgba(${tb},0.5)", fontSize: 14, lineHeight: 1.7 }}>{f.answer}</p>
                 </div>
               ))}
             </div>
@@ -581,7 +842,7 @@ export default async function Home() {
       {/* ── CTA Section ── */}
       <section style={{
         padding: "80px 24px",
-        borderTop: "1px solid rgba(255,255,255,0.05)",
+        borderTop: "1px solid rgba(${tb},0.05)",
         textAlign: "center",
         position: "relative", overflow: "hidden",
       }}>
@@ -599,7 +860,7 @@ export default async function Home() {
             {cta.headline || "Ready to get started?"}
           </h2>
           <p style={{
-            color: "rgba(255,255,255,0.5)", fontSize: 16, lineHeight: 1.7, marginBottom: 32,
+            color: "rgba(${tb},0.5)", fontSize: 16, lineHeight: 1.7, marginBottom: 32,
           }}>
             {cta.subheadline || biz.tagline}
           </p>
@@ -651,7 +912,7 @@ export default async function About() {
           }}>
             {about.title || "About " + biz.name}
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 16, lineHeight: 1.7 }}>
+          <p style={{ color: "rgba(${tb},0.5)", fontSize: 16, lineHeight: 1.7 }}>
             {biz.tagline}
           </p>
         </div>
@@ -661,7 +922,7 @@ export default async function About() {
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           {about.text && (
             <p style={{
-              color: "rgba(255,255,255,0.65)", fontSize: 17, lineHeight: 1.85,
+              color: "rgba(${tb},0.65)", fontSize: 17, lineHeight: 1.85,
               whiteSpace: "pre-wrap",
             }}>
               {about.text}
@@ -671,14 +932,14 @@ export default async function About() {
           {about.mission && (
             <div style={{
               marginTop: 56, padding: "36px 32px", borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.06)",
-              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(${tb},0.06)",
+              background: "rgba(${tb},0.02)",
               textAlign: "center",
             }}>
               <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 12 }}>
                 Our Mission
               </p>
-              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, lineHeight: 1.6, fontWeight: 500 }}>
+              <p style={{ color: "rgba(${tb},0.6)", fontSize: 18, lineHeight: 1.6, fontWeight: 500 }}>
                 {about.mission}
               </p>
             </div>
@@ -691,12 +952,12 @@ export default async function About() {
                 {values.map((v: string, i: number) => (
                   <div key={i} style={{
                     padding: "20px 24px", borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(${tb},0.06)",
+                    background: "rgba(${tb},0.02)",
                     display: "flex", alignItems: "center", gap: 12,
                   }}>
                     <span className="glow-dot" />
-                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{v}</span>
+                    <span style={{ color: "rgba(${tb},0.7)", fontSize: 15 }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -774,7 +1035,7 @@ export default async function ProductsPage() {
                 <p className="gradient-text" style={{ fontWeight: 800, fontSize: 28, marginBottom: 16 }}>
                   {p.price}
                 </p>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.7, marginBottom: 20, flex: 1 }}>
+                <p style={{ color: "rgba(${tb},0.5)", fontSize: 14, lineHeight: 1.7, marginBottom: 20, flex: 1 }}>
                   {p.desc}
                 </p>
                 {p.features && p.features.length > 0 && (
@@ -782,10 +1043,10 @@ export default async function ProductsPage() {
                     {p.features.map((feat: string, fi: number) => (
                       <li key={fi} style={{
                         padding: "6px 0", fontSize: 13,
-                        color: "rgba(255,255,255,0.55)",
+                        color: "rgba(${tb},0.55)",
                         display: "flex", alignItems: "center", gap: 8,
                       }}>
-                        <span style={{ color: "${primary}", fontSize: 14 }}>\\u2713</span>
+                        <span style={{ color: "${primary}", fontSize: 14 }}>{"\\u2713"}</span>
                         {feat}
                       </li>
                     ))}
@@ -841,7 +1102,7 @@ export default async function Contact() {
           }}>
             {isServices ? "Book a Call" : "Contact Us"}
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 16, lineHeight: 1.7 }}>
+          <p style={{ color: "rgba(${tb},0.5)", fontSize: 16, lineHeight: 1.7 }}>
             {isServices
               ? "Ready to discuss your project? Let\\u2019s find a time that works."
               : "Have a question? We\\u2019d love to hear from you."}
@@ -858,11 +1119,11 @@ export default async function Contact() {
               </a>
               <div style={{
                 display: "flex", alignItems: "center", gap: 16,
-                margin: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: 13,
+                margin: "24px 0", color: "rgba(${tb},0.2)", fontSize: 13,
               }}>
-                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                <div style={{ flex: 1, height: 1, background: "rgba(${tb},0.08)" }} />
                 or send a message
-                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                <div style={{ flex: 1, height: 1, background: "rgba(${tb},0.08)" }} />
               </div>
             </div>
           )}
@@ -880,26 +1141,26 @@ export default async function Contact() {
           {(contact.email || contact.phone) && (
             <div style={{
               marginTop: 40, padding: "24px 28px", borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.06)",
-              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(${tb},0.06)",
+              background: "rgba(${tb},0.02)",
               display: "flex", flexDirection: "column", gap: 10,
             }}>
               {contact.email && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: "${primary}", fontSize: 16 }}>\\u2709</span>
-                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>{contact.email}</span>
+                  <span style={{ color: "${primary}", fontSize: 16 }}>{"\\u2709"}</span>
+                  <span style={{ color: "rgba(${tb},0.6)", fontSize: 14 }}>{contact.email}</span>
                 </div>
               )}
               {contact.phone && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: "${primary}", fontSize: 16 }}>\\u260E</span>
-                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>{contact.phone}</span>
+                  <span style={{ color: "${primary}", fontSize: 16 }}>{"\\u260E"}</span>
+                  <span style={{ color: "rgba(${tb},0.6)", fontSize: 14 }}>{contact.phone}</span>
                 </div>
               )}
               {contact.hours && (
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: "${primary}", fontSize: 16 }}>\\u{1F552}</span>
-                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>{contact.hours}</span>
+                  <span style={{ color: "${primary}", fontSize: 16 }}>{"\\u{1F552}"}</span>
+                  <span style={{ color: "rgba(${tb},0.6)", fontSize: 14 }}>{contact.hours}</span>
                 </div>
               )}
             </div>
@@ -916,6 +1177,14 @@ export default async function Contact() {
   // FAQ is included via the about page or we can add it to the home page later
 
   return files;
+}
+
+function isLightColor(hex: string): boolean {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
 }
 
 function esc(str: string): string {
