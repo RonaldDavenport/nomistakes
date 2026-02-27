@@ -111,6 +111,30 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     tags: ["domains", "hosting", "ssl"],
   },
 
+  // Logo Design
+  {
+    id: "looka",
+    name: "Looka",
+    category: "design",
+    description: "AI-powered logo maker. Create a professional logo, brand kit, and social media assets in minutes.",
+    commission: "25-35% per sale",
+    affiliateUrl: "https://looka.com/?ref=PLACEHOLDER",
+    relevantFor: ["digital", "services"],
+    tags: ["logo", "branding", "design"],
+  },
+
+  // Business Email
+  {
+    id: "google-workspace",
+    name: "Google Workspace",
+    category: "email",
+    description: "Professional email (you@yourbusiness.com) with Gmail, Drive, Docs, Meet, and Calendar included.",
+    commission: "$9-27 per user",
+    affiliateUrl: "https://workspace.google.com/?ref=PLACEHOLDER",
+    relevantFor: ["digital", "services"],
+    tags: ["email", "business email", "productivity"],
+  },
+
   // AI Tools
   {
     id: "jasper",

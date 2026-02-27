@@ -27,6 +27,7 @@ export default function WizardPage() {
   const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
   const [buildProgress, setBuildProgress] = useState(0);
   const [siteSlug, setSiteSlug] = useState("");
+  const [businessIdResult, setBusinessIdResult] = useState("");
   const [error, setError] = useState("");
   const buildStarted = useRef(false);
 
@@ -140,9 +141,16 @@ export default function WizardPage() {
         if (res.ok) {
           const data = await res.json();
           setSiteSlug(data.siteUrl || "");
+          if (data.business?.id) setBusinessIdResult(data.business.id);
           // Animate to 100
           setBuildProgress(100);
-          setTimeout(() => setStep("done"), 800);
+          setTimeout(() => {
+            if (data.business?.id) {
+              router.push(`/onboarding/${data.business.id}`);
+            } else {
+              setStep("done");
+            }
+          }, 800);
         } else {
           // API failed but still show success with local data
           setBuildProgress(100);

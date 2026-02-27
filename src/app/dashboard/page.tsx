@@ -17,6 +17,8 @@ interface Business {
   created_at: string;
   brand: Record<string, unknown>;
   site_content: Record<string, unknown>;
+  onboarding_step: number;
+  onboarding_completed: boolean;
 }
 
 export default function DashboardPage() {
@@ -113,6 +115,23 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <p className="text-brand-400 text-sm mb-2 truncate">{biz.tagline}</p>
+                  {/* Onboarding progress */}
+                  {!biz.onboarding_completed && biz.onboarding_step < 8 && (
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-zinc-500">Setup: {biz.onboarding_step}/8 steps</span>
+                        <Link href={`/onboarding/${biz.id}`} className="text-xs text-brand-400 hover:text-brand-300">
+                          Continue Setup
+                        </Link>
+                      </div>
+                      <div className="h-1 rounded-full bg-white/5">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all"
+                          style={{ width: `${Math.round((biz.onboarding_step / 8) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-3 sm:gap-4 text-xs text-zinc-500">
                     <span className="capitalize">Type: {biz.type}</span>
                     <span>Revenue: {biz.revenue_estimate}</span>

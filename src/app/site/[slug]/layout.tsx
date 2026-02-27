@@ -26,6 +26,8 @@ export interface SiteData {
     contact?: { email?: string; phone?: string; address?: string; hours?: string };
     faq?: { question: string; answer: string }[];
   };
+  layout?: string;
+  calendly_url?: string;
 }
 
 // Determine if a hex colour is "light" (returns true) or "dark"
@@ -70,6 +72,7 @@ export default async function SiteLayout({
   const accent = colors.accent || "#9775fa";
   const fonts = site.brand?.fonts || {};
   const cta = site.site_content?.cta || {};
+  const calendlyUrl = site.calendly_url;
   const light = isLightColor(bg);
   // Adaptive colour tokens based on whether bg is light or dark
   const base = light ? "0,0,0" : "255,255,255"; // rgb base for text/borders
@@ -460,6 +463,27 @@ export default async function SiteLayout({
 
         {/* Page content */}
         {children}
+
+        {/* Calendly widget (when URL is set) */}
+        {calendlyUrl && (
+          <section className="section" style={{ textAlign: "center" }}>
+            <div style={{ maxWidth: 700, margin: "0 auto" }}>
+              <h2 className="section-title" style={{ textAlign: "center", marginBottom: 8 }}>
+                Book a Meeting
+              </h2>
+              <p style={{ color: "var(--faint)", marginBottom: 32, fontSize: 15 }}>
+                Schedule a time that works for you
+              </p>
+              <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+                <iframe
+                  src={`${calendlyUrl}?hide_gdpr_banner=1&background_color=${bg.replace("#", "")}&text_color=${textColor.replace("#", "")}&primary_color=${primary.replace("#", "")}`}
+                  style={{ width: "100%", height: 630, border: "none" }}
+                  title="Schedule a meeting"
+                />
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Footer */}
         <footer className="site-footer">

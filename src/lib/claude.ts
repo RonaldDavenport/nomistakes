@@ -126,6 +126,30 @@ Return ONLY valid JSON, no other text.`,
   return result;
 }
 
+// ── Name Generation ──
+export async function generateNames(currentName: string, type: string, audience: string, tagline: string) {
+  const result = await generate(
+    `The user has a ${type === "services" ? "service" : "digital product"} business currently named "${currentName}" with tagline "${tagline}" targeting ${audience}.
+
+Generate 5 alternative business names. Each name should be:
+- Catchy and brandable (1-2 words max)
+- Easy to spell and pronounce
+- Available as a .com domain (avoid common dictionary words)
+- Fitting for a ${type} business
+
+Return a JSON array of 5 objects, each with:
+- name: The business name
+- slug: URL-friendly version (lowercase, hyphens)
+- why: One sentence explaining the name choice
+
+Return ONLY valid JSON array, no other text.`,
+    "You are a brand naming expert. Generate creative, memorable business names that feel premium and modern. Avoid generic names. Each name should feel distinct from the others.",
+    "claude-haiku-4-5-20251001"
+  );
+
+  return result;
+}
+
 // ── Business Plan Generation ──
 export async function generateBusinessPlan(
   businessName: string,

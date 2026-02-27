@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { generateConcepts, generateBrand, generateSiteContent, generateBusinessPlan } from "@/lib/claude";
+import { generateConcepts, generateBrand, generateSiteContent, generateBusinessPlan, generateNames } from "@/lib/claude";
 
 // POST /api/generate — handles all generation types
 export async function POST(req: Request) {
@@ -12,6 +12,8 @@ export async function POST(req: Request) {
       return handleConcepts(body);
     } else if (action === "build") {
       return handleBuild(body);
+    } else if (action === "names") {
+      return handleNames(body);
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
@@ -158,5 +160,34 @@ async function handleBuild(body: {
   return NextResponse.json({
     business,
     siteUrl: `/site/${slug}`,
+  });
+}
+
+// Generate 5 alternative business names
+async function handleNames(body: {
+  currentName: string;
+  type: string;
+  audience: string;
+  tagline: string;
+}) {
+  const { currentName, type, audience, tagline } = body;
+
+  if (!currentName) {
+    return NextResponse.json({ error: "currentName required" }, { status: 400 });
+  }
+
+  const result = await generateNames(currentName, type || "services", audience || "", tagline || "");
+
+  let names;
+  try {
+    names = JSON.parse(result.content);
+  } catch {
+    const match = result.content.match(/\[[\s\S]*\]/);
+    names = match ? JSON.parse(match[0]) : [];
+  }
+
+  return NextResponse.json({
+    names,
+    usage: { input: result.inputTokens, output: result.outputTokens, model: result.model },
   });
 }
