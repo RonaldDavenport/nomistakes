@@ -42,7 +42,7 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
           }}>
             {about.title || `The Story Behind ${site.name}`}
           </h1>
-          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "var(--faint)", lineHeight: 1.6 }}>
             {site.tagline}
           </p>
         </div>
@@ -51,7 +51,7 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
       {/* Story */}
       <section className="section">
         <div className="section-narrow">
-          <p style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.8, whiteSpace: "pre-wrap", fontSize: "clamp(0.9rem, 2vw, 1rem)" }}>
+          <p style={{ color: "var(--muted)", lineHeight: 1.8, whiteSpace: "pre-wrap", fontSize: "clamp(0.9rem, 2vw, 1rem)" }}>
             {about.text || `${site.name} was born from a simple idea: make ${site.type === "services" ? "professional services" : "great products"} accessible to everyone. We believe in quality, transparency, and putting our customers first.`}
           </p>
         </div>
@@ -62,7 +62,7 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
         <section className="section" style={{ textAlign: "center" }}>
           <div className="section-narrow">
             <h2 className="section-title" style={{ textAlign: "center" }}>Our Mission</h2>
-            <p style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.8, fontSize: 18 }}>
+            <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: 18 }}>
               {about.mission}
             </p>
           </div>
@@ -102,7 +102,7 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
           }}>
             Ready to work with us?
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>
+          <p style={{ color: "var(--faint)", marginBottom: 32 }}>
             See what {site.name} can do for you.
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>

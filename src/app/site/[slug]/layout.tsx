@@ -28,6 +28,16 @@ export interface SiteData {
   };
 }
 
+// Determine if a hex colour is "light" (returns true) or "dark"
+function isLightColor(hex: string): boolean {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  // Relative luminance formula
+  return (r * 299 + g * 587 + b * 114) / 1000 > 140;
+}
+
 async function getSiteData(slug: string): Promise<SiteData | null> {
   const db = createServerClient();
   const { data } = await db
@@ -60,6 +70,9 @@ export default async function SiteLayout({
   const accent = colors.accent || "#9775fa";
   const fonts = site.brand?.fonts || {};
   const cta = site.site_content?.cta || {};
+  const light = isLightColor(bg);
+  // Adaptive colour tokens based on whether bg is light or dark
+  const base = light ? "0,0,0" : "255,255,255"; // rgb base for text/borders
   const navLinks = [
     { href: `/site/${slug}`, label: "Home" },
     { href: `/site/${slug}/about`, label: "About" },
@@ -99,11 +112,20 @@ export default async function SiteLayout({
             --site-bg: ${bg};
             --site-text: ${textColor};
             --site-heading-font: ${fonts.heading ? `"${fonts.heading}"` : "inherit"};
+            --base: ${base};
+            --muted: rgba(${base}, 0.6);
+            --faint: rgba(${base}, 0.5);
+            --subtle: rgba(${base}, 0.4);
+            --ghost: rgba(${base}, 0.25);
+            --border: rgba(${base}, 0.08);
+            --border-hover: rgba(${base}, 0.15);
+            --card-bg: rgba(${base}, 0.03);
+            --overlay: ${light ? `${bg}ee` : `${bg}ee`};
           }
 
           /* ── Navigation ── */
           .site-nav {
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border);
             padding: 0 20px;
             position: sticky;
             top: 0;
@@ -124,7 +146,7 @@ export default async function SiteLayout({
             font-size: 20px;
             font-weight: 800;
             font-family: var(--site-heading-font);
-            color: ${textColor};
+            color: var(--site-text);
           }
           .site-nav-links {
             display: none;
@@ -134,14 +156,14 @@ export default async function SiteLayout({
           }
           .site-nav-links a {
             font-size: 14px;
-            color: rgba(255,255,255,0.5);
+            color: var(--faint);
             transition: color 0.2s;
           }
           .site-nav-links a:hover,
-          .site-nav-links a.active { color: ${textColor}; }
+          .site-nav-links a.active { color: var(--site-text); }
           .site-nav-cta {
             background: ${primary};
-            color: #fff;
+            color: ${light ? "#fff" : "#fff"};
             padding: 10px 24px;
             border-radius: 10px;
             font-size: 14px;
@@ -168,7 +190,7 @@ export default async function SiteLayout({
             display: block;
             width: 20px;
             height: 2px;
-            background: rgba(255,255,255,0.6);
+            background: var(--muted);
             transition: all 0.2s;
           }
 
@@ -188,19 +210,19 @@ export default async function SiteLayout({
           .site-mobile-menu a {
             font-size: 24px;
             font-weight: 600;
-            color: rgba(255,255,255,0.6);
+            color: var(--muted);
             padding: 16px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border);
             transition: color 0.2s;
           }
-          .site-mobile-menu a:hover { color: ${textColor}; }
+          .site-mobile-menu a:hover { color: var(--site-text); }
           .site-mobile-close {
             position: absolute;
             top: 20px;
             right: 20px;
             background: none;
             border: none;
-            color: rgba(255,255,255,0.5);
+            color: var(--faint);
             font-size: 28px;
             cursor: pointer;
             width: 44px;
@@ -213,7 +235,7 @@ export default async function SiteLayout({
           /* ── Common Sections ── */
           .section {
             padding: 60px 20px;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid var(--border);
           }
           .section-inner {
             max-width: 1000px;
@@ -234,7 +256,7 @@ export default async function SiteLayout({
             margin-bottom: 40px;
           }
           .section-subtitle {
-            color: rgba(255,255,255,0.5);
+            color: var(--faint);
             font-size: 16px;
             text-align: center;
             margin-bottom: 40px;
@@ -251,8 +273,8 @@ export default async function SiteLayout({
           .card {
             padding: 20px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            background: var(--card-bg);
             transition: border-color 0.2s, transform 0.2s;
           }
           .card:hover {
@@ -260,7 +282,7 @@ export default async function SiteLayout({
             transform: translateY(-2px);
           }
           .card h3 { font-weight: 600; margin-bottom: 8px; font-family: var(--site-heading-font); }
-          .card p { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
+          .card p { color: var(--faint); font-size: 14px; line-height: 1.6; }
 
           .product-card {
             padding: 24px;
@@ -276,7 +298,7 @@ export default async function SiteLayout({
           }
           .product-card h3 { font-weight: 700; margin-bottom: 4px; font-family: var(--site-heading-font); }
           .product-card .price { color: ${primary}; font-weight: 700; font-size: 18px; margin-bottom: 12px; }
-          .product-card p { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
+          .product-card p { color: var(--faint); font-size: 14px; line-height: 1.6; }
           .product-card .product-features {
             list-style: none;
             margin-top: 16px;
@@ -285,7 +307,7 @@ export default async function SiteLayout({
           .product-card .product-features li {
             padding: 6px 0;
             font-size: 13px;
-            color: rgba(255,255,255,0.5);
+            color: var(--faint);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -334,8 +356,8 @@ export default async function SiteLayout({
           }
           .cta-btn-outline {
             display: inline-block;
-            border: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.8);
+            border: 1px solid var(--border-hover);
+            color: var(--muted);
             padding: 16px 40px;
             border-radius: 12px;
             font-size: 16px;
@@ -349,7 +371,7 @@ export default async function SiteLayout({
 
           /* ── Footer ── */
           .site-footer {
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid var(--border);
             padding: 48px 20px;
           }
           .site-footer-inner {
@@ -360,14 +382,14 @@ export default async function SiteLayout({
             gap: 32px;
           }
           .site-footer-brand { font-size: 18px; font-weight: 800; font-family: var(--site-heading-font); margin-bottom: 8px; }
-          .site-footer-desc { color: rgba(255,255,255,0.4); font-size: 13px; line-height: 1.6; max-width: 300px; }
+          .site-footer-desc { color: var(--subtle); font-size: 13px; line-height: 1.6; max-width: 300px; }
           .site-footer-heading { font-weight: 600; font-size: 14px; margin-bottom: 12px; }
           .site-footer-links { list-style: none; padding: 0; }
           .site-footer-links li { padding: 4px 0; }
-          .site-footer-links a { color: rgba(255,255,255,0.4); font-size: 13px; transition: color 0.2s; }
-          .site-footer-links a:hover { color: rgba(255,255,255,0.8); }
+          .site-footer-links a { color: var(--subtle); font-size: 13px; transition: color 0.2s; }
+          .site-footer-links a:hover { color: var(--site-text); }
           .site-footer-bottom {
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid var(--border);
             padding-top: 24px;
             margin-top: 16px;
             display: flex;
@@ -375,7 +397,7 @@ export default async function SiteLayout({
             gap: 12px;
             align-items: center;
           }
-          .site-footer-copy { color: rgba(255,255,255,0.25); font-size: 12px; }
+          .site-footer-copy { color: var(--ghost); font-size: 12px; }
           .site-footer-copy a { color: ${primary}; }
 
           /* ── Responsive ── */
