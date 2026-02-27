@@ -32,12 +32,12 @@ export async function POST(req: Request) {
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
-  } catch (err) {
-    console.error("[stripe] Error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Stripe operation failed" },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    const message = err && typeof err === "object" && "message" in err
+      ? String((err as { message: unknown }).message)
+      : "Stripe operation failed";
+    console.error("[stripe] Error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

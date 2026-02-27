@@ -24,6 +24,7 @@ export async function createConnectedAccount(
   email: string
 ): Promise<{ accountId: string }> {
   const account = await getStripe().accounts.create({
+    country: "US",
     business_profile: {
       name: businessName,
     },
@@ -35,7 +36,7 @@ export async function createConnectedAccount(
     controller: {
       stripe_dashboard: { type: "none" },
       fees: { payer: "application" },
-      losses: { payments: "application" },
+      losses: { payments: "stripe" },
       requirement_collection: "stripe",
     },
   } as Stripe.AccountCreateParams);
