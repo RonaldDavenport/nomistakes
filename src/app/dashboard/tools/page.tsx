@@ -25,7 +25,7 @@ export default function ToolsPage() {
         .eq("user_id", user.id);
 
       const types = businesses?.map((b) => b.type) || [];
-      const primaryType = (types[0] || "services") as "products" | "digital" | "services";
+      const primaryType = (types[0] || "services") as "digital" | "services";
 
       setPartners(getRelevantPartners(primaryType));
       setLoading(false);

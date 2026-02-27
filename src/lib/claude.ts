@@ -42,17 +42,21 @@ export async function generateConcepts(skills: string[], time: string, budget: s
 - Starting budget: ${budget}
 - Preferred type: ${bizType}
 
+IMPORTANT: Only generate SERVICE BUSINESSES or DIGITAL PRODUCT businesses. NO physical products, no ecommerce, no dropshipping, no inventory.
+- Service businesses: consulting, coaching, freelancing, agencies, retainers
+- Digital products: online courses, templates, ebooks, memberships, digital downloads, SaaS
+
 For each concept, return a JSON array with exactly 3 objects. Each object must have:
 - name: A catchy, brandable business name (one word or two words max)
 - tagline: One-line pitch (under 10 words)
-- type: "products" | "digital" | "services"
-- desc: 2-3 sentence description of the business model
+- type: "digital" | "services" (NEVER "products")
+- desc: 2-3 sentence description of the business model. Be specific about what they deliver and how they get paid.
 - revenue: Realistic monthly revenue range (e.g. "$2,000 – $8,000/mo")
 - startup: Startup cost range (e.g. "$0 – $100")
 - audience: One sentence describing ideal customer
 
 Return ONLY valid JSON array, no other text.`,
-    "You are a business strategist AI. You generate practical, profitable business ideas tailored to someone's skills and constraints. Focus on businesses that can launch fast and generate revenue quickly. Be creative but realistic.",
+    "You are a business strategist AI specializing in service businesses and digital products. You generate practical, high-margin business ideas that require no inventory or shipping. Focus on businesses that leverage skills into recurring revenue through consulting, coaching, courses, templates, and memberships. Be creative but realistic.",
     "claude-haiku-4-5-20251001"
   );
 
@@ -93,10 +97,10 @@ export async function generateSiteContent(
   brand: Record<string, unknown>
 ) {
   const result = await generate(
-    `Write all website content for this business:
+    `Write all website content for this ${type === "services" ? "service" : "digital product"} business:
 - Name: ${businessName}
 - Tagline: ${tagline}
-- Type: ${type} (products, digital, or services)
+- Type: ${type} (digital products/courses OR services/consulting — NOT physical products)
 - Description: ${desc}
 - Target audience: ${audience}
 - Brand tone: ${JSON.stringify(brand)}
@@ -104,18 +108,18 @@ export async function generateSiteContent(
 Return a JSON object with:
 - hero: { headline: string (powerful, under 8 words), subheadline: string (1 sentence value prop) }
 - about: { title: string, text: string (2-3 paragraphs about the business story and approach), mission: string (1 sentence mission statement) }
-- features: array of 6 objects { title: string, desc: string (1-2 sentences) }
-- products: array of 3-5 objects { name: string, desc: string (2-3 sentences), price: string (realistic price with $ sign), features: array of 3-4 strings listing what's included }
-- testimonials: array of 3 objects { name: string (realistic full name), role: string (job title or description), text: string (1-2 natural sentences), rating: 5 }
-- cta: { headline: string, subheadline: string, button_text: string }
+- features: array of 6 objects { title: string, desc: string (1-2 sentences) } — these are benefits/differentiators
+- products: array of 3-5 objects representing ${type === "services" ? "service packages/tiers (e.g. Starter, Pro, VIP)" : "digital products/courses (e.g. courses, templates, memberships)"}. Each: { name: string, desc: string (2-3 sentences about what they get), price: string (realistic price with $ sign — services can be /mo or /session, digital products are one-time or /mo for memberships), features: array of 3-5 strings listing exactly what's included }
+- testimonials: array of 3 objects { name: string (realistic full name), role: string (job title), text: string (1-2 natural sentences about specific results they got), rating: 5 }
+- cta: { headline: string, subheadline: string, button_text: string (e.g. "${type === "services" ? "Book a Call" : "Get Started"}" )}
 - seo: { title: string (under 60 chars), description: string (under 160 chars) }
 - contact: { email: string (realistic contact email using the business name), phone: string (format: (555) 123-4567), hours: string (e.g. "Mon-Fri 9AM-6PM EST") }
-- faq: array of 4-5 objects { question: string, answer: string (2-3 sentences) }
+- faq: array of 4-5 objects { question: string, answer: string (2-3 sentences) } — address pricing, results, process, and trust
 
-Make each product/service feel premium and distinct. Make testimonials sound like real people. FAQ should address common objections and build trust.
+Make each offering feel premium and distinct with clear value. Testimonials should mention specific outcomes. FAQ should overcome objections.
 
 Return ONLY valid JSON, no other text.`,
-    "You are a conversion-focused copywriter AI. Write compelling website copy that sells. Use power words, address pain points, and create urgency. Keep it concise and scannable. Make testimonials sound natural and believable. Products should have realistic pricing and detailed feature lists. Each piece of content should feel unique and tailored to this specific business — avoid generic template language.",
+    "You are a conversion-focused copywriter AI specializing in service businesses and digital products. Write compelling website copy that sells consulting, coaching, courses, templates, and memberships. Use power words, address pain points, and create urgency. Keep it concise and scannable. Make testimonials mention specific results (numbers, timeframes). Each piece of content should feel unique — never use generic template language like 'lorem ipsum' or 'your company'.",
     "claude-sonnet-4-5-20250929"
   );
 

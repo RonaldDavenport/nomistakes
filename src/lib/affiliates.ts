@@ -7,12 +7,12 @@
 export interface AffiliatePartner {
   id: string;
   name: string;
-  category: "email" | "payments" | "analytics" | "hosting" | "design" | "marketing" | "legal" | "shipping" | "ai" | "domains";
+  category: "email" | "payments" | "analytics" | "hosting" | "design" | "marketing" | "legal" | "ai" | "domains";
   description: string;
   commission: string; // e.g., "30% recurring" or "$50 per signup"
   affiliateUrl: string; // Our affiliate link
   logo?: string;
-  relevantFor: ("products" | "digital" | "services")[]; // Which business types benefit
+  relevantFor: ("digital" | "services")[]; // Which business types benefit
   tags: string[];
 }
 
@@ -25,7 +25,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "Email marketing platform. Build and grow your email list with automated campaigns.",
     commission: "Up to $300 per referral",
     affiliateUrl: "https://mailchimp.com/referral/?aid=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["email", "newsletters", "automation"],
   },
   {
@@ -47,7 +47,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "Privacy-focused website analytics. No cookies, GDPR compliant.",
     commission: "60-day cookie, recurring",
     affiliateUrl: "https://plausible.io/?ref=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["analytics", "privacy", "simple"],
   },
 
@@ -59,7 +59,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "Design tool for social media posts, ads, logos, and marketing materials.",
     commission: "Up to $36 per signup",
     affiliateUrl: "https://partner.canva.com/PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["design", "social media", "graphics"],
   },
 
@@ -71,20 +71,20 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "SEO and digital marketing toolkit. Keyword research, competitor analysis, site audit.",
     commission: "$200 per subscription sale",
     affiliateUrl: "https://www.semrush.com/?ref=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["seo", "marketing", "competitor analysis"],
   },
 
-  // Shipping
+  // Scheduling (for service businesses)
   {
-    id: "shipstation",
-    name: "ShipStation",
-    category: "shipping",
-    description: "Shipping software for ecommerce. Automate labels, tracking, and returns.",
-    commission: "Up to $150 per referral",
-    affiliateUrl: "https://www.shipstation.com/partners/?ref=PLACEHOLDER",
-    relevantFor: ["products"],
-    tags: ["shipping", "ecommerce", "fulfillment"],
+    id: "calendly",
+    name: "Calendly",
+    category: "marketing",
+    description: "Scheduling tool for booking calls, consultations, and coaching sessions.",
+    commission: "Up to $100 per referral",
+    affiliateUrl: "https://calendly.com/referral/?ref=PLACEHOLDER",
+    relevantFor: ["services"],
+    tags: ["scheduling", "booking", "consultations"],
   },
 
   // Legal
@@ -95,7 +95,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "Business formation, LLC setup, trademarks, and legal documents.",
     commission: "Up to 25% per sale",
     affiliateUrl: "https://www.legalzoom.com/?ref=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["legal", "llc", "business formation"],
   },
 
@@ -107,7 +107,7 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "Domain registration, hosting, and SSL certificates at great prices.",
     commission: "Up to 20% per sale",
     affiliateUrl: "https://www.namecheap.com/?aff=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["domains", "hosting", "ssl"],
   },
 
@@ -119,14 +119,14 @@ export const AFFILIATE_PARTNERS: AffiliatePartner[] = [
     description: "AI writing assistant for marketing copy, blog posts, and social media.",
     commission: "30% recurring",
     affiliateUrl: "https://www.jasper.ai/?ref=PLACEHOLDER",
-    relevantFor: ["products", "digital", "services"],
+    relevantFor: ["digital", "services"],
     tags: ["ai", "writing", "content"],
   },
 ];
 
 // Get relevant affiliate partners for a business type
 export function getRelevantPartners(
-  businessType: "products" | "digital" | "services",
+  businessType: "digital" | "services",
   tags?: string[]
 ): AffiliatePartner[] {
   let partners = AFFILIATE_PARTNERS.filter((p) =>
@@ -196,7 +196,7 @@ export interface AffiliateRecommendation {
 
 // Generate affiliate recommendations for a business site
 export function generateSiteRecommendations(
-  businessType: "products" | "digital" | "services",
+  businessType: "digital" | "services",
   businessName: string
 ): AffiliateRecommendation[] {
   const recommendations: AffiliateRecommendation[] = [];
