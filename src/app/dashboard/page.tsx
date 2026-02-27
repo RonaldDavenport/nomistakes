@@ -119,14 +119,23 @@ export default function DashboardPage() {
                     <span>Created: {new Date(biz.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
-                {biz.live_url && (
+                <div className="flex gap-2 w-full sm:w-auto shrink-0">
                   <Link
-                    href={biz.live_url}
-                    className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center shrink-0 w-full sm:w-auto"
+                    href={`/dashboard/site/${biz.id}`}
+                    className="btn-secondary px-4 py-2 rounded-lg text-xs font-semibold text-zinc-300 text-center flex-1 sm:flex-initial"
                   >
-                    View Site
+                    Edit Site
                   </Link>
-                )}
+                  {biz.live_url && (
+                    <Link
+                      href={biz.live_url}
+                      target="_blank"
+                      className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center flex-1 sm:flex-initial"
+                    >
+                      View Site
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           ))}
