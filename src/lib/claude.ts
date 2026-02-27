@@ -14,11 +14,12 @@ export interface GenerationResult {
 export async function generate(
   prompt: string,
   systemPrompt: string,
-  model: "claude-haiku-4-5-20251001" | "claude-sonnet-4-5-20250929" = "claude-haiku-4-5-20251001"
+  model: "claude-haiku-4-5-20251001" | "claude-sonnet-4-5-20250929" = "claude-haiku-4-5-20251001",
+  maxTokens = 4096
 ): Promise<GenerationResult> {
   const response = await anthropic.messages.create({
     model,
-    max_tokens: 4096,
+    max_tokens: maxTokens,
     system: systemPrompt,
     messages: [{ role: "user", content: prompt }],
   });
@@ -96,31 +97,117 @@ export async function generateSiteContent(
   audience: string,
   brand: Record<string, unknown>
 ) {
+  const isServices = type === "services";
+
   const result = await generate(
-    `Write all website content for this ${type === "services" ? "service" : "digital product"} business:
+    `You are building the website for "${businessName}" — a premium ${isServices ? "service-based" : "digital product"} business.
+
+BUSINESS CONTEXT:
 - Name: ${businessName}
-- Tagline: ${tagline}
-- Type: ${type} (digital products/courses OR services/consulting — NOT physical products)
-- Description: ${desc}
+- Tagline: "${tagline}"
+- Type: ${type}
+- What they do: ${desc}
 - Target audience: ${audience}
-- Brand tone: ${JSON.stringify(brand)}
+- Brand tone: ${(brand as { tone?: string }).tone || "professional"}
 
-Return a JSON object with:
-- hero: { headline: string (powerful, under 8 words), subheadline: string (1 sentence value prop) }
-- about: { title: string, text: string (2-3 paragraphs about the business story and approach), mission: string (1 sentence mission statement) }
-- features: array of 6 objects { title: string, desc: string (1-2 sentences) } — these are benefits/differentiators
-- products: array of 3-5 objects representing ${type === "services" ? "service packages/tiers (e.g. Starter, Pro, VIP)" : "digital products/courses (e.g. courses, templates, memberships)"}. Each: { name: string, desc: string (2-3 sentences about what they get), price: string (realistic price with $ sign — services can be /mo or /session, digital products are one-time or /mo for memberships), features: array of 3-5 strings listing exactly what's included }
-- testimonials: array of 3 objects { name: string (realistic full name), role: string (job title), text: string (1-2 natural sentences about specific results they got), rating: 5 }
-- cta: { headline: string, subheadline: string, button_text: string (e.g. "${type === "services" ? "Book a Call" : "Get Started"}" )}
-- seo: { title: string (under 60 chars), description: string (under 160 chars) }
-- contact: { email: string (realistic contact email using the business name), phone: string (format: (555) 123-4567), hours: string (e.g. "Mon-Fri 9AM-6PM EST") }
-- faq: array of 4-5 objects { question: string, answer: string (2-3 sentences) } — address pricing, results, process, and trust
+RESEARCH CONTEXT — Study how top companies in similar niches position themselves:
+- For consulting/coaching: Study how McKinsey, Bain, Tony Robbins, Alex Hormozi position their services. Use outcome-driven language. Lead with the transformation, not the process.
+- For digital products/courses: Study how Masterclass, Coursera, Gumroad creators position offerings. Use social proof, specificity, and scarcity.
+- For agencies/freelance: Study how Pentagram, IDEO, top Toptal freelancers position. Lead with portfolio results and client outcomes.
+- For SaaS/tools: Study how Linear, Notion, Vercel position. Use crisp, technical but human copy.
 
-Make each offering feel premium and distinct with clear value. Testimonials should mention specific outcomes. FAQ should overcome objections.
+WRITING RULES:
+1. NEVER use generic filler like "We're passionate about...", "Our team of experts...", "Unlock your potential..."
+2. Lead every headline with a specific outcome or transformation
+3. Use concrete numbers in testimonials (revenue increases, time saved, % improvements)
+4. Each product/service must have a clear "who it's for" and "what you get"
+5. FAQ answers should directly address the #1 objection and turn it into a reason to buy
+6. Hero headline: 4-8 words, punchy, outcome-focused. Think "Ship faster." or "Revenue on autopilot."
+7. Subheadline: One sentence that explains the HOW behind the headline
+8. Write like a human, not an AI. Short sentences. Sentence fragments are fine. Be direct.
+
+Return a JSON object with ALL of these fields:
+
+{
+  "hero": {
+    "headline": "4-8 word headline focused on the outcome/transformation the customer gets",
+    "subheadline": "One clear sentence explaining how ${businessName} delivers that outcome. Be specific."
+  },
+  "about": {
+    "title": "A compelling section title (not just 'About Us')",
+    "text": "3-4 paragraphs. Start with the problem (what frustrated you about the industry). Then the insight (what you discovered). Then the approach (how ${businessName} does it differently). End with the promise. Write in first person plural (we). Make it feel like a real founder story, not corporate speak.",
+    "mission": "One bold sentence. Not 'To empower...' — more like 'We exist to make [specific outcome] inevitable for [specific audience].'"
+  },
+  "features": [
+    { "title": "Benefit-focused title (e.g., 'Results in 14 days, not 14 months')", "desc": "2 sentences. First sentence: the problem this solves. Second: how we solve it differently." }
+  ],
+  "products": [
+    {
+      "name": "Tier name that implies value (e.g., 'Growth Sprint' not 'Basic Plan')",
+      "desc": "2-3 sentences. WHO this is for and WHAT transformation they get. Not just a feature list.",
+      "price": "Realistic price with $ sign${isServices ? " (can be /mo, /session, or /engagement)" : " (one-time or /mo for memberships)"}",
+      "features": ["Specific deliverable 1", "Specific deliverable 2", "Specific deliverable 3", "Specific deliverable 4"]
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "Realistic full name (diverse names)",
+      "role": "Specific job title at a realistic company (e.g., 'Head of Growth at Airtable' not 'Business Owner')",
+      "text": "1-2 sentences with a SPECIFIC metric or result. e.g., 'Went from 2K to 18K MRR in 3 months.' or 'Cut our onboarding time from 2 weeks to 2 days.' Never say 'highly recommend' or 'amazing experience.'",
+      "rating": 5
+    }
+  ],
+  "process": {
+    "title": "How It Works section heading (e.g., 'From zero to launch in 3 steps')",
+    "steps": [
+      {
+        "step": "1",
+        "title": "Short action name (e.g., 'Discovery Call')",
+        "desc": "2 sentences explaining this step and what the customer experiences"
+      }
+    ]
+  },
+  "stats": [
+    { "value": "A big impressive number with + or % (e.g., '500+', '97%', '3x')", "label": "What this number represents (e.g., 'Clients Served', 'Satisfaction Rate')" }
+  ],
+  "cta": {
+    "headline": "Action-oriented headline creating urgency (e.g., 'Stop leaving money on the table.')",
+    "subheadline": "One sentence about what happens after they take action",
+    "button_text": "${isServices ? "Book a Strategy Call" : "Get Started Now"}"
+  },
+  "seo": {
+    "title": "Under 60 chars. Format: '${businessName} — [outcome in 3-5 words]'",
+    "description": "Under 155 chars. Clear value prop with keywords the target audience would search."
+  },
+  "contact": {
+    "email": "hello@${businessName.toLowerCase().replace(/[^a-z0-9]/g, "")}.com",
+    "phone": "(555) XXX-XXXX format with realistic digits",
+    "hours": "Mon-Fri 9AM-6PM EST"
+  },
+  "faq": [
+    {
+      "question": "The #1 objection buyers have (about price, results, trust, or process)",
+      "answer": "2-3 sentences that acknowledge the concern, reframe it, and use social proof or a guarantee to overcome it."
+    }
+  ]
+}
+
+Generate exactly: 6 features, ${isServices ? "3" : "3-4"} products/services (with 4 included features each), 3 testimonials, 3 process steps, 4 stats, 5 FAQ items.
 
 Return ONLY valid JSON, no other text.`,
-    "You are a conversion-focused copywriter AI specializing in service businesses and digital products. Write compelling website copy that sells consulting, coaching, courses, templates, and memberships. Use power words, address pain points, and create urgency. Keep it concise and scannable. Make testimonials mention specific results (numbers, timeframes). Each piece of content should feel unique — never use generic template language like 'lorem ipsum' or 'your company'.",
-    "claude-sonnet-4-5-20250929"
+    `You are a world-class direct response copywriter who has studied David Ogilvy, Eugene Schwartz, and modern SaaS copy from companies like Linear, Stripe, and Vercel. You write copy that SELLS — not copy that fills space.
+
+Rules:
+- Every line must earn its place. If it doesn't sell, cut it.
+- Use specificity over superlatives. "47% faster" beats "much faster."
+- Write at an 8th grade reading level. Short sentences. Active voice.
+- Testimonials sound like real people, not marketing copy. Include specific numbers.
+- Product descriptions answer: "What do I get, what does it cost, and why should I care?"
+- Headlines are punchy. 4-8 words max. Lead with the outcome.
+- Never use: "leverage", "synergy", "empower", "unlock", "passionate", "cutting-edge", "state-of-the-art", "revolutionize", "game-changer"
+- Write for ${audience}. Use their language, reference their pain points, speak to their specific situation.`,
+    "claude-sonnet-4-5-20250929",
+    8192
   );
 
   return result;

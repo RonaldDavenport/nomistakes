@@ -45,6 +45,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
   const [tab, setTab] = useState<Tab>("content");
   const [bizId, setBizId] = useState("");
   const [deploying, setDeploying] = useState(false);
+  const [deployMessage, setDeployMessage] = useState<string | null>(null);
   const [domainInput, setDomainInput] = useState("");
   const [domainStatus, setDomainStatus] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
@@ -77,6 +78,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
   async function deployToVercel() {
     if (!business) return;
     setDeploying(true);
+    setDeployMessage("Creating project and uploading files...");
     try {
       const res = await fetch("/api/deploy", {
         method: "POST",
@@ -86,9 +88,15 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
       const data = await res.json();
       if (res.ok && data.url) {
         setBusiness({ ...business, deployed_url: data.url, status: "live" });
+        setDeployMessage("Deployed! Your site will be live in about 30-60 seconds.");
+        setTimeout(() => setDeployMessage(null), 8000);
+      } else {
+        setDeployMessage(data.error || "Deployment failed. Please try again.");
+        setTimeout(() => setDeployMessage(null), 5000);
       }
     } catch {
-      // silently fail
+      setDeployMessage("Deployment failed. Please try again.");
+      setTimeout(() => setDeployMessage(null), 5000);
     }
     setDeploying(false);
   }
@@ -199,6 +207,28 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+      {/* Deploy status banner */}
+      {deployMessage && (
+        <div style={{
+          marginBottom: 16, padding: "12px 16px", borderRadius: 12,
+          background: deploying ? "rgba(76,110,245,0.08)" : deployMessage.includes("Deployed") ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+          border: `1px solid ${deploying ? "rgba(76,110,245,0.2)" : deployMessage.includes("Deployed") ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          {deploying && (
+            <div style={{
+              width: 16, height: 16, border: "2px solid #4c6ef5",
+              borderTopColor: "transparent", borderRadius: "50%",
+              animation: "spin 0.6s linear infinite", flexShrink: 0,
+            }} />
+          )}
+          <p style={{
+            fontSize: 13, margin: 0,
+            color: deploying ? "#93a4f5" : deployMessage.includes("Deployed") ? "#4ade80" : "#f87171",
+          }}>{deployMessage}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>

@@ -61,6 +61,7 @@ export default function OnboardingPage() {
   const [domainInput, setDomainInput] = useState("");
   const [logoMode, setLogoMode] = useState<"text" | "upload" | null>(null);
   const [stripeConnecting, setStripeConnecting] = useState(false);
+  const [showStripeModal, setShowStripeModal] = useState(false);
 
   // Fetch business data
   useEffect(() => {
@@ -158,6 +159,7 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (res.ok && data.accountId) {
         setBusiness((prev) => prev ? { ...prev, stripe_account_id: data.accountId } : prev);
+        return true;
       } else if (!data.alreadyConnected) {
         console.error("[stripe] Connect failed:", data.error || res.status);
         alert(data.error || "Failed to connect Stripe. Please try again.");
@@ -167,6 +169,7 @@ export default function OnboardingPage() {
       alert("Failed to connect to Stripe. Please try again.");
     }
     setStripeConnecting(false);
+    return false;
   }
 
   if (loading) {
@@ -621,13 +624,38 @@ export default function OnboardingPage() {
                   </div>
 
                   {business.stripe_account_id ? (
-                    <StripeOnboardingEmbed businessId={businessId} onComplete={async () => {
-                      await saveStep("payments", { stripeAccountId: business.stripe_account_id });
-                      nextStep();
-                    }} />
+                    <>
+                      <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e" }} />
+                        <div>
+                          <p className="text-emerald-400 text-sm font-medium">Stripe account created</p>
+                          <p className="text-zinc-500 text-xs">Complete onboarding to start accepting payments</p>
+                        </div>
+                        <button
+                          onClick={() => setShowStripeModal(true)}
+                          className="ml-auto px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5146e5] text-white text-sm font-medium transition-colors"
+                        >
+                          Continue Setup
+                        </button>
+                      </div>
+                      {showStripeModal && (
+                        <StripeOnboardingModal
+                          businessId={businessId}
+                          onComplete={async () => {
+                            setShowStripeModal(false);
+                            await saveStep("payments", { stripeAccountId: business.stripe_account_id });
+                            nextStep();
+                          }}
+                          onClose={() => setShowStripeModal(false)}
+                        />
+                      )}
+                    </>
                   ) : (
                     <button
-                      onClick={connectStripe}
+                      onClick={async () => {
+                        const ok = await connectStripe();
+                        if (ok) setShowStripeModal(true);
+                      }}
                       disabled={stripeConnecting}
                       className="w-full p-5 rounded-xl border border-white/10 bg-surface/50 hover:border-brand-600/40 transition-all text-left"
                     >
@@ -755,8 +783,7 @@ function StepActions({
   );
 }
 
-function StripeOnboardingEmbed({ businessId, onComplete }: { businessId: string; onComplete: () => void }) {
-  // Dynamic import ConnectAccountOnboarding at render time
+function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId: string; onComplete: () => void; onClose: () => void }) {
   const [OnboardingComponent, setOnboardingComponent] = useState<React.ComponentType<{ onExit: () => void }> | null>(null);
 
   useEffect(() => {
@@ -765,19 +792,73 @@ function StripeOnboardingEmbed({ businessId, onComplete }: { businessId: string;
     });
   }, []);
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   return (
-    <StripeConnectProvider businessId={businessId}>
-      <div className="rounded-xl border border-white/5 bg-surface/50 overflow-hidden" style={{ minHeight: 400 }}>
-        {OnboardingComponent ? (
-          <OnboardingComponent onExit={onComplete} />
-        ) : (
-          <div style={{ padding: 40, textAlign: "center" }}>
-            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-zinc-500 text-sm mt-3">Loading Stripe onboarding...</p>
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        background: "#111118", borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.08)",
+        width: "100%", maxWidth: 600, maxHeight: "90vh",
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: "rgba(99,91,255,0.12)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#635bff", fontWeight: 700, fontSize: 14,
+            }}>S</div>
+            <span style={{ color: "#e4e4e7", fontWeight: 600, fontSize: 15 }}>Set Up Stripe</span>
           </div>
-        )}
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,0.06)", border: "none",
+              borderRadius: 8, width: 32, height: 32,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#a1a1aa", cursor: "pointer", fontSize: 18,
+            }}
+          >&times;</button>
+        </div>
+
+        {/* Stripe embedded onboarding */}
+        <div style={{ flex: 1, overflow: "auto", padding: "0 4px" }}>
+          <StripeConnectProvider businessId={businessId}>
+            {OnboardingComponent ? (
+              <OnboardingComponent onExit={onComplete} />
+            ) : (
+              <div style={{ padding: 60, textAlign: "center" }}>
+                <div style={{
+                  width: 24, height: 24, border: "2px solid #4c6ef5",
+                  borderTopColor: "transparent", borderRadius: "50%",
+                  animation: "spin 0.6s linear infinite", margin: "0 auto",
+                }} />
+                <p style={{ color: "#71717a", fontSize: 13, marginTop: 12 }}>Loading Stripe onboarding...</p>
+              </div>
+            )}
+          </StripeConnectProvider>
+        </div>
       </div>
-    </StripeConnectProvider>
+    </div>
   );
 }
 
