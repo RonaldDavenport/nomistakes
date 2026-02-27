@@ -45,7 +45,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
           </h1>
           <p style={{
             fontSize: "clamp(1rem, 2.5vw, 1.125rem)",
-            color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 32
+            color: "var(--muted)", lineHeight: 1.6, marginBottom: 32
           }}>
             {hero.subheadline || site.tagline}
           </p>
@@ -61,7 +61,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
       </section>
 
       {/* Trust bar */}
-      <section style={{ padding: "40px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
+      <section style={{ padding: "40px 20px", borderTop: "1px solid var(--border)", textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", gap: "clamp(24px, 5vw, 48px)", flexWrap: "wrap" }}>
           {[
             { label: "Trusted by customers", value: "500+" },
@@ -70,7 +70,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
           ].map((stat) => (
             <div key={stat.label} style={{ textAlign: "center" }}>
               <p style={{ fontSize: "clamp(1.25rem, 3vw, 1.75rem)", fontWeight: 800, color: primary }}>{stat.value}</p>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{stat.label}</p>
+              <p style={{ fontSize: 13, color: "var(--subtle)" }}>{stat.label}</p>
             </div>
           ))}
         </div>
@@ -101,7 +101,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
             <h2 className="section-title" style={{ textAlign: "center" }}>
               {about.title || `About ${site.name}`}
             </h2>
-            <p style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.8, marginBottom: 24 }}>
+            <p style={{ color: "var(--muted)", lineHeight: 1.8, marginBottom: 24 }}>
               {about.text.length > 300 ? about.text.slice(0, 300) + "..." : about.text}
             </p>
             <a href={`/site/${slug}/about`} style={{ color: primary, fontWeight: 600, fontSize: 14 }}>
@@ -124,12 +124,12 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
                       <span key={si} style={{ color: primary, fontSize: 14 }}>{star}</span>
                     ))}
                   </div>
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, lineHeight: 1.6, marginBottom: 16, fontStyle: "italic" }}>
+                  <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 16, fontStyle: "italic" }}>
                     &ldquo;{t.text}&rdquo;
                   </p>
                   <div>
                     <p style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</p>
-                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>{t.role}</p>
+                    <p style={{ color: "var(--subtle)", fontSize: 12 }}>{t.role}</p>
                   </div>
                 </div>
               ))}
@@ -147,7 +147,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
           }}>
             {cta.headline || `Ready to get started with ${site.name}?`}
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>
+          <p style={{ color: "var(--faint)", marginBottom: 32 }}>
             {cta.subheadline || site.tagline}
           </p>
           <a href={`/site/${slug}/products`} className="cta-btn">

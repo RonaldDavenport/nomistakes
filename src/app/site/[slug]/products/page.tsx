@@ -44,7 +44,7 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
           }}>
             {isServices ? "What We Can Do For You" : "Browse Our Collection"}
           </h1>
-          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "var(--faint)", lineHeight: 1.6 }}>
             {isServices
               ? "Professional services tailored to your needs. Quality and results guaranteed."
               : "Carefully curated products designed to deliver real value."}
@@ -113,7 +113,7 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
               {faq.map((item, i) => (
                 <div key={i} className="card">
                   <h3 style={{ marginBottom: 8, fontSize: 15 }}>{item.question}</h3>
-                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, lineHeight: 1.6 }}>{item.answer}</p>
+                  <p style={{ color: "var(--faint)", fontSize: 14, lineHeight: 1.6 }}>{item.answer}</p>
                 </div>
               ))}
             </div>
@@ -130,7 +130,7 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
           }}>
             Have questions?
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 32 }}>
+          <p style={{ color: "var(--faint)", marginBottom: 32 }}>
             We&apos;d love to hear from you. Reach out anytime.
           </p>
           <a href={`/site/${slug}/contact`} className="cta-btn">

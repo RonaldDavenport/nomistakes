@@ -41,7 +41,7 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
           }}>
             Get in Touch
           </h1>
-          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "var(--faint)", lineHeight: 1.6 }}>
             We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
           </p>
         </div>
@@ -56,50 +56,50 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
               <form style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
                   <div>
-                    <label style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Name</label>
+                    <label style={{ display: "block", fontSize: 14, color: "var(--faint)", marginBottom: 6 }}>Name</label>
                     <input
                       type="text"
                       placeholder="Your name"
                       style={{
                         width: "100%", padding: "12px 16px", borderRadius: 10,
-                        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                        background: "var(--card-bg)", border: "1px solid var(--border)",
                         color: "inherit", fontSize: 14, outline: "none"
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Email</label>
+                    <label style={{ display: "block", fontSize: 14, color: "var(--faint)", marginBottom: 6 }}>Email</label>
                     <input
                       type="email"
                       placeholder="you@example.com"
                       style={{
                         width: "100%", padding: "12px 16px", borderRadius: 10,
-                        background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                        background: "var(--card-bg)", border: "1px solid var(--border)",
                         color: "inherit", fontSize: 14, outline: "none"
                       }}
                     />
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Subject</label>
+                  <label style={{ display: "block", fontSize: 14, color: "var(--faint)", marginBottom: 6 }}>Subject</label>
                   <input
                     type="text"
                     placeholder="How can we help?"
                     style={{
                       width: "100%", padding: "12px 16px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                      background: "var(--card-bg)", border: "1px solid var(--border)",
                       color: "inherit", fontSize: 14, outline: "none"
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Message</label>
+                  <label style={{ display: "block", fontSize: 14, color: "var(--faint)", marginBottom: 6 }}>Message</label>
                   <textarea
                     rows={6}
                     placeholder="Tell us more..."
                     style={{
                       width: "100%", padding: "12px 16px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                      background: "var(--card-bg)", border: "1px solid var(--border)",
                       color: "inherit", fontSize: 14, outline: "none", resize: "vertical",
                       fontFamily: "inherit"
                     }}
@@ -130,7 +130,7 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
                     </div>
                     <div>
                       <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Email</p>
-                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>{contact.email}</p>
+                      <p style={{ color: "var(--faint)", fontSize: 14 }}>{contact.email}</p>
                     </div>
                   </div>
                 )}
@@ -146,7 +146,7 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
                     </div>
                     <div>
                       <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Phone</p>
-                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>{contact.phone}</p>
+                      <p style={{ color: "var(--faint)", fontSize: 14 }}>{contact.phone}</p>
                     </div>
                   </div>
                 )}
@@ -162,13 +162,13 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
                     </div>
                     <div>
                       <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>Hours</p>
-                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>{contact.hours}</p>
+                      <p style={{ color: "var(--faint)", fontSize: 14 }}>{contact.hours}</p>
                     </div>
                   </div>
                 )}
                 {!contact.email && !contact.phone && !contact.hours && (
                   <div className="card" style={{ textAlign: "center", padding: 32 }}>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>
+                    <p style={{ color: "var(--faint)", fontSize: 14 }}>
                       Fill out the form above and we&apos;ll get back to you within 24 hours.
                     </p>
                   </div>
