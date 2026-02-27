@@ -128,6 +128,7 @@ export interface Business {
   business_email?: string;
   stripe_account_id?: string;
   deployed_url?: string;
+  video_url?: string;
 }
 
 let _cache: Business | null = null;
