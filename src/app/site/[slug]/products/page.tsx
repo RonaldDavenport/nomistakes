@@ -18,6 +18,7 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
   const site = business as SiteData;
   const colors = site.brand?.colors || {};
   const primary = colors.primary || "#4c6ef5";
+  const accent = colors.accent || "#9775fa";
   const products = site.site_content?.products || [];
   const features = site.site_content?.features || [];
   const faq = site.site_content?.faq || [];
@@ -26,25 +27,25 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
   return (
     <>
       {/* Hero */}
-      <section style={{ padding: "80px 20px 40px", textAlign: "center", position: "relative" }}>
-        <div style={{
-          position: "absolute", width: 400, height: 400, top: -150,
-          left: "50%", transform: "translateX(-50%)",
-          background: `radial-gradient(circle, ${primary}15 0%, transparent 70%)`,
-          pointerEvents: "none"
-        }} />
+      <section style={{ padding: "100px 20px 60px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div className="hero-blob" style={{ width: 400, height: 400, background: primary, top: -200, left: "30%", opacity: 0.15, filter: "blur(100px)" }} />
         <div style={{ maxWidth: 700, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <p style={{ color: primary, fontWeight: 600, fontSize: 14, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+          <p className="reveal" style={{
+            display: "inline-block", padding: "8px 20px", borderRadius: 100,
+            background: `${primary}12`, border: `1px solid ${primary}20`,
+            color: primary, fontWeight: 600, fontSize: 13, marginBottom: 24,
+            textTransform: "uppercase", letterSpacing: "0.08em",
+          }}>
             {isServices ? "Our Services" : "Our Products"}
           </p>
-          <h1 style={{
-            fontSize: "clamp(1.75rem, 4.5vw, 3rem)", fontWeight: 800,
-            lineHeight: 1.1, marginBottom: 16,
+          <h1 className="reveal reveal-delay-1" style={{
+            fontSize: "clamp(2rem, 5vw, 3.25rem)", fontWeight: 800,
+            lineHeight: 1.08, marginBottom: 20,
             fontFamily: "var(--site-heading-font)"
           }}>
             {isServices ? "What We Can Do For You" : "Browse Our Collection"}
           </h1>
-          <p style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "var(--faint)", lineHeight: 1.6 }}>
+          <p className="reveal reveal-delay-2" style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)", color: "var(--faint)", lineHeight: 1.6 }}>
             {isServices
               ? "Professional services tailored to your needs. Quality and results guaranteed."
               : "Carefully curated products designed to deliver real value."}
@@ -52,13 +53,13 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
         </div>
       </section>
 
-      {/* Products / Services grid */}
+      {/* Products grid */}
       {products.length > 0 && (
         <section className="section">
           <div className="section-inner">
             <div className="grid-cards">
               {products.map((p, i) => (
-                <div key={i} className="product-card">
+                <div key={i} className={`reveal product-card reveal-delay-${Math.min(i + 1, 5)}`}>
                   <h3>{p.name}</h3>
                   <p className="price">{p.price}</p>
                   <p>{p.desc}</p>
@@ -83,17 +84,12 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
       {features.length > 0 && (
         <section className="section">
           <div className="section-inner">
-            <h2 className="section-title section-title-center">Why {site.name}?</h2>
+            <h2 className="reveal section-title section-title-center">Why {site.name}?</h2>
             <div className="grid-cards">
               {features.slice(0, 6).map((f, i) => (
-                <div key={i} className="card" style={{ textAlign: "center" }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10, margin: "0 auto 12px",
-                    background: `${primary}15`, border: `1px solid ${primary}20`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, color: primary, fontSize: 16
-                  }}>
-                    {i + 1}
+                <div key={i} className={`reveal glass-card reveal-delay-${Math.min(i + 1, 5)}`} style={{ textAlign: "center" }}>
+                  <div className="feature-icon" style={{ margin: "0 auto 16px" }}>
+                    {["✦", "◆", "▲", "●", "★", "◉"][i % 6]}
                   </div>
                   <h3>{f.title}</h3>
                   <p>{f.desc}</p>
@@ -108,12 +104,12 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
       {faq.length > 0 && (
         <section className="section">
           <div className="section-narrow">
-            <h2 className="section-title section-title-center">Frequently Asked Questions</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <h2 className="reveal section-title section-title-center">Frequently Asked Questions</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {faq.map((item, i) => (
-                <div key={i} className="card">
-                  <h3 style={{ marginBottom: 8, fontSize: 15 }}>{item.question}</h3>
-                  <p style={{ color: "var(--faint)", fontSize: 14, lineHeight: 1.6 }}>{item.answer}</p>
+                <div key={i} className={`reveal faq-item reveal-delay-${Math.min(i + 1, 5)}`}>
+                  <h3 style={{ marginBottom: 10, fontSize: 15, fontWeight: 600, fontFamily: "var(--site-heading-font)" }}>{item.question}</h3>
+                  <p style={{ color: "var(--faint)", fontSize: 14, lineHeight: 1.7 }}>{item.answer}</p>
                 </div>
               ))}
             </div>
@@ -122,20 +118,23 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
       )}
 
       {/* CTA */}
-      <section className="section" style={{ textAlign: "center" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{
-            fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 800,
+      <section className="section" style={{ textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div className="hero-blob" style={{ width: 300, height: 300, background: accent, bottom: -100, right: "20%", opacity: 0.15, filter: "blur(80px)" }} />
+        <div style={{ maxWidth: 600, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <h2 className="reveal" style={{
+            fontSize: "clamp(1.5rem, 4vw, 2.25rem)", fontWeight: 800,
             marginBottom: 16, fontFamily: "var(--site-heading-font)"
           }}>
             Have questions?
           </h2>
-          <p style={{ color: "var(--faint)", marginBottom: 32 }}>
+          <p className="reveal reveal-delay-1" style={{ color: "var(--faint)", marginBottom: 36, lineHeight: 1.6 }}>
             We&apos;d love to hear from you. Reach out anytime.
           </p>
-          <a href={`/site/${slug}/contact`} className="cta-btn">
-            Contact Us
-          </a>
+          <div className="reveal reveal-delay-2">
+            <a href={`/site/${slug}/contact`} className="cta-btn">
+              <span>Contact Us</span>
+            </a>
+          </div>
         </div>
       </section>
     </>

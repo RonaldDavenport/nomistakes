@@ -12,8 +12,6 @@ import {
   COLOR_PRESETS,
   LAYOUT_OPTIONS,
   ONBOARDING_AFFILIATES,
-  SOCIAL_PROOF_STATS,
-  STEP_MOTIVATION,
   type ColorPreset,
 } from "@/lib/onboarding-data";
 import { getTrackedUrl } from "@/lib/affiliates";
@@ -152,15 +150,20 @@ export default function OnboardingPage() {
           businessName: business?.name,
         }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
       }
-    } catch {
-      // silent
+      if (data.alreadyConnected) {
+        alert("Stripe is already connected!");
+      } else {
+        console.error("[stripe] Connect failed:", data.error || res.status);
+        alert(data.error || "Failed to connect Stripe. Please try again.");
+      }
+    } catch (err) {
+      console.error("[stripe] Connect error:", err);
+      alert("Failed to connect to Stripe. Please try again.");
     }
     setStripeConnecting(false);
   }
@@ -202,42 +205,22 @@ export default function OnboardingPage() {
     <>
       <Navbar />
       <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-6xl mx-auto">
 
-          {/* Social proof stats */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {SOCIAL_PROOF_STATS.map((stat) => (
-              <div
-                key={stat.label}
-                className="p-3 rounded-xl border border-white/5 bg-surface/50 text-center"
-              >
-                <p className="text-lg font-bold text-white">{stat.value}</p>
-                <p className="text-[11px] text-zinc-500">{stat.label}</p>
+          {/* Progress — compact */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex gap-1.5">
+                {ONBOARDING_STEPS.map((s, i) => (
+                  <div
+                    key={s.id}
+                    className={`h-1.5 rounded-full transition-colors ${
+                      i < currentStep ? "bg-brand-600 w-6" : i === currentStep ? "bg-brand-400 w-8" : "bg-white/5 w-6"
+                    }`}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-
-          {/* Progress */}
-          <div className="mb-8">
-            <div className="flex justify-between text-xs text-zinc-600 mb-2">
-              <span>Step {currentStep + 1} of {ONBOARDING_STEPS.length}</span>
-              <span>{progressPct}%</span>
-            </div>
-            <div className="h-1 rounded-full bg-white/5">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all duration-500"
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-            <div className="flex gap-1.5 mt-3">
-              {ONBOARDING_STEPS.map((s, i) => (
-                <div
-                  key={s.id}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i < currentStep ? "bg-brand-600" : i === currentStep ? "bg-brand-400" : "bg-white/5"
-                  }`}
-                />
-              ))}
+              <span className="text-xs text-zinc-600">{currentStep + 1}/{ONBOARDING_STEPS.length}</span>
             </div>
           </div>
 
@@ -252,22 +235,14 @@ export default function OnboardingPage() {
           />
 
           {/* Split layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-8">
             {/* Left: Step form */}
             <div>
               {/* Step header */}
-              <div className="mb-6 animate-fadeIn">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">{stepDef.title}</h2>
-                <p className="text-zinc-500">{stepDef.subtitle}</p>
+              <div className="mb-5 animate-fadeIn">
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-1">{stepDef.title}</h2>
+                <p className="text-sm text-zinc-500">{stepDef.subtitle}</p>
               </div>
-
-              {/* Motivation tip */}
-              {STEP_MOTIVATION[stepDef.id] && (
-                <div className="flex items-center gap-2 mb-6 p-3 rounded-lg bg-brand-600/5 border border-brand-600/10 animate-fadeIn">
-                  <span className="text-brand-400 text-sm shrink-0">&#9733;</span>
-                  <p className="text-xs text-brand-300/80">{STEP_MOTIVATION[stepDef.id]}</p>
-                </div>
-              )}
 
               {/* ── STEP 1: Name ── */}
               {stepDef.id === "name" && (
@@ -594,8 +569,12 @@ export default function OnboardingPage() {
                   {calendlyUrl && calendlyUrl.includes("calendly.com") && (
                     <div className="p-4 rounded-xl border border-brand-600/20 bg-brand-600/5">
                       <p className="text-xs text-zinc-500 mb-2">Preview</p>
-                      <div className="h-32 rounded-lg bg-white/5 flex items-center justify-center text-zinc-600 text-sm">
-                        Calendly widget will appear here on your site
+                      <div style={{ borderRadius: 8, overflow: "hidden" }}>
+                        <iframe
+                          src={`${calendlyUrl}?hide_gdpr_banner=1&background_color=0a0a12&text_color=ffffff&primary_color=4c6ef5`}
+                          style={{ width: "100%", height: 400, border: "none" }}
+                          title="Calendly preview"
+                        />
                       </div>
                     </div>
                   )}

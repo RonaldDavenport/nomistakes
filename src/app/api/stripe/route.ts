@@ -89,7 +89,7 @@ async function handleConnect(body: { businessId: string; userId: string }) {
 
   return NextResponse.json({
     accountId: result.accountId,
-    onboardingUrl: result.onboardingUrl,
+    url: result.onboardingUrl,
   });
 }
 

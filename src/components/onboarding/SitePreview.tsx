@@ -34,13 +34,13 @@ export default function SitePreview({
   const previewContent = (
     <div
       style={{
-        width: "286%", // 1 / 0.35
-        transform: "scale(0.35)",
+        width: "200%", // 1 / 0.5
+        transform: "scale(0.5)",
         transformOrigin: "top left",
         background: bg,
         color: tx,
         fontFamily: "Inter, system-ui, sans-serif",
-        minHeight: 1400,
+        minHeight: 1000,
         transition: "background 0.4s, color 0.4s",
       }}
     >
