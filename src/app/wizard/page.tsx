@@ -185,7 +185,7 @@ export default function WizardPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-24 pb-16 px-6">
+      <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
 
           {/* Progress bar */}
@@ -346,12 +346,12 @@ export default function WizardPage() {
                     className="text-left p-6 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/40 hover:shadow-[0_0_40px_rgba(76,110,245,0.08)] transition-all animate-fadeIn"
                     style={{ animationDelay: `${i * 150}ms` }}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{c.name}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4 mb-3">
+                      <div className="min-w-0">
+                        <h3 className="text-lg sm:text-xl font-bold text-white">{c.name}</h3>
                         <p className="text-brand-400 text-sm font-medium">{c.tagline}</p>
                       </div>
-                      <span className="shrink-0 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="shrink-0 self-start px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {c.revenue}
                       </span>
                     </div>
