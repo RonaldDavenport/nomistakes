@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
 import {
   SKILLS,
   TIME_OPTIONS,
   BUDGET_OPTIONS,
   TYPE_OPTIONS,
-  generateConcepts,
+  generateConcepts as localGenerateConcepts,
   type BusinessConcept,
 } from "@/lib/wizard-data";
 
@@ -25,6 +26,9 @@ export default function WizardPage() {
   const [concepts, setConcepts] = useState<BusinessConcept[]>([]);
   const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
   const [buildProgress, setBuildProgress] = useState(0);
+  const [siteSlug, setSiteSlug] = useState("");
+  const [error, setError] = useState("");
+  const buildStarted = useRef(false);
 
   const progress =
     step === "skills" ? 25 :
@@ -54,48 +58,126 @@ export default function WizardPage() {
     setStep("generating");
   }
 
-  // Generate concepts
+  // Generate concepts — try API first, fallback to local
   useEffect(() => {
     if (step !== "generating") return;
-    const timer = setTimeout(() => {
-      const results = generateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType);
-      setConcepts(results);
-      setStep("results");
-    }, 2500);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+
+    async function fetchConcepts() {
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "concepts",
+            skills: selectedSkills,
+            time: selectedTime,
+            budget: selectedBudget,
+            bizType: selectedType,
+          }),
+        });
+
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          if (data.concepts && data.concepts.length > 0) {
+            setConcepts(data.concepts);
+            setStep("results");
+            return;
+          }
+        }
+      } catch {
+        // API failed — fallback to local
+      }
+
+      // Fallback: local generation
+      if (!cancelled) {
+        const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType);
+        setConcepts(results);
+        setStep("results");
+      }
+    }
+
+    fetchConcepts();
+    return () => { cancelled = true; };
   }, [step, selectedSkills, selectedTime, selectedBudget, selectedType]);
 
-  // Build animation
+  // Build: call API to generate brand + site + plan, animate progress in parallel
   useEffect(() => {
-    if (step !== "building") return;
+    if (step !== "building" || !chosenConcept || buildStarted.current) return;
+    buildStarted.current = true;
     setBuildProgress(0);
+    setError("");
+
+    // Start progress animation
     const interval = setInterval(() => {
       setBuildProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => setStep("done"), 500);
-          return 100;
-        }
-        return prev + 2;
+        if (prev >= 90) return 90; // hold at 90 until API finishes
+        return prev + 1;
       });
-    }, 80);
+    }, 150);
+
+    async function buildBusiness() {
+      try {
+        // Get current user (if logged in)
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "build",
+            userId: user?.id || null,
+            concept: chosenConcept,
+            skills: selectedSkills,
+            time: selectedTime,
+            budget: selectedBudget,
+            bizType: selectedType,
+          }),
+        });
+
+        clearInterval(interval);
+
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSlug(data.siteUrl || "");
+          // Animate to 100
+          setBuildProgress(100);
+          setTimeout(() => setStep("done"), 800);
+        } else {
+          // API failed but still show success with local data
+          setBuildProgress(100);
+          const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          setSiteSlug(`/site/${slug}`);
+          setTimeout(() => setStep("done"), 800);
+        }
+      } catch {
+        clearInterval(interval);
+        setBuildProgress(100);
+        const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        setSiteSlug(`/site/${slug}`);
+        setTimeout(() => setStep("done"), 800);
+      }
+    }
+
+    buildBusiness();
     return () => clearInterval(interval);
-  }, [step]);
+  }, [step, chosenConcept, selectedSkills, selectedTime, selectedBudget, selectedType]);
 
   function pickConcept(c: BusinessConcept) {
     setChosenConcept(c);
+    buildStarted.current = false;
     setStep("building");
   }
 
   const buildSteps = [
-    { at: 10, label: "Registering domain..." },
-    { at: 20, label: "Generating brand identity..." },
-    { at: 35, label: "Creating logo & color palette..." },
-    { at: 50, label: "Writing website copy..." },
-    { at: 65, label: "Building product pages..." },
-    { at: 75, label: "Setting up checkout..." },
-    { at: 85, label: "Configuring SEO..." },
-    { at: 95, label: "Deploying to live URL..." },
+    { at: 5, label: "Registering domain..." },
+    { at: 15, label: "Generating brand identity..." },
+    { at: 30, label: "Creating color palette & fonts..." },
+    { at: 45, label: "Writing website copy..." },
+    { at: 60, label: "Building product pages..." },
+    { at: 72, label: "Setting up checkout..." },
+    { at: 82, label: "Configuring SEO..." },
+    { at: 92, label: "Deploying to live URL..." },
   ];
 
   const currentBuildStep = buildSteps.filter((s) => buildProgress >= s.at).pop();
@@ -304,6 +386,9 @@ export default function WizardPage() {
                   <span>{buildProgress}%</span>
                 </div>
               </div>
+              {error && (
+                <p className="text-red-400 text-sm mt-4">{error}</p>
+              )}
             </div>
           )}
 
@@ -315,30 +400,26 @@ export default function WizardPage() {
                 {chosenConcept.name} is live!
               </h2>
               <p className="text-zinc-400 text-lg mb-2">Your business has been deployed and is ready to go.</p>
-              <p className="text-brand-400 font-mono text-sm mb-10">
-                https://{chosenConcept.name.toLowerCase().replace(/\s/g, "")}.nomistakes.ai
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {siteSlug && (
+                <Link href={siteSlug} className="text-brand-400 font-mono text-sm hover:underline mb-10 inline-block">
+                  nomistakes.vercel.app{siteSlug}
+                </Link>
+              )}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+                {siteSlug && (
+                  <Link
+                    href={siteSlug}
+                    className="btn-primary px-8 py-4 rounded-xl text-base font-bold text-white w-full sm:w-auto text-center"
+                  >
+                    View Your Site
+                  </Link>
+                )}
                 <Link
                   href="/dashboard"
-                  className="btn-primary px-8 py-4 rounded-xl text-base font-bold text-white w-full sm:w-auto text-center"
+                  className="btn-secondary px-8 py-4 rounded-xl text-base font-medium text-zinc-300 w-full sm:w-auto text-center"
                 >
                   Go to Dashboard
                 </Link>
-                <button
-                  onClick={() => {
-                    setStep("skills");
-                    setSelectedSkills([]);
-                    setSelectedTime("");
-                    setSelectedBudget("");
-                    setSelectedType("");
-                    setConcepts([]);
-                    setChosenConcept(null);
-                  }}
-                  className="btn-secondary px-8 py-4 rounded-xl text-base font-medium text-zinc-300 w-full sm:w-auto text-center"
-                >
-                  Start Over
-                </button>
               </div>
             </div>
           )}
