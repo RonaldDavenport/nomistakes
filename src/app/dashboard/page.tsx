@@ -14,6 +14,8 @@ interface Business {
   revenue_estimate: string;
   audience: string;
   live_url: string;
+  deployed_url: string;
+  custom_domain: string;
   created_at: string;
   brand: Record<string, unknown>;
   site_content: Record<string, unknown>;
@@ -23,6 +25,8 @@ export default function DashboardPage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [deploying, setDeploying] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -38,6 +42,7 @@ export default function DashboardPage() {
         .eq("id", user.id)
         .single();
       setUserName(profile?.full_name || user.email?.split("@")[0] || "there");
+      setUserId(user.id);
 
       const { data } = await supabase
         .from("businesses")
@@ -51,6 +56,34 @@ export default function DashboardPage() {
 
     load();
   }, []);
+
+  async function deployBusiness(biz: Business) {
+    setDeploying(biz.id);
+    try {
+      const res = await fetch("/api/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId: biz.id, userId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setBusinesses((prev) =>
+          prev.map((b) =>
+            b.id === biz.id ? { ...b, deployed_url: data.url, status: "live" } : b
+          )
+        );
+      }
+    } catch {
+      // Deploy failed silently
+    }
+    setDeploying(null);
+  }
+
+  function getSiteUrl(biz: Business): string {
+    if (biz.custom_domain) return `https://${biz.custom_domain}`;
+    if (biz.deployed_url) return biz.deployed_url;
+    return `/site/${biz.slug}`;
+  }
 
   if (loading) {
     return (
@@ -118,6 +151,11 @@ export default function DashboardPage() {
                     <span>Revenue: {biz.revenue_estimate}</span>
                     <span>Created: {new Date(biz.created_at).toLocaleDateString()}</span>
                   </div>
+                  {(biz.deployed_url || biz.custom_domain) && (
+                    <p className="text-brand-400 font-mono text-xs mt-2">
+                      {biz.custom_domain ? biz.custom_domain : biz.deployed_url}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto shrink-0">
                   <Link
@@ -126,14 +164,23 @@ export default function DashboardPage() {
                   >
                     Edit Site
                   </Link>
-                  {biz.live_url && (
-                    <Link
-                      href={biz.live_url}
+                  {!biz.deployed_url ? (
+                    <button
+                      onClick={() => deployBusiness(biz)}
+                      disabled={deploying === biz.id}
+                      className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center flex-1 sm:flex-initial"
+                    >
+                      {deploying === biz.id ? "Deploying..." : "Deploy"}
+                    </button>
+                  ) : (
+                    <a
+                      href={getSiteUrl(biz)}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center flex-1 sm:flex-initial"
                     >
                       View Site
-                    </Link>
+                    </a>
                   )}
                 </div>
               </div>

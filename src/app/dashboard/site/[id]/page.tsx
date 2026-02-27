@@ -12,6 +12,8 @@ interface Business {
   tagline: string;
   type: string;
   status: string;
+  deployed_url: string;
+  custom_domain: string;
   brand: {
     colors?: { primary?: string; secondary?: string; accent?: string; background?: string; text?: string };
     fonts?: { heading?: string; body?: string };
@@ -39,6 +41,10 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
   const [saved, setSaved] = useState(false);
   const [tab, setTab] = useState<Tab>("content");
   const [bizId, setBizId] = useState("");
+  const [deploying, setDeploying] = useState(false);
+  const [domainInput, setDomainInput] = useState("");
+  const [domainStatus, setDomainStatus] = useState<string | null>(null);
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -50,6 +56,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
   async function loadBusiness(id: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = "/auth/login"; return; }
+    setUserId(user.id);
 
     const { data } = await supabase
       .from("businesses")
@@ -60,7 +67,52 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
 
     if (!data) { router.push("/dashboard"); return; }
     setBusiness(data as Business);
+    setDomainInput(data.custom_domain || "");
     setLoading(false);
+  }
+
+  async function deployToVercel() {
+    if (!business) return;
+    setDeploying(true);
+    try {
+      const res = await fetch("/api/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId: business.id, userId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setBusiness({ ...business, deployed_url: data.url, status: "live" });
+      }
+    } catch {
+      // silently fail
+    }
+    setDeploying(false);
+  }
+
+  async function connectDomain() {
+    if (!domainInput.trim() || !business) return;
+    setDomainStatus("connecting");
+    try {
+      const res = await fetch("/api/domain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessId: business.id,
+          domain: domainInput.trim(),
+          userId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBusiness({ ...business, custom_domain: domainInput.trim() });
+        setDomainStatus(data.configured ? "connected" : "pending-dns");
+      } else {
+        setDomainStatus("error");
+      }
+    } catch {
+      setDomainStatus("error");
+    }
   }
 
   async function save() {
@@ -153,13 +205,24 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
           <p className="text-zinc-500 text-sm">{business.tagline}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            href={`/site/${business.slug}`}
-            target="_blank"
-            className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-zinc-300"
-          >
-            Preview Site
-          </Link>
+          {business.deployed_url ? (
+            <a
+              href={business.custom_domain ? `https://${business.custom_domain}` : business.deployed_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-zinc-300"
+            >
+              View Live Site
+            </a>
+          ) : (
+            <button
+              onClick={deployToVercel}
+              disabled={deploying}
+              className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-zinc-300"
+            >
+              {deploying ? "Deploying..." : "Deploy Site"}
+            </button>
+          )}
           <button
             onClick={save}
             disabled={saving}
@@ -535,19 +598,77 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
           </fieldset>
 
           <fieldset className="space-y-4">
-            <legend className="text-white font-semibold mb-2">Site URL</legend>
-            <div className="p-4 rounded-xl bg-surface-light border border-white/10">
-              <p className="text-sm text-zinc-400 mb-1">Current URL</p>
-              <p className="text-brand-400 font-mono text-sm">
-                nomistakes.vercel.app/site/{business.slug}
-              </p>
-            </div>
+            <legend className="text-white font-semibold mb-2">Deployment</legend>
+            {business.deployed_url ? (
+              <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                <p className="text-sm text-emerald-400 font-medium mb-1">Deployed</p>
+                <a
+                  href={business.deployed_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-400 font-mono text-sm hover:underline"
+                >
+                  {business.deployed_url}
+                </a>
+                <button
+                  onClick={deployToVercel}
+                  disabled={deploying}
+                  className="mt-3 btn-secondary px-4 py-2 rounded-lg text-xs font-semibold text-zinc-300 block"
+                >
+                  {deploying ? "Redeploying..." : "Redeploy"}
+                </button>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-surface-light border border-white/10">
+                <p className="text-sm text-zinc-400 mb-1">Not yet deployed</p>
+                <p className="text-xs text-zinc-600 mb-3">
+                  Deploy this site to get its own URL. Requires VERCEL_TOKEN to be configured.
+                </p>
+                <button
+                  onClick={deployToVercel}
+                  disabled={deploying}
+                  className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white"
+                >
+                  {deploying ? "Deploying..." : "Deploy to Vercel"}
+                </button>
+              </div>
+            )}
+          </fieldset>
+
+          <fieldset className="space-y-4">
+            <legend className="text-white font-semibold mb-2">Custom Domain</legend>
             <div className="p-4 rounded-xl border border-brand-600/20 bg-brand-600/5">
-              <p className="text-sm text-white font-medium mb-1">Custom Domain</p>
-              <p className="text-xs text-zinc-500 mb-3">Connect your own domain to this site. Available on Starter plan and above.</p>
-              <button className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white">
-                Connect Domain
-              </button>
+              <p className="text-sm text-white font-medium mb-1">Connect your own domain</p>
+              <p className="text-xs text-zinc-500 mb-3">
+                Point your domain&apos;s DNS to Vercel, then enter it below.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={domainInput}
+                  onChange={(e) => setDomainInput(e.target.value)}
+                  placeholder="mybusiness.com"
+                  className="flex-1 px-4 py-2 rounded-lg bg-surface-light border border-white/10 text-white text-sm focus:outline-none focus:border-brand-500 transition"
+                />
+                <button
+                  onClick={connectDomain}
+                  disabled={!domainInput.trim() || domainStatus === "connecting"}
+                  className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white"
+                >
+                  {domainStatus === "connecting" ? "..." : "Connect"}
+                </button>
+              </div>
+              {domainStatus === "connected" && (
+                <p className="text-emerald-400 text-xs mt-2">Domain connected and verified.</p>
+              )}
+              {domainStatus === "pending-dns" && (
+                <p className="text-amber-400 text-xs mt-2">
+                  Domain added. Point your DNS CNAME to <code className="bg-surface-light px-1 rounded">cname.vercel-dns.com</code> to activate.
+                </p>
+              )}
+              {domainStatus === "error" && (
+                <p className="text-red-400 text-xs mt-2">Failed to connect domain. Make sure deployment is configured.</p>
+              )}
             </div>
           </fieldset>
         </div>

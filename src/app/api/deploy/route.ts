@@ -64,6 +64,7 @@ export async function POST(req: Request) {
     await db
       .from("businesses")
       .update({
+        deployed_url: result.url,
         live_url: result.url,
         status: "live",
       })

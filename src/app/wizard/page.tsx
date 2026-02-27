@@ -27,6 +27,7 @@ export default function WizardPage() {
   const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
   const [buildProgress, setBuildProgress] = useState(0);
   const [siteSlug, setSiteSlug] = useState("");
+  const [deployedUrl, setDeployedUrl] = useState("");
   const [error, setError] = useState("");
   const buildStarted = useRef(false);
 
@@ -139,12 +140,35 @@ export default function WizardPage() {
 
         if (res.ok) {
           const data = await res.json();
-          setSiteSlug(data.siteUrl || "");
-          // Animate to 100
+          const slug = data.siteUrl || "";
+          setSiteSlug(slug);
+
+          // Auto-deploy to Vercel if possible
+          if (data.businessId) {
+            setBuildProgress(92);
+            try {
+              const deployRes = await fetch("/api/deploy", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  businessId: data.businessId,
+                  userId: user?.id || null,
+                }),
+              });
+              if (deployRes.ok) {
+                const deployData = await deployRes.json();
+                if (deployData.url) {
+                  setDeployedUrl(deployData.url);
+                }
+              }
+            } catch {
+              // Deploy failed — site still available as preview
+            }
+          }
+
           setBuildProgress(100);
           setTimeout(() => setStep("done"), 800);
         } else {
-          // API failed but still show success with local data
           setBuildProgress(100);
           const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
           setSiteSlug(`/site/${slug}`);
@@ -399,20 +423,35 @@ export default function WizardPage() {
               <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
                 {chosenConcept.name} is live!
               </h2>
-              <p className="text-zinc-400 text-lg mb-2">Your business has been deployed and is ready to go.</p>
-              {siteSlug && (
+              <p className="text-zinc-400 text-lg mb-2">
+                {deployedUrl
+                  ? "Your site has been deployed to its own URL."
+                  : "Your business has been created and is ready to go."}
+              </p>
+              {deployedUrl ? (
+                <a
+                  href={deployedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand-400 font-mono text-sm hover:underline mb-10 inline-block"
+                >
+                  {deployedUrl}
+                </a>
+              ) : siteSlug ? (
                 <Link href={siteSlug} className="text-brand-400 font-mono text-sm hover:underline mb-10 inline-block">
-                  nomistakes.vercel.app{siteSlug}
+                  Preview: {siteSlug}
                 </Link>
-              )}
+              ) : null}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                {siteSlug && (
-                  <Link
-                    href={siteSlug}
+                {(deployedUrl || siteSlug) && (
+                  <a
+                    href={deployedUrl || siteSlug}
+                    target={deployedUrl ? "_blank" : undefined}
+                    rel={deployedUrl ? "noopener noreferrer" : undefined}
                     className="btn-primary px-8 py-4 rounded-xl text-base font-bold text-white w-full sm:w-auto text-center"
                   >
                     View Your Site
-                  </Link>
+                  </a>
                 )}
                 <Link
                   href="/dashboard"
