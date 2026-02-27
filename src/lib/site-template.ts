@@ -41,14 +41,15 @@ export function generateSiteFiles(config: BusinessConfig): { file: string; data:
   const primary = config.brand.colors?.primary || "#6366f1";
   const accent = config.brand.colors?.accent || "#a78bfa";
   const bg = config.brand.colors?.background || "#09090b";
-  const textColor = config.brand.colors?.text || "#fafafa";
   const headingFont = config.brand.fonts?.heading || "Inter";
   const bodyFont = config.brand.fonts?.body || "Inter";
   const isServices = config.type === "services";
 
-  // Adaptive light/dark — compute text/border base RGB from background luminance
+  // Adaptive light/dark — compute ALL colors from background luminance
+  // NEVER trust AI-generated text color — compute it to guarantee contrast
   const isLight = isLightColor(bg);
-  const tb = isLight ? "0,0,0" : "255,255,255"; // text & border base
+  const textColor = isLight ? "#111111" : "#fafafa";
+  const tb = isLight ? "0,0,0" : "255,255,255"; // text & border base for rgba()
   const shadowAlpha = isLight ? "0.08" : "0.3";
   const ctaText = isLightColor(primary) ? "#111" : "#fff";
 
