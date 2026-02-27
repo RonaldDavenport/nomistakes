@@ -96,22 +96,26 @@ export async function generateSiteContent(
     `Write all website content for this business:
 - Name: ${businessName}
 - Tagline: ${tagline}
-- Type: ${type}
+- Type: ${type} (products, digital, or services)
 - Description: ${desc}
 - Target audience: ${audience}
 - Brand tone: ${JSON.stringify(brand)}
 
 Return a JSON object with:
 - hero: { headline: string (powerful, under 8 words), subheadline: string (1 sentence value prop) }
-- about: { title: string, text: string (2-3 paragraphs about the business) }
-- features: array of 6 objects { title: string, desc: string (1 sentence) }
-- products: array of 3 objects { name: string, desc: string, price: string } (if applicable)
-- testimonials: array of 3 objects { name: string, role: string, text: string (1-2 sentences) }
+- about: { title: string, text: string (2-3 paragraphs about the business story and approach), mission: string (1 sentence mission statement) }
+- features: array of 6 objects { title: string, desc: string (1-2 sentences) }
+- products: array of 3-5 objects { name: string, desc: string (2-3 sentences), price: string (realistic price with $ sign), features: array of 3-4 strings listing what's included }
+- testimonials: array of 3 objects { name: string (realistic full name), role: string (job title or description), text: string (1-2 natural sentences), rating: 5 }
 - cta: { headline: string, subheadline: string, button_text: string }
 - seo: { title: string (under 60 chars), description: string (under 160 chars) }
+- contact: { email: string (realistic contact email using the business name), phone: string (format: (555) 123-4567), hours: string (e.g. "Mon-Fri 9AM-6PM EST") }
+- faq: array of 4-5 objects { question: string, answer: string (2-3 sentences) }
+
+Make each product/service feel premium and distinct. Make testimonials sound like real people. FAQ should address common objections and build trust.
 
 Return ONLY valid JSON, no other text.`,
-    "You are a conversion-focused copywriter AI. Write compelling website copy that sells. Use power words, address pain points, and create urgency. Keep it concise and scannable. Make testimonials sound natural and believable.",
+    "You are a conversion-focused copywriter AI. Write compelling website copy that sells. Use power words, address pain points, and create urgency. Keep it concise and scannable. Make testimonials sound natural and believable. Products should have realistic pricing and detailed feature lists. Each piece of content should feel unique and tailored to this specific business — avoid generic template language.",
     "claude-sonnet-4-5-20250929"
   );
 
