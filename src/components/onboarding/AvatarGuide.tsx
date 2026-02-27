@@ -109,17 +109,31 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
   const hasVideo = !!script.videoUrl;
 
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 50 }}>
+    <>
+      <style>{`
+        .avatar-guide { position: fixed; bottom: 24px; right: 24px; z-index: 50; }
+        .avatar-bubble { position: absolute; right: 0; }
+        .avatar-bubble-arrow { right: 40px; }
+        .avatar-video { width: 120px; height: 120px; }
+        .avatar-fallback { width: 80px; height: 80px; }
+        @media (max-width: 1023px) {
+          .avatar-guide { right: auto; left: 16px; bottom: 16px; }
+          .avatar-bubble { right: auto; left: 0; }
+          .avatar-bubble-arrow { right: auto; left: 28px; }
+          .avatar-video { width: 72px; height: 72px; }
+          .avatar-fallback { width: 56px; height: 56px; }
+        }
+      `}</style>
+      <div className="avatar-guide">
       {/* Speech bubble */}
       {showBubble && !dismissed && (
         <div
-          className="animate-bubbleIn"
+          className="animate-bubbleIn avatar-bubble"
           style={{
             position: "absolute",
             bottom: hasVideo ? 140 : 84,
-            right: 0,
             width: 300,
-            maxWidth: "calc(100vw - 64px)",
+            maxWidth: "calc(100vw - 48px)",
             background: "#1a1a2e",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 16,
@@ -172,10 +186,10 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
 
           {/* Bubble arrow */}
           <div
+            className="avatar-bubble-arrow"
             style={{
               position: "absolute",
               bottom: -6,
-              right: 40,
               width: 12,
               height: 12,
               background: "#1a1a2e",
@@ -206,11 +220,10 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
         {hasVideo ? (
           <video
             ref={videoRef}
+            className="avatar-video"
             playsInline
             onEnded={handleVideoEnd}
             style={{
-              width: 120,
-              height: 120,
               borderRadius: "50%",
               objectFit: "cover",
               border: `3px solid ${isPlaying ? "#4c6ef5" : "rgba(255,255,255,0.1)"}`,
@@ -220,9 +233,8 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
         ) : (
           /* Fallback: gradient circle with initial */
           <div
+            className="avatar-fallback"
             style={{
-              width: 80,
-              height: 80,
               borderRadius: "50%",
               background: "linear-gradient(135deg, #4c6ef5, #7048e8)",
               display: "flex",
@@ -265,5 +277,6 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
         </button>
       </div>
     </div>
+    </>
   );
 }

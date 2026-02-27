@@ -24,7 +24,6 @@ export async function createConnectedAccount(
   email: string
 ): Promise<{ accountId: string }> {
   const account = await getStripe().accounts.create({
-    business_type: "individual",
     business_profile: {
       name: businessName,
     },
@@ -39,7 +38,7 @@ export async function createConnectedAccount(
       losses: { payments: "application" },
       requirement_collection: "stripe",
     },
-  });
+  } as Stripe.AccountCreateParams);
 
   return { accountId: account.id };
 }

@@ -52,8 +52,13 @@ async function handleConnect(body: { businessId: string; userId: string }) {
     .eq("id", businessId)
     .single();
 
-  if (!business || (userId && business.user_id !== userId)) {
+  if (!business) {
     return NextResponse.json({ error: "Business not found" }, { status: 404 });
+  }
+
+  // Only enforce ownership if business is already claimed
+  if (userId && business.user_id && business.user_id !== userId) {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
   // Check if already connected
@@ -66,18 +71,24 @@ async function handleConnect(body: { businessId: string; userId: string }) {
         status,
       });
     }
+    // Account exists but onboarding not complete — return it so embedded component can continue
+    return NextResponse.json({ accountId: business.stripe_account_id });
   }
 
-  // Get user email
-  const { data: profile } = await db
-    .from("profiles")
-    .select("email")
-    .eq("id", business.user_id)
-    .single();
+  // Get user email (try from profiles, fallback to empty)
+  let email = "";
+  if (business.user_id) {
+    const { data: profile } = await db
+      .from("profiles")
+      .select("email")
+      .eq("id", business.user_id)
+      .single();
+    email = profile?.email || "";
+  }
 
   const result = await createConnectedAccount(
     business.name,
-    profile?.email || ""
+    email
   );
 
   // Save account ID to business

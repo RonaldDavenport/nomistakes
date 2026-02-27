@@ -82,6 +82,7 @@ export async function deploy(
     headers: headers(),
     body: JSON.stringify({
       name: projectName,
+      target: "production",
       files: files.map((f) => ({
         file: f.file,
         data: Buffer.from(f.data).toString("base64"),
@@ -102,10 +103,12 @@ export async function deploy(
   }
 
   const deployment = await res.json();
+  // Use the stable project URL, not the deployment-specific hash URL
+  const projectUrl = `https://${projectName}.vercel.app`;
   return {
     projectId: deployment.projectId,
     deploymentId: deployment.id,
-    url: `https://${deployment.url}`,
+    url: projectUrl,
     readyState: deployment.readyState,
   };
 }

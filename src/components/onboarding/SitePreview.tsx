@@ -36,13 +36,13 @@ export default function SitePreview({
   const previewContent = (
     <div
       style={{
-        width: "250%",
-        transform: "scale(0.4)",
+        width: "167%",
+        transform: "scale(0.6)",
         transformOrigin: "top left",
         background: bg,
         color: tx,
         fontFamily: "Inter, system-ui, sans-serif",
-        minHeight: 1800,
+        minHeight: 1400,
         transition: "background 0.4s, color 0.4s",
         position: "relative",
         overflow: "hidden",
@@ -228,7 +228,7 @@ export default function SitePreview({
               background: "#111118",
             }}
           >
-            <div style={{ height: 300, overflow: "hidden" }}>
+            <div style={{ height: 380, overflow: "hidden" }}>
               {previewContent}
             </div>
           </div>
