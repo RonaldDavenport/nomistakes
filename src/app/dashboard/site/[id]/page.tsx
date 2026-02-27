@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
+const StripeConnectProvider = dynamic(() => import("@/components/StripeConnectProvider"), { ssr: false });
 
 interface Business {
   id: string;
@@ -14,6 +16,7 @@ interface Business {
   status: string;
   deployed_url: string;
   custom_domain: string;
+  stripe_account_id?: string;
   brand: {
     colors?: { primary?: string; secondary?: string; accent?: string; background?: string; text?: string };
     fonts?: { heading?: string; body?: string };
@@ -31,7 +34,7 @@ interface Business {
   };
 }
 
-type Tab = "content" | "brand" | "products" | "settings";
+type Tab = "content" | "brand" | "products" | "payments" | "settings";
 
 export default function SiteEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -190,6 +193,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
     { id: "content", label: "Content" },
     { id: "brand", label: "Brand" },
     { id: "products", label: business.type === "services" ? "Services" : "Products" },
+    { id: "payments", label: "Payments" },
     { id: "settings", label: "Settings" },
   ];
 
@@ -551,6 +555,41 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
+      {/* Payments tab */}
+      {tab === "payments" && (
+        <div className="space-y-6 animate-fadeIn">
+          {business.stripe_account_id ? (
+            <PaymentsDashboard businessId={business.id} />
+          ) : (
+            <div className="p-8 rounded-xl border border-white/5 bg-surface/50 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-[#635bff]/10 flex items-center justify-center text-[#635bff] font-bold text-2xl mx-auto mb-4">
+                S
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">Connect Stripe to Accept Payments</h3>
+              <p className="text-zinc-500 text-sm mb-6 max-w-md mx-auto">
+                Set up Stripe to accept credit cards, Apple Pay, and more on your site. Takes about 2 minutes.
+              </p>
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/stripe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "connect", businessId: business.id, userId }),
+                  });
+                  const data = await res.json();
+                  if (res.ok && data.accountId) {
+                    setBusiness({ ...business, stripe_account_id: data.accountId });
+                  }
+                }}
+                className="btn-primary px-8 py-3 rounded-xl text-sm font-bold text-white"
+              >
+                Connect Stripe
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Settings tab */}
       {tab === "settings" && (
         <div className="space-y-8 animate-fadeIn">
@@ -674,5 +713,69 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
     </div>
+  );
+}
+
+function PaymentsDashboard({ businessId }: { businessId: string }) {
+  const [components, setComponents] = useState<{
+    ConnectPayments: React.ComponentType | null;
+    ConnectPayouts: React.ComponentType | null;
+    ConnectAccountManagement: React.ComponentType | null;
+    ConnectNotificationBanner: React.ComponentType | null;
+  }>({ ConnectPayments: null, ConnectPayouts: null, ConnectAccountManagement: null, ConnectNotificationBanner: null });
+
+  useEffect(() => {
+    import("@stripe/react-connect-js").then((mod) => {
+      setComponents({
+        ConnectPayments: mod.ConnectPayments,
+        ConnectPayouts: mod.ConnectPayouts,
+        ConnectAccountManagement: mod.ConnectAccountManagement,
+        ConnectNotificationBanner: mod.ConnectNotificationBanner,
+      });
+    });
+  }, []);
+
+  const { ConnectPayments, ConnectPayouts, ConnectAccountManagement, ConnectNotificationBanner } = components;
+
+  return (
+    <StripeConnectProvider businessId={businessId}>
+      <div className="space-y-6">
+        {ConnectNotificationBanner && (
+          <div className="rounded-xl overflow-hidden">
+            <ConnectNotificationBanner />
+          </div>
+        )}
+        {ConnectPayments && (
+          <div>
+            <h3 className="text-white font-semibold mb-3">Payments</h3>
+            <div className="rounded-xl border border-white/5 overflow-hidden" style={{ minHeight: 300 }}>
+              <ConnectPayments />
+            </div>
+          </div>
+        )}
+        {ConnectPayouts && (
+          <div>
+            <h3 className="text-white font-semibold mb-3">Payouts</h3>
+            <div className="rounded-xl border border-white/5 overflow-hidden" style={{ minHeight: 200 }}>
+              <ConnectPayouts />
+            </div>
+          </div>
+        )}
+        {ConnectAccountManagement && (
+          <div>
+            <h3 className="text-white font-semibold mb-3">Account Settings</h3>
+            <div className="rounded-xl border border-white/5 overflow-hidden" style={{ minHeight: 200 }}>
+              <ConnectAccountManagement />
+            </div>
+          </div>
+        )}
+        {!ConnectPayments && (
+          <div style={{ padding: 40, textAlign: "center" }}>
+            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-zinc-500 text-sm mt-3">Loading payment components...</p>
+          </div>
+        )}
+      </div>
+    </StripeConnectProvider>
   );
 }

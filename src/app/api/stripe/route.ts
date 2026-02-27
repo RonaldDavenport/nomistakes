@@ -4,7 +4,6 @@ import {
   createConnectedAccount,
   getAccountStatus,
   createCheckoutSession,
-  getStripeDashboardLink,
   isStripeConfigured,
 } from "@/lib/stripe";
 
@@ -29,7 +28,7 @@ export async function POST(req: Request) {
       case "checkout":
         return handleCheckout(body);
       case "dashboard":
-        return handleDashboard(body);
+        return NextResponse.json({ error: "Use embedded components instead" }, { status: 410 });
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
@@ -89,7 +88,6 @@ async function handleConnect(body: { businessId: string; userId: string }) {
 
   return NextResponse.json({
     accountId: result.accountId,
-    url: result.onboardingUrl,
   });
 }
 
@@ -143,24 +141,3 @@ async function handleCheckout(body: {
   return NextResponse.json(result);
 }
 
-// Get Stripe dashboard link for the business owner
-async function handleDashboard(body: { businessId: string; userId: string }) {
-  const db = createServerClient();
-
-  const { data: business } = await db
-    .from("businesses")
-    .select("stripe_account_id, user_id")
-    .eq("id", body.businessId)
-    .single();
-
-  if (!business?.stripe_account_id) {
-    return NextResponse.json({ error: "No Stripe account" }, { status: 400 });
-  }
-
-  if (body.userId && business.user_id !== body.userId) {
-    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-  }
-
-  const url = await getStripeDashboardLink(business.stripe_account_id);
-  return NextResponse.json({ url });
-}

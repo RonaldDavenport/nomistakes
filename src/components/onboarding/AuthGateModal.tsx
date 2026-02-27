@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 interface AuthGateModalProps {
   businessId: string;
@@ -283,6 +284,18 @@ export default function AuthGateModal({
             {loading ? "Please wait..." : tab === "signup" ? "Create Account" : "Sign In"}
           </button>
         </form>
+
+        {/* Google OAuth divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textTransform: "uppercase" }}>or</span>
+          <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+        </div>
+
+        <GoogleSignInButton
+          redirectTo={`/onboarding/${businessId}`}
+          label={tab === "signup" ? "Sign up with Google" : "Sign in with Google"}
+        />
 
         {/* Skip */}
         <div style={{ textAlign: "center", marginTop: 16 }}>

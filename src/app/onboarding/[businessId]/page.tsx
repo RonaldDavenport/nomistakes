@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import AvatarGuide from "@/components/onboarding/AvatarGuide";
 import SitePreview from "@/components/onboarding/SitePreview";
+const StripeConnectProvider = dynamic(() => import("@/components/StripeConnectProvider"), { ssr: false });
 import { supabase } from "@/lib/supabase";
 import {
   ONBOARDING_STEPS,
@@ -142,23 +144,21 @@ export default function OnboardingPage() {
   async function connectStripe() {
     setStripeConnecting(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const res = await fetch("/api/stripe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "connect",
           businessId,
+          userId: user?.id,
           businessName: business?.name,
         }),
       });
       const data = await res.json();
-      if (res.ok && data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      if (data.alreadyConnected) {
-        alert("Stripe is already connected!");
-      } else {
+      if (res.ok && data.accountId) {
+        setBusiness((prev) => prev ? { ...prev, stripe_account_id: data.accountId } : prev);
+      } else if (!data.alreadyConnected) {
         console.error("[stripe] Connect failed:", data.error || res.status);
         alert(data.error || "Failed to connect Stripe. Please try again.");
       }
@@ -621,17 +621,10 @@ export default function OnboardingPage() {
                   </div>
 
                   {business.stripe_account_id ? (
-                    <div className="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-sm">
-                          &#10003;
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">Stripe Connected</p>
-                          <p className="text-zinc-500 text-sm">You&apos;re ready to accept payments</p>
-                        </div>
-                      </div>
-                    </div>
+                    <StripeOnboardingEmbed businessId={businessId} onComplete={async () => {
+                      await saveStep("payments", { stripeAccountId: business.stripe_account_id });
+                      nextStep();
+                    }} />
                   ) : (
                     <button
                       onClick={connectStripe}
@@ -644,7 +637,7 @@ export default function OnboardingPage() {
                         </div>
                         <div>
                           <p className="text-white font-medium">
-                            {stripeConnecting ? "Connecting..." : "Connect with Stripe"}
+                            {stripeConnecting ? "Connecting..." : "Set Up Stripe"}
                           </p>
                           <p className="text-zinc-500 text-sm">Set up in 2 minutes. No monthly fees.</p>
                         </div>
@@ -759,6 +752,32 @@ function StepActions({
         {saving ? "Saving..." : lastStep ? "Finish Setup" : "Continue"}
       </button>
     </div>
+  );
+}
+
+function StripeOnboardingEmbed({ businessId, onComplete }: { businessId: string; onComplete: () => void }) {
+  // Dynamic import ConnectAccountOnboarding at render time
+  const [OnboardingComponent, setOnboardingComponent] = useState<React.ComponentType<{ onExit: () => void }> | null>(null);
+
+  useEffect(() => {
+    import("@stripe/react-connect-js").then((mod) => {
+      setOnboardingComponent(() => mod.ConnectAccountOnboarding);
+    });
+  }, []);
+
+  return (
+    <StripeConnectProvider businessId={businessId}>
+      <div className="rounded-xl border border-white/5 bg-surface/50 overflow-hidden" style={{ minHeight: 400 }}>
+        {OnboardingComponent ? (
+          <OnboardingComponent onExit={onComplete} />
+        ) : (
+          <div style={{ padding: 40, textAlign: "center" }}>
+            <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-zinc-500 text-sm mt-3">Loading Stripe onboarding...</p>
+          </div>
+        )}
+      </div>
+    </StripeConnectProvider>
   );
 }
 

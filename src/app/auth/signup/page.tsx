@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -93,6 +94,14 @@ export default function SignupPage() {
             {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-white/5" />
+          <span className="text-xs text-zinc-600 uppercase">or</span>
+          <div className="flex-1 h-px bg-white/5" />
+        </div>
+
+        <GoogleSignInButton redirectTo="/wizard" />
 
         <p className="text-center text-sm text-zinc-500 mt-6">
           Already have an account?{" "}

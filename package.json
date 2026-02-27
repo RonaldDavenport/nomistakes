@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
+    "@stripe/connect-js": "^3.3.34",
+    "@stripe/react-connect-js": "^3.3.33",
     "@supabase/supabase-js": "^2.98.0",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^25.3.2",
