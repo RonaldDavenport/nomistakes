@@ -144,34 +144,37 @@ export default function WizardPage() {
 
         if (res.ok) {
           const data = await res.json();
+          const bizId = data.business?.id;
           setSiteSlug(data.siteUrl || "");
-          if (data.business?.id) setBusinessIdResult(data.business.id);
-          // Animate to 100
+          if (bizId) setBusinessIdResult(bizId);
           setBuildProgress(100);
           setTimeout(async () => {
-            if (data.business?.id) {
+            if (bizId) {
               // Check if user is authenticated
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                router.push(`/onboarding/${data.business.id}`);
+              const { data: { user: authUser } } = await supabase.auth.getUser();
+              if (authUser) {
+                router.push(`/onboarding/${bizId}`);
               } else {
                 // Show auth gate to capture email for winbacks
-                setPendingBusinessId(data.business.id);
+                setPendingBusinessId(bizId);
                 setPendingBusinessName(chosenConcept?.name || "your business");
                 setShowAuthGate(true);
               }
             } else {
+              // API returned ok but no business id — show done
               setStep("done");
             }
           }, 800);
         } else {
-          // API failed but still show success with local data
+          // API failed — show done page with local data
+          console.error("[wizard] Build API returned non-ok:", res.status);
           setBuildProgress(100);
           const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
           setSiteSlug(`/site/${slug}`);
           setTimeout(() => setStep("done"), 800);
         }
-      } catch {
+      } catch (err) {
+        console.error("[wizard] Build error:", err);
         clearInterval(interval);
         setBuildProgress(100);
         const slug = chosenConcept!.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
