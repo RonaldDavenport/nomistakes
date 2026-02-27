@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/ads", label: "Ads", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" },
   { href: "/dashboard/analytics", label: "Analytics", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
   { href: "/dashboard/chat", label: "AI Chat", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
+  { href: "/dashboard/tools", label: "Tools", icon: "M11.42 15.17l-5.658-5.658a1 1 0 010-1.414l.354-.354a1 1 0 011.414 0l4.95 4.95 4.95-4.95a1 1 0 011.414 0l.354.354a1 1 0 010 1.414l-5.658 5.658a2 2 0 01-2.828 0z" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
