@@ -1,7 +1,11 @@
 import OpenAI from "openai";
 import { createServerClient } from "./supabase";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  return _openai;
+}
 
 interface ImageSet {
   hero: string;
@@ -60,7 +64,7 @@ export async function generateBusinessImages(
 
     while (retries > 0) {
       try {
-        const response = await openai.images.generate({
+        const response = await getOpenAI().images.generate({
           model: "gpt-image-1",
           prompt,
           n: 1,
