@@ -54,6 +54,58 @@ function aiCoachHint(task: TaskWithStatus): string | null {
   return null;
 }
 
+// Derive a useful action URL from task context
+function getTaskActionUrl(
+  task: TaskWithStatus,
+  businessId: string,
+  business: { deployed_url?: string; custom_domain?: string; slug?: string }
+): { label: string; href: string; external?: boolean } | null {
+  const id = task.id;
+
+  // "Review your live site" → go to the site
+  if (id.includes("review-site")) {
+    const url = business.custom_domain
+      ? `https://${business.custom_domain}`
+      : business.deployed_url || `/site/${business.slug}`;
+    return { label: "Open your site", href: url, external: true };
+  }
+
+  // "Review business plan" → settings
+  if (id.includes("review-plan") || id.includes("review-business")) {
+    return { label: "Open settings", href: `/dashboard/${businessId}/settings` };
+  }
+
+  // Stripe / payments → settings (integrations)
+  if (id.includes("stripe") || id.includes("verify-integrations") || id.includes("connect-payment")) {
+    return { label: "Go to settings", href: `/dashboard/${businessId}/settings` };
+  }
+
+  // Email setup → Google Workspace
+  if (id.includes("setup-email") || id.includes("professional-email")) {
+    return { label: "Google Workspace", href: "https://workspace.google.com/", external: true };
+  }
+
+  // Freelance platforms
+  if (id.includes("platform-profiles")) {
+    return { label: "Open Upwork", href: "https://www.upwork.com/freelancers/", external: true };
+  }
+
+  // LinkedIn tasks
+  if (id.includes("linkedin")) {
+    return { label: "Open LinkedIn", href: "https://www.linkedin.com/", external: true };
+  }
+
+  // AI-capable tasks → chat with pre-filled context
+  if (task.aiCapability === "full" || task.aiCapability === "draft") {
+    return { label: "Generate with AI Coach", href: `/dashboard/${businessId}/chat` };
+  }
+  if (task.aiCapability === "strategy") {
+    return { label: "Ask AI Coach", href: `/dashboard/${businessId}/chat` };
+  }
+
+  return null;
+}
+
 /* ── PhaseStepper ── */
 
 function PhaseStepper({
@@ -151,6 +203,7 @@ function TaskList({
   tasks,
   plan,
   businessId,
+  business,
   updatingTask,
   onComplete,
   onSkip,
@@ -158,6 +211,7 @@ function TaskList({
   tasks: TaskWithStatus[];
   plan: string;
   businessId: string;
+  business: { deployed_url?: string; custom_domain?: string; slug?: string };
   updatingTask: string | null;
   onComplete: (taskId: string) => void;
   onSkip: (taskId: string) => void;
@@ -176,6 +230,7 @@ function TaskList({
         const isUpdating = updatingTask === task.id;
         const isCurrent = task.id === firstPending?.id;
         const hint = isCurrent ? aiCoachHint(task) : null;
+        const actionUrl = isCurrent ? getTaskActionUrl(task, businessId, business) : null;
 
         if (isCompleted || isSkipped) {
           /* ── Compact completed row ── */
@@ -252,8 +307,37 @@ function TaskList({
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="mt-4 flex items-center gap-3">
+                {/* Action link */}
+                {actionUrl && (
+                  <div className="mt-4">
+                    {actionUrl.external ? (
+                      <a
+                        href={actionUrl.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                      >
+                        {actionUrl.label}
+                        <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    ) : (
+                      <Link
+                        href={actionUrl.href}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                      >
+                        {actionUrl.label}
+                        <svg className="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </Link>
+                    )}
+                  </div>
+                )}
+
+                {/* Complete / Skip */}
+                <div className="mt-3 flex items-center gap-3">
                   <button
                     onClick={() => onComplete(task.id)}
                     disabled={isUpdating}
@@ -268,16 +352,6 @@ function TaskList({
                   >
                     Skip
                   </button>
-                  {task.externalUrl && (
-                    <a
-                      href={task.externalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      Open link &rarr;
-                    </a>
-                  )}
                 </div>
               </div>
             </div>
@@ -685,6 +759,7 @@ export default function BusinessHome() {
             tasks={currentPhaseGroup.tasks}
             plan={plan}
             businessId={businessId}
+            business={business}
             updatingTask={updatingTask}
             onComplete={(id) => {
               const task = tasks.find((t) => t.id === id);
