@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen">
       {/* Minimal top bar for non-business pages (overview, account) */}
-      <header className="sticky top-0 z-30 border-b border-white/5 bg-[rgba(10,10,15,0.85)] backdrop-blur-xl px-4 sm:px-6 h-14 flex items-center justify-between">
+      <header data-dashboard-header className="sticky top-0 z-30 border-b border-white/5 bg-[rgba(10,10,15,0.85)] backdrop-blur-xl px-4 sm:px-6 h-14 flex items-center justify-between">
         <Link href="/" className="text-lg font-bold tracking-tight">
           <span className="text-white">No</span>
           <span className="gradient-text">Mistakes</span>

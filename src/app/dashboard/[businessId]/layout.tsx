@@ -86,7 +86,9 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
 
   return (
     <BusinessProvider businessId={businessId}>
-      <div className="flex min-h-screen -mt-14">
+      {/* Hide parent dashboard header — business layout has its own sidebar with logo */}
+      <style>{`[data-dashboard-header] { display: none !important; }`}</style>
+      <div className="flex min-h-screen">
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
