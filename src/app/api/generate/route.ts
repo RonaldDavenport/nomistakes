@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { generateConcepts, generateBrand, generateSiteContent, generateBusinessPlan, generateNames } from "@/lib/claude";
+import { generateBusinessImages } from "@/lib/images";
 
 // POST /api/generate — handles all generation types
 export async function POST(req: Request) {
@@ -24,14 +25,14 @@ export async function POST(req: Request) {
 }
 
 // Generate 3 business concepts from wizard inputs
-async function handleConcepts(body: { skills: string[]; time: string; budget: string; bizType: string }) {
-  const { skills, time, budget, bizType } = body;
+async function handleConcepts(body: { skills: string[]; time: string; budget: string; bizType: string; subtype?: string }) {
+  const { skills, time, budget, bizType, subtype } = body;
 
   if (!skills || !Array.isArray(skills) || skills.length === 0) {
     return NextResponse.json({ error: "At least one skill required" }, { status: 400 });
   }
 
-  const result = await generateConcepts(skills, time, budget, bizType);
+  const result = await generateConcepts(skills, time, budget, bizType, subtype);
 
   let concepts;
   try {
@@ -55,6 +56,7 @@ async function handleBuild(body: {
     name: string;
     tagline: string;
     type: string;
+    subtype?: string;
     desc: string;
     revenue: string;
     startup: string;
@@ -64,8 +66,10 @@ async function handleBuild(body: {
   time: string;
   budget: string;
   bizType: string;
+  subtype?: string;
 }) {
-  const { userId, concept, skills, time, budget, bizType } = body;
+  const { userId, concept, skills, time, budget, bizType, subtype } = body;
+  const resolvedSubtype = subtype || concept.subtype || "";
   const db = createServerClient();
 
   // Create slug
@@ -96,6 +100,26 @@ async function handleBuild(body: {
     siteContent = match ? JSON.parse(match[0]) : {};
   }
 
+  // 2.5 Generate images (parallel, non-blocking)
+  const productInfos = (siteContent.products || []).slice(0, 3).map((p: { name: string; desc: string }) => ({
+    name: p.name,
+    desc: p.desc,
+  }));
+  try {
+    const images = await generateBusinessImages(
+      slug, // use slug as folder name since we don't have DB id yet
+      concept.name,
+      concept.type,
+      concept.tagline,
+      (brand as { tone?: string }).tone || "professional",
+      productInfos
+    );
+    siteContent.images = images;
+  } catch (err) {
+    console.error("[generate] Image generation failed (non-fatal):", err);
+    // Images are optional — site works without them via gradient fallbacks
+  }
+
   // 3. Generate business plan
   const planResult = await generateBusinessPlan(
     concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup
@@ -117,6 +141,7 @@ async function handleBuild(body: {
       slug,
       tagline: concept.tagline,
       type: concept.type,
+      subtype: resolvedSubtype || null,
       status: "live",
       skills,
       time_commitment: time,

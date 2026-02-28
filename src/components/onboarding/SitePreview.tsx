@@ -15,6 +15,15 @@ interface SitePreviewProps {
   };
   layout: "default" | "minimal" | "creator";
   slug: string;
+  siteContent?: {
+    hero?: { headline?: string; subheadline?: string; badge?: string };
+    features?: { title: string; desc: string }[];
+    stats?: { value: string; label: string }[];
+    testimonials?: { name: string; role: string; text: string; rating?: number }[];
+    cta?: { headline?: string; subheadline?: string; button_text?: string };
+    images?: { hero?: string; about?: string; products?: string[] };
+    [key: string]: unknown;
+  };
 }
 
 export default function SitePreview({
@@ -24,6 +33,7 @@ export default function SitePreview({
   colors,
   layout,
   slug,
+  siteContent,
 }: SitePreviewProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -83,11 +93,11 @@ export default function SitePreview({
       </div>
 
       {layout === "minimal" ? (
-        <MinimalPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} />
+        <MinimalPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} siteContent={siteContent} />
       ) : layout === "creator" ? (
-        <CreatorPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} />
+        <CreatorPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} siteContent={siteContent} />
       ) : (
-        <DefaultPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} />
+        <DefaultPreview name={businessName} tagline={tagline} primary={p} accent={ac} secondary={sec} tx={tx} type={type} siteContent={siteContent} />
       )}
 
       {/* Footer */}
@@ -369,15 +379,39 @@ function Divider({ tx }: { tx: string }) {
 interface PreviewProps {
   name: string; tagline: string; primary: string; accent: string;
   secondary: string; tx: string; type: string;
+  siteContent?: SitePreviewProps["siteContent"];
 }
 
-function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type }: PreviewProps) {
-  const featureIcons = ["✦", "◆", "▲"];
-  const features = [
-    { icon: "✦", title: `Expert ${type === "services" ? "Service" : "Products"}`, desc: "Tailored solutions built around your specific needs and goals." },
-    { icon: "◆", title: "Fast Results", desc: "See measurable improvements from day one with our proven approach." },
-    { icon: "▲", title: "24/7 Support", desc: "Round-the-clock assistance whenever you need help or guidance." },
-  ];
+function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type, siteContent }: PreviewProps) {
+  const hero = siteContent?.hero;
+  const aiFeatures = siteContent?.features;
+  const aiStats = siteContent?.stats;
+  const aiTestimonials = siteContent?.testimonials;
+  const aiCta = siteContent?.cta;
+  const heroImage = siteContent?.images?.hero;
+
+  const features = aiFeatures && aiFeatures.length >= 3
+    ? aiFeatures.slice(0, 3).map((f, i) => ({ icon: ["\u2728", "\u26A1", "\u{1F680}"][i], title: f.title, desc: f.desc }))
+    : [
+        { icon: "\u2728", title: `Expert ${type === "services" ? "Service" : "Products"}`, desc: "Tailored solutions built around your specific needs and goals." },
+        { icon: "\u26A1", title: "Fast Results", desc: "See measurable improvements from day one with our proven approach." },
+        { icon: "\u{1F680}", title: "24/7 Support", desc: "Round-the-clock assistance whenever you need help or guidance." },
+      ];
+
+  const stats = aiStats && aiStats.length >= 3
+    ? aiStats.slice(0, 3).map((s) => ({ num: s.value, label: s.label }))
+    : [
+        { num: "500+", label: "Happy Customers" },
+        { num: "4.9/5", label: "Star Reviews" },
+        { num: "100%", label: "Satisfaction" },
+      ];
+
+  const testimonials = aiTestimonials && aiTestimonials.length >= 2
+    ? aiTestimonials.slice(0, 2)
+    : [
+        { name: "Sarah M.", role: "Business Owner", text: "Transformed our online presence. Couldn\u2019t be happier with the results." },
+        { name: "James R.", role: "Startup Founder", text: "The best investment we made this year. Professional and fast." },
+      ];
 
   return (
     <>
@@ -386,26 +420,42 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type }:
         <Blob color={primary} size={400} top={-180} left={-80} opacity={0.25} />
         <Blob color={accent} size={320} top={-120} right={-60} opacity={0.18} />
         <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto" }}>
+          {hero?.badge && (
+            <span style={{
+              display: "inline-block", padding: "6px 14px", borderRadius: 100,
+              border: `1px solid ${tx}12`, background: `${tx}05`,
+              fontSize: 11, fontWeight: 500, opacity: 0.6, marginBottom: 18,
+            }}>
+              {hero.badge}
+            </span>
+          )}
           <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.08, marginBottom: 16, letterSpacing: "-0.01em" }}>
-            {name}
+            {hero?.headline || name}
           </h1>
           <p style={{ fontSize: 17, opacity: 0.55, marginBottom: 36, lineHeight: 1.7, maxWidth: 520, margin: "0 auto 36px" }}>
-            {tagline || "Your tagline goes here"}
+            {hero?.subheadline || tagline || "Your tagline goes here"}
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
-            <GradientButton primary={primary} accent={accent}>Get Started</GradientButton>
+            <GradientButton primary={primary} accent={accent}>
+              {aiCta?.button_text || "Get Started"}
+            </GradientButton>
             <OutlineButton tx={tx}>Learn More</OutlineButton>
           </div>
         </div>
       </div>
 
+      {/* Hero image */}
+      {heroImage && (
+        <div style={{ padding: "0 32px 24px", maxWidth: 700, margin: "0 auto" }}>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${tx}10` }}>
+            <img src={heroImage} alt={name} style={{ width: "100%", height: "auto", display: "block" }} />
+          </div>
+        </div>
+      )}
+
       {/* Trust bar with gradient numbers */}
       <div style={{ display: "flex", justifyContent: "center", gap: 56, padding: "36px 32px", textAlign: "center" }}>
-        {[
-          { num: "500+", label: "Happy Customers" },
-          { num: "4.9/5", label: "Star Reviews" },
-          { num: "100%", label: "Satisfaction" },
-        ].map((s) => (
+        {stats.map((s) => (
           <div key={s.label}>
             <StatNumber primary={primary} accent={accent}>
               <span style={{ fontSize: 28 }}>{s.num}</span>
@@ -436,10 +486,7 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type }:
       <div style={{ padding: "0 32px 56px" }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, textAlign: "center", marginBottom: 28 }}>What People Say</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          {[
-            { name: "Sarah M.", role: "Business Owner", text: "Transformed our online presence. Couldn\u2019t be happier with the results." },
-            { name: "James R.", role: "Startup Founder", text: "The best investment we made this year. Professional and fast." },
-          ].map((t) => (
+          {testimonials.map((t) => (
             <div key={t.name} style={{
               padding: 22, borderRadius: 16,
               border: `1px solid ${tx}08`, background: `${tx}03`,
@@ -481,19 +528,21 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type }:
         <Blob color={secondary} size={250} top={-80} left="30%" opacity={0.2} />
         <div style={{ position: "relative", zIndex: 1 }}>
           <h2 style={{ fontSize: 30, fontWeight: 800, marginBottom: 14 }}>
-            Ready to get started?
+            {aiCta?.headline || "Ready to get started?"}
           </h2>
           <p style={{ opacity: 0.4, marginBottom: 32, fontSize: 15 }}>
-            {tagline || "Join thousands of happy customers"}
+            {aiCta?.subheadline || tagline || "Join thousands of happy customers"}
           </p>
-          <GradientButton primary={primary} accent={accent}>Get Started Now</GradientButton>
+          <GradientButton primary={primary} accent={accent}>
+            {aiCta?.button_text || "Get Started Now"}
+          </GradientButton>
         </div>
       </div>
     </>
   );
 }
 
-function MinimalPreview({ name, tagline, primary, accent, secondary, tx, type }: PreviewProps) {
+function MinimalPreview({ name, tagline, primary, accent, secondary, tx, type, siteContent }: PreviewProps) {
   return (
     <>
       {/* Hero — editorial style */}
@@ -614,7 +663,7 @@ function MinimalPreview({ name, tagline, primary, accent, secondary, tx, type }:
   );
 }
 
-function CreatorPreview({ name, tagline, primary, accent, secondary, tx, type }: PreviewProps) {
+function CreatorPreview({ name, tagline, primary, accent, secondary, tx, type, siteContent }: PreviewProps) {
   return (
     <>
       {/* Hero with blobs + gradient text */}

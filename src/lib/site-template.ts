@@ -12,7 +12,7 @@ interface SiteContent {
   hero?: { headline?: string; subheadline?: string; badge?: string };
   about?: { title?: string; text?: string; mission?: string };
   features?: { title: string; desc: string }[];
-  products?: { name: string; desc: string; price: string; features?: string[]; tagline?: string }[];
+  products?: { name: string; slug?: string; tagline?: string; desc: string; long_desc?: string; price: string; audience?: string; what_you_get?: string[]; features?: string[]; guarantee?: string }[];
   testimonials?: { name: string; role: string; text: string; rating?: number }[];
   process?: { title?: string; steps?: { step: string; title: string; desc: string }[] };
   stats?: { value: string; label: string }[];
@@ -21,6 +21,7 @@ interface SiteContent {
   seo?: { title?: string; description?: string };
   contact?: { email?: string; phone?: string; address?: string; hours?: string };
   faq?: { question: string; answer: string }[];
+  images?: { hero?: string; about?: string; products?: string[] };
 }
 
 interface BusinessConfig {
@@ -66,6 +67,7 @@ export function generateSiteFiles(config: BusinessConfig): { file: string; data:
         react: "^19.0.0",
         "react-dom": "^19.0.0",
         "@supabase/supabase-js": "^2.49.0",
+        stripe: "^17.5.0",
       },
       devDependencies: {
         typescript: "^5.0.0",
@@ -254,12 +256,30 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
 .input:focus { border-color: ${primary}66; }
 .input::placeholder { color: rgba(${tb},0.25); }
 
+/* Mobile nav */
+.mobile-menu-btn { display: none !important; }
+.desktop-nav { display: flex !important; }
+
+@media (max-width: 767px) {
+  .mobile-menu-btn { display: block !important; }
+  .desktop-nav { display: none !important; }
+}
+
+/* Two-column product layout */
+.product-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
 @media (min-width: 640px) {
   .grid-2 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 768px) {
   .grid-3 { grid-template-columns: repeat(3, 1fr); }
   .section { padding: 100px 24px; }
+  .product-two-col { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 960px) {
   .grid-2 { gap: 24px; }
@@ -275,11 +295,115 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
     { href: isServices ? "/services" : "/products", label: isServices ? "Services" : "Products" },
     { href: "/contact", label: "Contact" },
   ];
+  const ctaLabel = isServices ? "Book a Call" : "Get Started";
+
+  // ── Nav component (client — needs useState for mobile menu) ──
+  files.push({
+    file: "src/components/Nav.tsx",
+    data: `"use client";
+import { useState } from "react";
+
+const links = ${JSON.stringify(navLinks)};
+
+export default function Nav() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <nav style={{
+      borderBottom: "1px solid rgba(${tb},0.06)",
+      padding: "0 24px",
+      position: "sticky",
+      top: 0,
+      background: "${bg}dd",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      zIndex: 50,
+    }}>
+      <div style={{
+        maxWidth: 1100, margin: "0 auto",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        height: 64,
+      }}>
+        <a href="/" style={{
+          fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span className="gradient-text">${esc(config.name)}</span>
+        </a>
+
+        {/* Desktop nav */}
+        <div className="desktop-nav" style={{ display: "flex", gap: 28, alignItems: "center" }}>
+          {links.map((l) => (
+            <a key={l.href} href={l.href} style={{ fontSize: 14, fontWeight: 500, color: "rgba(${tb},0.5)", transition: "color 0.2s" }}>
+              {l.label}
+            </a>
+          ))}
+          <a href="/contact" className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>
+            ${esc(ctaLabel)}
+          </a>
+        </div>
+
+        {/* Mobile hamburger */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+          style={{
+            display: "none", background: "none", border: "none",
+            color: "rgba(${tb},0.7)", fontSize: 24, cursor: "pointer",
+            padding: 8, lineHeight: 1,
+          }}
+        >
+          {open ? "\\u2715" : "\\u2630"}
+        </button>
+      </div>
+
+      {/* Mobile overlay */}
+      {open && (
+        <div style={{
+          position: "fixed", inset: 0, top: 64,
+          background: "${bg}f5",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          zIndex: 49,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 8,
+          padding: "40px 24px",
+        }}>
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              style={{
+                fontSize: 20, fontWeight: 600, padding: "14px 0",
+                color: "rgba(${tb},0.7)", transition: "color 0.2s",
+              }}
+            >
+              {l.label}
+            </a>
+          ))}
+          <a
+            href="/contact"
+            onClick={() => setOpen(false)}
+            className="cta-btn"
+            style={{ marginTop: 16, padding: "14px 36px", fontSize: 16 }}
+          >
+            ${esc(ctaLabel)}
+          </a>
+        </div>
+      )}
+    </nav>
+  );
+}
+`,
+  });
 
   files.push({
     file: "src/app/layout.tsx",
     data: `import "./globals.css";
 import type { Metadata } from "next";
+import Nav from "@/components/Nav";
 
 export const metadata: Metadata = {
   title: "${esc(config.siteContent.seo?.title || config.name)}",
@@ -296,35 +420,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <nav style={{
-          borderBottom: "1px solid rgba(${tb},0.06)",
-          padding: "0 24px",
-          position: "sticky",
-          top: 0,
-          background: "${bg}dd",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          zIndex: 50,
-        }}>
-          <div style={{
-            maxWidth: 1100, margin: "0 auto",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            height: 64,
-          }}>
-            <a href="/" style={{
-              fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em",
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span className="gradient-text">${esc(config.name)}</span>
-            </a>
-            <div style={{ display: "flex", gap: 28, alignItems: "center" }}>
-              ${navLinks.map(l => `<a href="${l.href}" style={{ fontSize: 14, fontWeight: 500, color: "rgba(${tb},0.5)", transition: "color 0.2s" }}>${l.label}</a>`).join("\n              ")}
-              <a href="/contact" className="cta-btn" style={{ padding: "8px 20px", fontSize: 13 }}>
-                ${isServices ? "Book a Call" : "Get Started"}
-              </a>
-            </div>
-          </div>
-        </nav>
+        <Nav />
         {children}
         <footer style={{
           borderTop: "1px solid rgba(${tb},0.06)",
@@ -372,6 +468,7 @@ export default async function Home() {
   const cta = biz.site_content?.cta || {};
   const socialProof = biz.site_content?.social_proof || {};
   const products = biz.site_content?.products || [];
+  const images = biz.site_content?.images || {};
   const isServices = biz.type === "services";
 
   return (
@@ -440,79 +537,37 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* ── Hero Visual — Browser Mockup ── */}
+        {/* ── Hero Visual ── */}
         <div style={{
           position: "relative", maxWidth: 900, width: "100%",
           margin: "56px auto 0", padding: "0 24px",
         }}>
-          <div style={{
-            borderRadius: 16, overflow: "hidden",
-            border: "1px solid rgba(${tb},0.1)",
-            boxShadow: "0 24px 80px rgba(0,0,0,${shadowAlpha}), 0 0 120px ${primary}08",
-          }}>
-            {/* Browser chrome */}
+          {images.hero ? (
             <div style={{
-              padding: "10px 16px",
-              background: "rgba(${tb},0.04)",
-              borderBottom: "1px solid rgba(${tb},0.06)",
-              display: "flex", alignItems: "center", gap: 8,
+              borderRadius: 16, overflow: "hidden",
+              border: "1px solid rgba(${tb},0.1)",
+              boxShadow: "0 24px 80px rgba(0,0,0,${shadowAlpha}), 0 0 120px ${primary}08",
             }}>
-              <div style={{ display: "flex", gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(${tb},0.12)" }} />
-              </div>
-              <div style={{
-                flex: 1, margin: "0 40px", padding: "5px 12px",
-                borderRadius: 6, background: "rgba(${tb},0.04)",
-                fontSize: 11, color: "rgba(${tb},0.3)", textAlign: "center",
-              }}>
-                {biz.deployed_url || biz.name.toLowerCase().replace(/[^a-z0-9]/g, "") + ".com"}
-              </div>
+              <img src={images.hero} alt={biz.name} style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
-            {/* Dashboard/product preview gradient */}
+          ) : (
             <div style={{
-              height: 340, position: "relative", overflow: "hidden",
+              height: 340, borderRadius: 16, overflow: "hidden",
+              border: "1px solid rgba(${tb},0.1)",
               background: "linear-gradient(135deg, ${primary}18, ${accent}12, rgba(${tb},0.03))",
+              boxShadow: "0 24px 80px rgba(0,0,0,${shadowAlpha}), 0 0 120px ${primary}08",
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              {/* Abstract UI elements to simulate a dashboard */}
-              <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <div style={{ width: 120, height: 32, borderRadius: 8, background: "${primary}22" }} />
-                  <div style={{ width: 80, height: 32, borderRadius: 8, background: "rgba(${tb},0.06)" }} />
-                  <div style={{ width: 80, height: 32, borderRadius: 8, background: "rgba(${tb},0.06)" }} />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 8 }}>
-                  {[0,1,2].map(i => (
-                    <div key={i} style={{
-                      padding: 20, borderRadius: 12,
-                      background: "rgba(${tb},0.04)",
-                      border: "1px solid rgba(${tb},0.06)",
-                    }}>
-                      <div style={{ width: "60%", height: 12, borderRadius: 6, background: "rgba(${tb},0.1)", marginBottom: 10 }} />
-                      <div className="gradient-text" style={{ fontSize: 28, fontWeight: 800 }}>
-                        {["$12.4K", "847", "94%"][i]}
-                      </div>
-                      <div style={{ width: "40%", height: 8, borderRadius: 4, background: "rgba(${tb},0.06)", marginTop: 8 }} />
-                    </div>
-                  ))}
-                </div>
-                <div style={{
-                  flex: 1, borderRadius: 12, marginTop: 4,
-                  background: "rgba(${tb},0.04)",
-                  border: "1px solid rgba(${tb},0.06)",
-                  minHeight: 120,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <div style={{
-                    width: "90%", height: 60,
-                    background: "linear-gradient(90deg, ${primary}33, ${accent}22, ${primary}11)",
-                    borderRadius: 8,
-                  }} />
-                </div>
+              <div style={{
+                fontSize: "clamp(3rem, 8vw, 6rem)", fontWeight: 800,
+                background: "linear-gradient(135deg, ${primary}44, ${accent}33)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}>
+                {biz.name.charAt(0)}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -677,7 +732,9 @@ export default async function Home() {
               </h2>
             </div>
             <div className="grid-3">
-              {products.slice(0, 3).map((p: any, i: number) => (
+              {products.slice(0, 3).map((p: any, i: number) => {
+                const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
+                return (
                 <div key={i} style={{
                   borderRadius: 16, overflow: "hidden",
                   border: "1px solid rgba(${tb},0.08)",
@@ -686,13 +743,17 @@ export default async function Home() {
                 }}>
                   {/* Card visual header */}
                   <div style={{
-                    height: 140, position: "relative",
+                    height: 180, position: "relative", overflow: "hidden",
                     background: "linear-gradient(135deg, ${primary}" + (15 + i * 8).toString(16).padStart(2, "0") + ", ${accent}" + (10 + i * 6).toString(16).padStart(2, "0") + ")",
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
-                    <span style={{ fontSize: 48, opacity: 0.4 }}>
-                      {["\\u{1F3AF}", "\\u{1F680}", "\\u{1F4A1}"][i % 3]}
-                    </span>
+                    {images.products && images.products[i] ? (
+                      <img src={images.products[i]} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }} />
+                    ) : (
+                      <span style={{ fontSize: 48, opacity: 0.4 }}>
+                        {["\\u{1F3AF}", "\\u{1F680}", "\\u{1F4A1}"][i % 3]}
+                      </span>
+                    )}
                     {i === 0 && products.length > 1 && (
                       <span style={{
                         position: "absolute", top: 12, right: 12,
@@ -708,18 +769,27 @@ export default async function Home() {
                   {/* Card body */}
                   <div style={{ padding: "24px 24px 28px", flex: 1, display: "flex", flexDirection: "column" }}>
                     <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{p.name}</h3>
-                    <p className="gradient-text" style={{ fontWeight: 800, fontSize: 24, marginBottom: 12 }}>
+                    {!isServices && p.tagline && (
+                      <p style={{ color: "rgba(${tb},0.5)", fontSize: 13, fontStyle: "italic", marginBottom: 8 }}>{p.tagline}</p>
+                    )}
+                    <p className="gradient-text" style={{ fontWeight: 800, fontSize: 24, marginBottom: isServices ? 12 : 8 }}>
                       {p.price}
                     </p>
+                    {!isServices && p.audience && (
+                      <p style={{ color: "rgba(${tb},0.45)", fontSize: 12, marginBottom: 12 }}>
+                        {String.fromCodePoint(0x1F464)} {p.audience}
+                      </p>
+                    )}
                     <p style={{ color: "rgba(${tb},0.5)", fontSize: 13, lineHeight: 1.7, flex: 1, marginBottom: 20 }}>
                       {p.desc}
                     </p>
-                    <a href={isServices ? "/contact" : "/${isServices ? "services" : "products"}"} className="cta-btn" style={{ width: "100%", padding: "12px", fontSize: 14 }}>
-                      {isServices ? "Get Started" : "Learn More"}
+                    <a href={isServices ? "/contact" : \`/products/\${slug}\`} className="cta-btn" style={{ width: "100%", padding: "12px", fontSize: 14 }}>
+                      {isServices ? "Get Started" : "Learn More \\u2192"}
                     </a>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
             {products.length > 3 && (
               <div style={{ textAlign: "center", marginTop: 32 }}>
@@ -891,6 +961,7 @@ export default async function About() {
 
   const about = biz.site_content?.about || {};
   const values = biz.brand?.values || [];
+  const images = biz.site_content?.images || {};
 
   return (
     <>
@@ -919,6 +990,19 @@ export default async function About() {
           </p>
         </div>
       </section>
+
+      {/* About image */}
+      {images.about && (
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{
+            borderRadius: 16, overflow: "hidden",
+            border: "1px solid rgba(${tb},0.08)",
+            boxShadow: "0 16px 64px rgba(0,0,0,${shadowAlpha})",
+          }}>
+            <img src={images.about} alt={"About " + biz.name} style={{ width: "100%", height: "auto", display: "block" }} />
+          </div>
+        </div>
+      )}
 
       <section className="section">
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -975,18 +1059,20 @@ export default async function About() {
 
   // ── Products/Services Page (dynamic) ──
   const productsPath = isServices ? "services" : "products";
-  files.push({
-    file: `src/app/${productsPath}/page.tsx`,
-    data: `import { getBusiness } from "@/lib/data";
+
+  if (isServices) {
+    // Services: pricing grid with "Get Started" → /contact
+    files.push({
+      file: `src/app/${productsPath}/page.tsx`,
+      data: `import { getBusiness } from "@/lib/data";
 
 export const revalidate = 60;
 
-export default async function ProductsPage() {
+export default async function ServicesPage() {
   const biz = await getBusiness();
   if (!biz) return null;
 
   const products = biz.site_content?.products || [];
-  const isServices = biz.type === "services";
 
   return (
     <>
@@ -1002,13 +1088,13 @@ export default async function ProductsPage() {
         }} />
         <div style={{ position: "relative" }}>
           <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 16 }}>
-            {isServices ? "What We Offer" : "Our Products"}
+            What We Offer
           </p>
           <h1 style={{
             fontSize: "clamp(2rem, 5vw, 3.25rem)",
             fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1,
           }}>
-            {isServices ? "Services & Pricing" : "Our Products"}
+            Services & Pricing
           </h1>
         </div>
       </section>
@@ -1055,7 +1141,7 @@ export default async function ProductsPage() {
                   </ul>
                 )}
                 <a href="/contact" className="cta-btn" style={{ width: "100%", padding: "12px", fontSize: 14 }}>
-                  {isServices ? "Get Started" : "Buy Now"}
+                  Get Started
                 </a>
               </div>
             ))}
@@ -1066,7 +1152,321 @@ export default async function ProductsPage() {
   );
 }
 `,
-  });
+    });
+  } else {
+    // Digital products: catalog page with links to individual product pages
+    files.push({
+      file: "src/app/products/page.tsx",
+      data: `import { getBusiness } from "@/lib/data";
+
+export const revalidate = 60;
+
+function getSlug(p: any): string {
+  return p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
+}
+
+export default async function ProductsPage() {
+  const biz = await getBusiness();
+  if (!biz) return null;
+
+  const products = biz.site_content?.products || [];
+  const images = biz.site_content?.images || {};
+
+  return (
+    <>
+      <section style={{
+        padding: "80px 24px 40px", textAlign: "center",
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
+          width: "60%", height: 300,
+          background: "radial-gradient(ellipse, ${primary}10 0%, transparent 70%)",
+          filter: "blur(60px)", pointerEvents: "none",
+        }} />
+        <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
+          <p style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "${primary}", marginBottom: 16 }}>
+            Our Products
+          </p>
+          <h1 style={{
+            fontSize: "clamp(2rem, 5vw, 3.25rem)",
+            fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 16,
+          }}>
+            Everything you need to succeed
+          </h1>
+          <p style={{ color: "rgba(${tb},0.5)", fontSize: 16, lineHeight: 1.7 }}>
+            Courses, templates, and resources built from real experience.
+          </p>
+        </div>
+      </section>
+
+      <section className="section">
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            {products.map((p: any, i: number) => {
+              const slug = getSlug(p);
+              return (
+                <a key={i} href={"/products/" + slug} style={{
+                  display: "flex", flexDirection: "column", overflow: "hidden",
+                  borderRadius: 16, border: "1px solid rgba(${tb},0.08)",
+                  transition: "all 0.3s ease-out", textDecoration: "none", color: "inherit",
+                }}>
+                  {/* Visual header */}
+                  <div style={{
+                    height: 200, position: "relative", overflow: "hidden",
+                    background: "linear-gradient(135deg, ${primary}" + (15 + i * 8).toString(16).padStart(2, "0") + ", ${accent}" + (10 + i * 6).toString(16).padStart(2, "0") + ")",
+                  }}>
+                    {images.products && images.products[i] ? (
+                      <img src={images.products[i]} alt={p.name} style={{
+                        width: "100%", height: "100%", objectFit: "cover",
+                        position: "absolute", top: 0, left: 0,
+                      }} />
+                    ) : null}
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      padding: "48px 28px 20px",
+                      background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+                      display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+                    }}>
+                      <div>
+                        <h2 style={{ fontWeight: 800, fontSize: 22, marginBottom: 4, color: "#fff" }}>{p.name}</h2>
+                        {p.tagline && <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>{p.tagline}</p>}
+                      </div>
+                      <span style={{
+                        fontSize: 28, fontWeight: 800, color: "#fff",
+                      }}>
+                        {p.price}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Card body */}
+                  <div style={{ padding: "24px 28px" }}>
+                    {p.audience && (
+                      <p style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "${primary}", marginBottom: 10 }}>
+                        {p.audience}
+                      </p>
+                    )}
+                    <p style={{ color: "rgba(${tb},0.55)", fontSize: 14, lineHeight: 1.7, marginBottom: 16 }}>
+                      {p.desc}
+                    </p>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "${primary}", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      Learn more <span style={{ fontSize: 16 }}>&rarr;</span>
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+`,
+    });
+
+    // ── Individual Product Page (Shopify-style) ──
+    files.push({
+      file: "src/app/products/[slug]/page.tsx",
+      data: `import { getBusiness } from "@/lib/data";
+import { notFound } from "next/navigation";
+
+export const revalidate = 60;
+
+function getSlug(p: any): string {
+  return p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
+}
+
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const biz = await getBusiness();
+  if (!biz) return notFound();
+
+  const products = biz.site_content?.products || [];
+  const product = products.find((p: any) => getSlug(p) === slug);
+  if (!product) return notFound();
+
+  const productIndex = products.indexOf(product);
+  const images = biz.site_content?.images || {};
+  const productImage = images.products && images.products[productIndex];
+  const testimonials = (biz.site_content?.testimonials || []).slice(0, 2);
+
+  return (
+    <>
+      {/* ── Product Hero: Image + Buy Box ── */}
+      <section style={{ padding: "40px 24px 60px" }}>
+        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <div className="product-two-col" style={{ gap: 48 }}>
+
+            {/* Left — Product image */}
+            <div>
+              {productImage ? (
+                <div style={{
+                  borderRadius: 12, overflow: "hidden",
+                  border: "1px solid rgba(${tb},0.08)",
+                  boxShadow: "0 8px 40px rgba(0,0,0,${shadowAlpha})",
+                  aspectRatio: "4/3",
+                }}>
+                  <img src={productImage} alt={product.name} style={{
+                    width: "100%", height: "100%", objectFit: "cover", display: "block",
+                  }} />
+                </div>
+              ) : (
+                <div style={{
+                  aspectRatio: "4/3", borderRadius: 12,
+                  border: "1px solid rgba(${tb},0.08)",
+                  background: "linear-gradient(135deg, ${primary}08, ${accent}06)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <span style={{ fontSize: 72, fontWeight: 800, opacity: 0.15 }}>
+                    {product.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Right — Buy box */}
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              {product.audience && (
+                <p style={{
+                  fontSize: 12, fontWeight: 600, textTransform: "uppercase",
+                  letterSpacing: "0.06em", color: "${primary}", marginBottom: 12,
+                }}>
+                  {product.audience}
+                </p>
+              )}
+
+              <h1 style={{
+                fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+                fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 12,
+              }}>
+                {product.name}
+              </h1>
+
+              {product.tagline && (
+                <p style={{ color: "rgba(${tb},0.5)", fontSize: 15, lineHeight: 1.6, marginBottom: 20 }}>
+                  {product.tagline}
+                </p>
+              )}
+
+              <p style={{ fontSize: 32, fontWeight: 800, marginBottom: 24, color: "inherit" }}>
+                {product.price}
+              </p>
+
+              <a href={\`/api/checkout?product=\${slug}\`} className="cta-btn" style={{
+                padding: "16px 32px", fontSize: 16, textAlign: "center", width: "100%",
+              }}>
+                Add to Cart
+              </a>
+
+              {/* Trust signals */}
+              <div style={{
+                display: "flex", flexWrap: "wrap", gap: 16, marginTop: 20,
+                paddingTop: 20, borderTop: "1px solid rgba(${tb},0.06)",
+              }}>
+                {product.guarantee && (
+                  <span style={{ fontSize: 13, color: "rgba(${tb},0.45)", display: "flex", alignItems: "center", gap: 6 }}>
+                    {"\\u{1F6E1}"} {product.guarantee}
+                  </span>
+                )}
+                <span style={{ fontSize: 13, color: "rgba(${tb},0.45)", display: "flex", alignItems: "center", gap: 6 }}>
+                  {"\\u26A1"} Instant access
+                </span>
+              </div>
+
+              {/* Short description */}
+              {product.desc && (
+                <p style={{
+                  color: "rgba(${tb},0.5)", fontSize: 14, lineHeight: 1.7,
+                  marginTop: 24, paddingTop: 20, borderTop: "1px solid rgba(${tb},0.06)",
+                }}>
+                  {product.desc}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── What's Included ── */}
+      {product.what_you_get && product.what_you_get.length > 0 && (
+        <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(${tb},0.05)" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, textAlign: "center" }}>
+              What&apos;s included
+            </h2>
+            <div className="grid-2" style={{ gap: 12 }}>
+              {product.what_you_get.map((item: string, i: number) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  padding: "14px 16px", borderRadius: 10,
+                  border: "1px solid rgba(${tb},0.06)",
+                }}>
+                  <span style={{ color: "${primary}", fontSize: 14, fontWeight: 700, marginTop: 1, flexShrink: 0 }}>{"\\u2713"}</span>
+                  <span style={{ color: "rgba(${tb},0.6)", fontSize: 14, lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Features (fallback if no what_you_get) ── */}
+      {(!product.what_you_get || product.what_you_get.length === 0) && product.features && product.features.length > 0 && (
+        <section style={{ padding: "60px 24px", borderTop: "1px solid rgba(${tb},0.05)" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 24, textAlign: "center" }}>
+              Features
+            </h2>
+            <div className="grid-2" style={{ gap: 12 }}>
+              {product.features.map((feat: string, i: number) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  padding: "14px 16px", borderRadius: 10,
+                  border: "1px solid rgba(${tb},0.06)",
+                }}>
+                  <span style={{ color: "${primary}", fontSize: 14, fontWeight: 700, marginTop: 1, flexShrink: 0 }}>{"\\u2713"}</span>
+                  <span style={{ color: "rgba(${tb},0.6)", fontSize: 14, lineHeight: 1.5 }}>{feat}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Social proof (max 2 reviews) ── */}
+      {testimonials.length > 0 && (
+        <section style={{ padding: "48px 24px", borderTop: "1px solid rgba(${tb},0.05)" }}>
+          <div style={{ maxWidth: 700, margin: "0 auto" }}>
+            <div className="grid-2" style={{ gap: 16 }}>
+              {testimonials.map((t: any, i: number) => (
+                <div key={i} style={{
+                  padding: "20px", borderRadius: 12,
+                  border: "1px solid rgba(${tb},0.06)",
+                }}>
+                  {t.rating && (
+                    <div style={{ marginBottom: 8, color: "#facc15", fontSize: 12, letterSpacing: 2 }}>
+                      {"\\u2605".repeat(t.rating)}
+                    </div>
+                  )}
+                  <p style={{ color: "rgba(${tb},0.6)", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}>
+                    &ldquo;{t.text}&rdquo;
+                  </p>
+                  <p style={{ fontWeight: 600, fontSize: 12, color: "rgba(${tb},0.4)" }}>
+                    {t.name}{t.role ? " \\u2014 " + t.role : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+`,
+    });
+  }
 
   // ── Contact Page (dynamic) ──
   files.push({
@@ -1177,6 +1577,191 @@ export default async function Contact() {
 
   // ── FAQ Page (only if faq content exists, rendered on home or about) ──
   // FAQ is included via the about page or we can add it to the home page later
+
+  // ── Checkout API Route (digital products only) ──
+  if (!isServices) {
+    files.push({
+      file: "src/app/api/checkout/route.ts",
+      data: `import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import Stripe from "stripe";
+
+const BUSINESS_ID = process.env.NEXT_PUBLIC_BUSINESS_ID!;
+const PLATFORM_FEE_PERCENT = 0.05;
+
+function parsePrice(priceStr: string): { cents: number; recurring: null | "month" | "year" } {
+  const lower = priceStr.toLowerCase().trim();
+  const isMonthly = lower.includes("/mo");
+  const isYearly = lower.includes("/y") && !lower.includes("/mo");
+  let numPart = lower.replace(/\\/mo|\\/year|\\/yr|\\/y/g, "").replace(/[^0-9.k]/g, "");
+  let num = 0;
+  if (numPart.endsWith("k")) {
+    num = parseFloat(numPart.slice(0, -1)) * 1000;
+  } else {
+    num = parseFloat(numPart) || 0;
+  }
+  return { cents: Math.round(num * 100), recurring: isMonthly ? "month" : isYearly ? "year" : null };
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const productSlug = url.searchParams.get("product");
+  if (!productSlug) {
+    return NextResponse.json({ error: "Missing product" }, { status: 400 });
+  }
+
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    return NextResponse.redirect(new URL("/contact", url.origin));
+  }
+
+  const db = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const { data: business } = await db
+    .from("businesses")
+    .select("stripe_account_id, site_content")
+    .eq("id", BUSINESS_ID)
+    .single();
+
+  if (!business?.stripe_account_id) {
+    return NextResponse.redirect(new URL("/contact", url.origin));
+  }
+
+  const products = business.site_content?.products || [];
+  const product = products.find((p: any) => {
+    const s = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
+    return s === productSlug;
+  });
+
+  if (!product) {
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  }
+
+  const { cents, recurring } = parsePrice(product.price);
+  if (cents <= 0) {
+    return NextResponse.redirect(new URL("/contact", url.origin));
+  }
+
+  const stripe = new Stripe(stripeKey);
+  const origin = url.origin;
+
+  try {
+    if (recurring) {
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: { name: product.name, description: product.desc || undefined },
+            unit_amount: cents,
+            recurring: { interval: recurring },
+          },
+          quantity: 1,
+        }],
+        subscription_data: {
+          application_fee_percent: PLATFORM_FEE_PERCENT * 100,
+        },
+        success_url: origin + "/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: origin + "/products/" + productSlug,
+      }, { stripeAccount: business.stripe_account_id });
+
+      return NextResponse.redirect(session.url!);
+    } else {
+      const platformFee = Math.round(cents * PLATFORM_FEE_PERCENT);
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: { name: product.name, description: product.desc || undefined },
+            unit_amount: cents,
+          },
+          quantity: 1,
+        }],
+        payment_intent_data: {
+          application_fee_amount: platformFee,
+        },
+        success_url: origin + "/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: origin + "/products/" + productSlug,
+      }, { stripeAccount: business.stripe_account_id });
+
+      return NextResponse.redirect(session.url!);
+    }
+  } catch (err: any) {
+    console.error("[checkout] Stripe error:", err);
+    return NextResponse.redirect(new URL("/contact", url.origin));
+  }
+}
+`,
+    });
+
+    // ── Checkout Success Page ──
+    files.push({
+      file: "src/app/checkout/success/page.tsx",
+      data: `import { getBusiness } from "@/lib/data";
+
+export const revalidate = 60;
+
+export default async function CheckoutSuccess() {
+  const biz = await getBusiness();
+  if (!biz) return null;
+
+  return (
+    <section style={{
+      minHeight: "70vh",
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+      textAlign: "center", padding: "80px 24px",
+      position: "relative", overflow: "hidden",
+    }}>
+      <div style={{
+        position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
+        width: "60%", height: 400,
+        background: "radial-gradient(ellipse, ${primary}15 0%, transparent 70%)",
+        filter: "blur(60px)", pointerEvents: "none",
+      }} />
+      <div style={{ position: "relative", maxWidth: 520, margin: "0 auto" }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: "50%",
+          background: "${primary}18", border: "2px solid ${primary}44",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 28px", fontSize: 36,
+        }}>
+          {"\\u2713"}
+        </div>
+        <h1 style={{
+          fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+          fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 16,
+        }}>
+          Thank you for your purchase!
+        </h1>
+        <p style={{
+          color: "rgba(${tb},0.55)", fontSize: 16, lineHeight: 1.7, marginBottom: 12,
+        }}>
+          Your order has been confirmed. You'll receive an email with your receipt and access details shortly.
+        </p>
+        <p style={{
+          color: "rgba(${tb},0.35)", fontSize: 14, marginBottom: 36,
+        }}>
+          If you have any questions, don't hesitate to reach out.
+        </p>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+          <a href="/" className="cta-btn">
+            Back to Home <span style={{ fontSize: 18 }}>&rarr;</span>
+          </a>
+          <a href="/contact" className="btn-secondary">
+            Contact Us
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+`,
+    });
+  }
 
   return files;
 }

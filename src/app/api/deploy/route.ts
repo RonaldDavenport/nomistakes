@@ -58,6 +58,7 @@ export async function POST(req: Request) {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
       NEXT_PUBLIC_BUSINESS_ID: business.id,
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "",
     });
 
     // Update business record with deployment URL
