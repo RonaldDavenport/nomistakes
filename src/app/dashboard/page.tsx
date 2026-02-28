@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { getPlan } from "@/lib/plans";
 
 interface Business {
   id: string;
@@ -10,41 +11,34 @@ interface Business {
   slug: string;
   tagline: string;
   type: string;
+  subtype: string;
   status: string;
-  revenue_estimate: string;
-  audience: string;
-  live_url: string;
   deployed_url: string;
   custom_domain: string;
   created_at: string;
   brand: Record<string, unknown>;
-  site_content: Record<string, unknown>;
   onboarding_step: number;
   onboarding_completed: boolean;
 }
 
-export default function DashboardPage() {
+export default function DashboardOverview() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
-  const [deploying, setDeploying] = useState<string | null>(null);
-  const [userId, setUserId] = useState("");
+  const [userPlan, setUserPlan] = useState("free");
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = "/auth/login";
-        return;
-      }
+      if (!user) { window.location.href = "/auth/login"; return; }
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, plan")
         .eq("id", user.id)
         .single();
       setUserName(profile?.full_name || user.email?.split("@")[0] || "there");
-      setUserId(user.id);
+      setUserPlan(profile?.plan || "free");
 
       const { data } = await supabase
         .from("businesses")
@@ -55,57 +49,34 @@ export default function DashboardPage() {
       setBusinesses((data as Business[]) || []);
       setLoading(false);
     }
-
     load();
   }, []);
 
-  async function deployBusiness(biz: Business) {
-    setDeploying(biz.id);
-    try {
-      const res = await fetch("/api/deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessId: biz.id, userId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setBusinesses((prev) =>
-          prev.map((b) =>
-            b.id === biz.id ? { ...b, deployed_url: data.url, status: "live" } : b
-          )
-        );
-      }
-    } catch {
-      // Deploy failed silently
-    }
-    setDeploying(null);
-  }
-
-  function getSiteUrl(biz: Business): string {
-    if (biz.custom_domain) return `https://${biz.custom_domain}`;
-    if (biz.deployed_url) return biz.deployed_url;
-    return `/site/${biz.slug}`;
-  }
+  const plan = getPlan(userPlan);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-[80vh]">
         <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Dashboard</h1>
-        <p className="text-zinc-500 text-sm">Welcome back, {userName}. Here&apos;s your businesses.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Welcome back, {userName}</h1>
+        <p className="text-zinc-500 text-sm">
+          {businesses.length === 0
+            ? "Build your first business with AI in under 60 seconds."
+            : `You have ${businesses.length} business${businesses.length !== 1 ? "es" : ""}. Select one to manage.`}
+        </p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
-          <p className="text-zinc-500 text-xs font-medium mb-1">Total Businesses</p>
+          <p className="text-zinc-500 text-xs font-medium mb-1">Businesses</p>
           <p className="text-2xl font-bold text-white">{businesses.length}</p>
         </div>
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
@@ -114,15 +85,17 @@ export default function DashboardPage() {
         </div>
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
           <p className="text-zinc-500 text-xs font-medium mb-1">Plan</p>
-          <p className="text-2xl font-bold text-white">Free</p>
+          <p className="text-2xl font-bold text-white">{plan.name}</p>
         </div>
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
-          <p className="text-zinc-500 text-xs font-medium mb-1">AI Credits</p>
-          <p className="text-2xl font-bold text-white">Unlimited</p>
+          <p className="text-zinc-500 text-xs font-medium mb-1">AI Chat</p>
+          <p className="text-2xl font-bold text-white">
+            {plan.limits.chatMessagesPerDay === Infinity ? "Unlimited" : `${plan.limits.chatMessagesPerDay}/day`}
+          </p>
         </div>
       </div>
 
-      {/* Businesses list */}
+      {/* Business cards */}
       {businesses.length === 0 ? (
         <div className="text-center py-20 rounded-xl border border-white/5 bg-surface/50">
           <p className="text-zinc-400 text-lg mb-2">No businesses yet</p>
@@ -133,78 +106,64 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {businesses.map((biz) => (
-            <div key={biz.id} className="p-4 sm:p-6 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/30 transition-all">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3 mb-1 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-bold text-white">{biz.name}</h3>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                      biz.status === "live"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                    }`}>
-                      {biz.status}
-                    </span>
-                  </div>
-                  <p className="text-brand-400 text-sm mb-2 truncate">{biz.tagline}</p>
-                  {/* Onboarding progress */}
-                  {!biz.onboarding_completed && biz.onboarding_step < 8 && (
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-zinc-500">Setup: {biz.onboarding_step}/8 steps</span>
-                        <Link href={`/onboarding/${biz.id}`} className="text-xs text-brand-400 hover:text-brand-300">
-                          Continue Setup
-                        </Link>
-                      </div>
-                      <div className="h-1 rounded-full bg-white/5">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all"
-                          style={{ width: `${Math.round((biz.onboarding_step / 8) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-3 sm:gap-4 text-xs text-zinc-500">
-                    <span className="capitalize">Type: {biz.type}</span>
-                    <span>Revenue: {biz.revenue_estimate}</span>
-                    <span>Created: {new Date(biz.created_at).toLocaleDateString()}</span>
-                  </div>
-                  {(biz.deployed_url || biz.custom_domain) && (
-                    <p className="text-brand-400 font-mono text-xs mt-2">
-                      {biz.custom_domain ? biz.custom_domain : biz.deployed_url}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto shrink-0">
-                  <Link
-                    href={`/dashboard/site/${biz.id}`}
-                    className="btn-secondary px-4 py-2 rounded-lg text-xs font-semibold text-zinc-300 text-center flex-1 sm:flex-initial"
+          {businesses.map((biz) => {
+            const primaryColor = (biz.brand as { colors?: { primary?: string } })?.colors?.primary || "#6366f1";
+            return (
+              <Link
+                key={biz.id}
+                href={`/dashboard/${biz.id}`}
+                className="p-4 sm:p-6 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/30 transition-all group block"
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold shrink-0"
+                    style={{ backgroundColor: primaryColor }}
                   >
-                    Edit Site
-                  </Link>
-                  {!biz.deployed_url ? (
-                    <button
-                      onClick={() => deployBusiness(biz)}
-                      disabled={deploying === biz.id}
-                      className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center flex-1 sm:flex-initial"
-                    >
-                      {deploying === biz.id ? "Deploying..." : "Deploy"}
-                    </button>
-                  ) : (
-                    <a
-                      href={getSiteUrl(biz)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold text-white text-center flex-1 sm:flex-initial"
-                    >
-                      View Site
-                    </a>
-                  )}
+                    {biz.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-brand-400 transition-colors">
+                        {biz.name}
+                      </h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        biz.status === "live"
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                          : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                      }`}>
+                        {biz.status}
+                      </span>
+                    </div>
+                    <p className="text-brand-400 text-sm mb-2 truncate">{biz.tagline}</p>
+                    <div className="flex flex-wrap gap-3 text-xs text-zinc-500">
+                      <span className="capitalize">{biz.subtype || biz.type}</span>
+                      {biz.deployed_url && (
+                        <span className="font-mono text-zinc-600">{biz.custom_domain || biz.deployed_url}</span>
+                      )}
+                      <span>{new Date(biz.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {/* Onboarding progress */}
+                    {!biz.onboarding_completed && biz.onboarding_step < 8 && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-zinc-500">Setup: {biz.onboarding_step}/8 steps</span>
+                        </div>
+                        <div className="h-1 rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all"
+                            style={{ width: `${Math.round((biz.onboarding_step / 8) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <svg className="w-5 h-5 text-zinc-600 group-hover:text-brand-400 transition-colors shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </div>
-              </div>
-            </div>
-          ))}
+              </Link>
+            );
+          })}
 
           <Link
             href="/wizard"

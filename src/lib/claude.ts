@@ -35,13 +35,14 @@ export async function generate(
 }
 
 // ── Concept Generation ──
-export async function generateConcepts(skills: string[], time: string, budget: string, bizType: string) {
+export async function generateConcepts(skills: string[], time: string, budget: string, bizType: string, subtype?: string) {
+  const subtypeHint = subtype ? `\n- Preferred subtype: ${subtype} (prioritize this business model)` : "";
   const result = await generate(
     `Generate 3 unique, actionable business concepts for someone with these traits:
 - Skills: ${skills.join(", ")}
 - Time available: ${time}
 - Starting budget: ${budget}
-- Preferred type: ${bizType}
+- Preferred type: ${bizType}${subtypeHint}
 
 IMPORTANT: Only generate SERVICE BUSINESSES or DIGITAL PRODUCT businesses. NO physical products, no ecommerce, no dropshipping, no inventory.
 - Service businesses: consulting, coaching, freelancing, agencies, retainers
@@ -51,6 +52,7 @@ For each concept, return a JSON array with exactly 3 objects. Each object must h
 - name: A catchy, brandable business name (one word or two words max)
 - tagline: One-line pitch (under 10 words)
 - type: "digital" | "services" (NEVER "products")
+- subtype: One of "freelance" | "consulting" | "coaching" | "agency" | "courses" | "templates" | "ebooks" | "memberships"
 - desc: 2-3 sentence description of the business model. Be specific about what they deliver and how they get paid.
 - revenue: Realistic monthly revenue range (e.g. "$2,000 – $8,000/mo")
 - startup: Startup cost range (e.g. "$0 – $100")
@@ -151,8 +153,14 @@ Return a JSON object with ALL of these fields:
   ],
   "products": [
     {
-      "name": "Tier name that implies value (e.g., 'Growth Sprint' not 'Basic Plan')",
-      "desc": "2-3 sentences. WHO this is for and WHAT transformation they get. Not just a feature list.",
+      "name": "${isServices ? "Tier name that implies value (e.g., 'Growth Sprint' not 'Basic Plan')" : "Product name (e.g., 'The Creator Blueprint', 'Design System Pro')"}",
+      "slug": "url-friendly-slug (lowercase, hyphens only)",
+      "tagline": "One-line hook that sells the transformation (under 10 words)",
+      "desc": "2-3 sentences. WHO this is for and WHAT transformation they get. Not just a feature list.",${isServices ? "" : `
+      "long_desc": "3-4 paragraphs written like a sales page: Paragraph 1: The problem your buyer faces (be specific, use their language). Paragraph 2: The insight or approach that changes everything. Paragraph 3: What this product delivers and how it works. Paragraph 4: The transformation — what life looks like after. Write in second person (you/your).",
+      "audience": "One sentence: exactly who should buy this (e.g., 'Freelance designers charging under $5K per project')",
+      "what_you_get": ["Module 1: [Title] — [what they learn/get]", "Module 2: [Title] — [what they learn/get]", "Bonus: [Title] — [description]"],
+      "guarantee": "Money-back guarantee statement (e.g., '30-day full refund, no questions asked')",`}
       "price": "Realistic price with $ sign${isServices ? " (can be /mo, /session, or /engagement)" : " (one-time or /mo for memberships)"}",
       "features": ["Specific deliverable 1", "Specific deliverable 2", "Specific deliverable 3", "Specific deliverable 4"]
     }
@@ -203,7 +211,7 @@ Return a JSON object with ALL of these fields:
   ]
 }
 
-Generate exactly: 6 features, ${isServices ? "3" : "3-4"} products/services (with 4 included features each), 3 testimonials, 3 process steps, 4 stats, 5-6 social proof logos, 5 FAQ items.
+Generate exactly: 6 features, ${isServices ? "3 services (with 4 included features each)" : "3 products (each with slug, tagline, long_desc, audience, 5-8 what_you_get items, guarantee, and 4 features)"}, 3 testimonials, 3 process steps, 4 stats, 5-6 social proof logos, 5 FAQ items.
 
 Return ONLY valid JSON, no other text.`,
     `You are a world-class direct response copywriter who has studied David Ogilvy, Eugene Schwartz, and modern SaaS copy from companies like Linear, Stripe, and Vercel. You write copy that SELLS — not copy that fills space.
@@ -246,6 +254,24 @@ Return ONLY valid JSON array, no other text.`,
   );
 
   return result;
+}
+
+// ── Business Plan Generation ──
+// ── Streaming (for chat) ──
+export async function generateStream(
+  messages: { role: "user" | "assistant"; content: string }[],
+  systemPrompt: string,
+  model: "claude-haiku-4-5-20251001" | "claude-sonnet-4-5-20250929" = "claude-sonnet-4-5-20250929",
+  maxTokens = 4096
+) {
+  const stream = anthropic.messages.stream({
+    model,
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages,
+  });
+
+  return stream;
 }
 
 // ── Business Plan Generation ──
