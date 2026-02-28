@@ -15,6 +15,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [removingDomain, setRemovingDomain] = useState(false);
 
   if (!business) {
     return (
@@ -65,6 +66,20 @@ export default function SettingsPage() {
       router.push("/dashboard");
     } else {
       setDeleting(false);
+    }
+  }
+
+  async function handleRemoveDomain() {
+    setRemovingDomain(true);
+    try {
+      const res = await fetch(`/api/business/${business!.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ custom_domain: null }),
+      });
+      if (res.ok) await refreshBusiness();
+    } finally {
+      setRemovingDomain(false);
     }
   }
 
@@ -176,9 +191,18 @@ export default function SettingsPage() {
             )}
           </div>
           {business.custom_domain && (
-            <div>
-              <p className="text-sm text-white font-medium">Custom Domain</p>
-              <p className="text-xs text-zinc-500">{business.custom_domain}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-white font-medium">Custom Domain</p>
+                <p className="text-xs text-zinc-500">{business.custom_domain}</p>
+              </div>
+              <button
+                onClick={handleRemoveDomain}
+                disabled={removingDomain}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition disabled:opacity-50"
+              >
+                {removingDomain ? "Removing..." : "Remove"}
+              </button>
             </div>
           )}
           {business.custom_domain && (

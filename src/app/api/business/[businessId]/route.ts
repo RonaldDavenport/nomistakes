@@ -42,6 +42,7 @@ export async function PATCH(
     "revenue_estimate",
     "calendly_url",
     "business_email",
+    "custom_domain",
   ];
 
   const updates: Record<string, unknown> = {};
