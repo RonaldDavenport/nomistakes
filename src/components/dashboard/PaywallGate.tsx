@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { meetsRequiredPlan, getUpgradePlan } from "@/lib/plans";
 import { useBusinessContext } from "./BusinessProvider";
 
@@ -46,9 +47,12 @@ export function PaywallGate({ requiredPlan, children, compact }: PaywallGateProp
           This feature is available on the {upgrade.name} plan.
           {upgrade.price > 0 && ` Starting at $${(upgrade.price / 100).toFixed(2)}/mo.`}
         </p>
-        <button className="btn-primary px-6 py-3 rounded-xl text-sm font-semibold text-white">
+        <Link
+          href="/pricing"
+          className="inline-block btn-primary px-6 py-3 rounded-xl text-sm font-semibold text-white"
+        >
           Upgrade to {upgrade.name}
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -11,11 +11,12 @@ import {
   TIME_OPTIONS,
   BUDGET_OPTIONS,
   TYPE_OPTIONS,
+  SUBTYPE_OPTIONS,
   generateConcepts as localGenerateConcepts,
   type BusinessConcept,
 } from "@/lib/wizard-data";
 
-type Step = "skills" | "time" | "budget" | "type" | "generating" | "results" | "building" | "done";
+type Step = "skills" | "time" | "budget" | "type" | "subtype" | "generating" | "results" | "building" | "done";
 
 export default function WizardPage() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export default function WizardPage() {
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedBudget, setSelectedBudget] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [selectedSubtype, setSelectedSubtype] = useState("");
   const [concepts, setConcepts] = useState<BusinessConcept[]>([]);
   const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
   const [buildProgress, setBuildProgress] = useState(0);
@@ -37,10 +39,11 @@ export default function WizardPage() {
   const buildStarted = useRef(false);
 
   const progress =
-    step === "skills" ? 25 :
-    step === "time" ? 50 :
-    step === "budget" ? 75 :
-    step === "type" ? 90 :
+    step === "skills" ? 20 :
+    step === "time" ? 40 :
+    step === "budget" ? 60 :
+    step === "type" ? 80 :
+    step === "subtype" ? 90 :
     100;
 
   function toggleSkill(id: string) {
@@ -61,6 +64,17 @@ export default function WizardPage() {
 
   function handleTypeSelect(id: string) {
     setSelectedType(id);
+    // Show subtype picker for services or digital; skip for both/any
+    if (id === "services" || id === "digital") {
+      setSelectedSubtype("");
+      setStep("subtype");
+    } else {
+      setStep("generating");
+    }
+  }
+
+  function handleSubtypeSelect(id: string) {
+    setSelectedSubtype(id);
     setStep("generating");
   }
 
@@ -80,6 +94,7 @@ export default function WizardPage() {
             time: selectedTime,
             budget: selectedBudget,
             bizType: selectedType,
+            subtype: selectedSubtype || undefined,
           }),
         });
 
@@ -97,7 +112,7 @@ export default function WizardPage() {
 
       // Fallback: local generation
       if (!cancelled) {
-        const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType);
+        const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype || undefined);
         setConcepts(results);
         setStep("results");
       }
@@ -105,7 +120,7 @@ export default function WizardPage() {
 
     fetchConcepts();
     return () => { cancelled = true; };
-  }, [step, selectedSkills, selectedTime, selectedBudget, selectedType]);
+  }, [step, selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype]);
 
   // Build: call API to generate brand + site + plan, animate progress in parallel
   useEffect(() => {
@@ -138,6 +153,7 @@ export default function WizardPage() {
             time: selectedTime,
             budget: selectedBudget,
             bizType: selectedType,
+            subtype: selectedSubtype || chosenConcept?.subtype || undefined,
           }),
         });
 
@@ -233,10 +249,10 @@ export default function WizardPage() {
         <div className="max-w-3xl mx-auto">
 
           {/* Progress bar */}
-          {!["generating", "building", "done"].includes(step) && (
+          {!["generating", "building", "done", "results"].includes(step) && (
             <div className="mb-12">
               <div className="flex justify-between text-xs text-zinc-600 mb-2">
-                <span>Step {step === "skills" ? 1 : step === "time" ? 2 : step === "budget" ? 3 : 4} of 4</span>
+                <span>Step {step === "skills" ? 1 : step === "time" ? 2 : step === "budget" ? 3 : step === "type" ? 4 : 5} of {selectedType === "services" || selectedType === "digital" ? 5 : 4}</span>
                 <span>{progress}%</span>
               </div>
               <div className="h-1 rounded-full bg-white/5">
@@ -363,6 +379,52 @@ export default function WizardPage() {
             </div>
           )}
 
+          {/* STEP: Subtype */}
+          {step === "subtype" && SUBTYPE_OPTIONS[selectedType] && (
+            <div className="animate-fadeIn">
+              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">What kind of {selectedType === "services" ? "service" : "digital product"}?</h2>
+              <p className="text-zinc-500 mb-2">Pick one so we can tailor your launch checklist and AI tools.</p>
+              <p className="text-xs text-brand-400 mb-8">This determines which tasks, templates, and strategies you&apos;ll get.</p>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {SUBTYPE_OPTIONS[selectedType].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleSubtypeSelect(s.id)}
+                    className={`flex items-center gap-3 p-5 rounded-xl border text-left transition-all ${
+                      selectedSubtype === s.id
+                        ? "border-brand-600/50 bg-brand-600/10"
+                        : "border-white/5 bg-surface/50 hover:border-white/15"
+                    }`}
+                  >
+                    <span className="text-2xl">{s.icon}</span>
+                    <div>
+                      <span className="text-white font-semibold block">{s.label}</span>
+                      <span className="text-zinc-500 text-xs">{
+                        s.id === "freelance" ? "Solo client work" :
+                        s.id === "consulting" ? "Strategic advisory" :
+                        s.id === "coaching" ? "1:1 or group coaching" :
+                        s.id === "agency" ? "Team-based services" :
+                        s.id === "courses" ? "Online education" :
+                        s.id === "templates" ? "Downloadable assets" :
+                        s.id === "ebooks" ? "Written products" :
+                        s.id === "memberships" ? "Recurring community" : ""
+                      }</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-zinc-600 text-xs text-center">
+                Not sure?{" "}
+                <button
+                  onClick={() => { setSelectedSubtype(""); setStep("generating"); }}
+                  className="text-zinc-500 hover:text-zinc-300 underline transition-colors"
+                >
+                  Let AI pick for you
+                </button>
+              </p>
+            </div>
+          )}
+
           {/* GENERATING */}
           {step === "generating" && (
             <div className="flex flex-col items-center justify-center py-20 animate-fadeIn">
@@ -403,7 +465,7 @@ export default function WizardPage() {
                     <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
                       <span>Startup: {c.startup}</span>
                       <span>Audience: {c.audience}</span>
-                      <span className="capitalize">Type: {c.type}</span>
+                      <span className="capitalize">Type: {c.type}{c.subtype ? ` · ${c.subtype}` : ""}</span>
                     </div>
                   </button>
                 ))}

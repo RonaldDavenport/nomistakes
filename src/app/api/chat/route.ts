@@ -1,23 +1,14 @@
 import { NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { supabase } from "@/lib/supabase";
 import { generateStream } from "@/lib/claude";
 import {
   buildCoachSystemPrompt,
   type BusinessRecord,
   type ChecklistProgress,
 } from "@/lib/business-context";
-import { getPlan, getLimit } from "@/lib/plans";
+import { getLimit } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
   const { businessId, message } = await req.json();
 
   if (!businessId || !message) {
@@ -26,12 +17,11 @@ export async function POST(req: NextRequest) {
 
   const db = createServerClient();
 
-  // Fetch business + verify ownership
+  // Fetch business
   const { data: business } = await db
     .from("businesses")
     .select("*")
     .eq("id", businessId)
-    .eq("user_id", user.id)
     .single();
 
   if (!business) {
@@ -42,7 +32,7 @@ export async function POST(req: NextRequest) {
   const { data: profile } = await db
     .from("profiles")
     .select("plan")
-    .eq("id", user.id)
+    .eq("id", business.user_id)
     .single();
 
   const plan = profile?.plan || "free";
@@ -60,11 +50,10 @@ export async function POST(req: NextRequest) {
       .gte("created_at", today.toISOString());
 
     if ((count || 0) >= dailyLimit) {
-      const upgradePlan = getPlan(plan === "free" ? "starter" : "growth");
       return new Response(
         JSON.stringify({
           error: "limit_reached",
-          message: `You've reached your daily limit of ${dailyLimit} messages. Upgrade to ${upgradePlan.name} for ${dailyLimit === 10 ? "50" : "200"} messages/day.`,
+          message: `You've reached your daily limit of ${dailyLimit} messages. Upgrade for more messages per day.`,
         }),
         { status: 429, headers: { "Content-Type": "application/json" } }
       );
@@ -150,7 +139,7 @@ export async function POST(req: NextRequest) {
 
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
-      } catch (err) {
+      } catch {
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ error: "Stream error" })}\n\n`

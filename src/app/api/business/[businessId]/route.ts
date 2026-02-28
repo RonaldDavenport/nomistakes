@@ -1,27 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { supabase } from "@/lib/supabase";
 
-// GET — fetch a single business (verifies ownership)
+// GET — fetch a single business
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   const { businessId } = await params;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const db = createServerClient();
+
   const { data: business, error } = await db
     .from("businesses")
     .select("*")
     .eq("id", businessId)
-    .eq("user_id", user.id)
     .single();
 
   if (error || !business) {
@@ -37,14 +28,6 @@ export async function PATCH(
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   const { businessId } = await params;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = await req.json();
 
   // Allowlist of updatable fields
@@ -77,7 +60,6 @@ export async function PATCH(
     .from("businesses")
     .update(updates)
     .eq("id", businessId)
-    .eq("user_id", user.id)
     .select()
     .single();
 
@@ -90,26 +72,18 @@ export async function PATCH(
 
 // DELETE — delete a business and all related data (cascades via FK)
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ businessId: string }> }
 ) {
   const { businessId } = await params;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const db = createServerClient();
+  const { userId } = await req.json().catch(() => ({ userId: null }));
 
-  // Verify ownership first
+  // Fetch the business to get user_id for profile update
   const { data: business } = await db
     .from("businesses")
-    .select("id")
+    .select("id, user_id")
     .eq("id", businessId)
-    .eq("user_id", user.id)
     .single();
 
   if (!business) {
@@ -123,17 +97,20 @@ export async function DELETE(
   }
 
   // Decrement businesses_count on profile
-  const { data: profile } = await db
-    .from("profiles")
-    .select("businesses_count")
-    .eq("id", user.id)
-    .single();
-
-  if (profile && profile.businesses_count > 0) {
-    await db
+  const ownerId = userId || business.user_id;
+  if (ownerId) {
+    const { data: profile } = await db
       .from("profiles")
-      .update({ businesses_count: profile.businesses_count - 1 })
-      .eq("id", user.id);
+      .select("businesses_count")
+      .eq("id", ownerId)
+      .single();
+
+    if (profile && profile.businesses_count > 0) {
+      await db
+        .from("profiles")
+        .update({ businesses_count: profile.businesses_count - 1 })
+        .eq("id", ownerId);
+    }
   }
 
   return NextResponse.json({ success: true });

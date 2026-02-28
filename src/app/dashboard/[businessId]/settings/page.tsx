@@ -181,6 +181,54 @@ export default function SettingsPage() {
               <p className="text-xs text-zinc-500">{business.custom_domain}</p>
             </div>
           )}
+          {business.custom_domain && (
+            <div className="mt-4 p-4 rounded-lg border border-amber-500/20 bg-amber-500/5">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-semibold text-amber-300 mb-2">DNS Setup Required</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed mb-3">
+                    To connect <strong className="text-white">{business.custom_domain}</strong> to your site, add these DNS records with your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
+                  </p>
+                  <div className="space-y-2 mb-3">
+                    <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">CNAME Record</span>
+                      </div>
+                      <div className="grid grid-cols-[60px_1fr] gap-x-3 text-xs">
+                        <span className="text-zinc-500">Name</span>
+                        <span className="text-white font-mono">
+                          {business.custom_domain.startsWith("www.") ? "www" : "@"}
+                        </span>
+                        <span className="text-zinc-500">Value</span>
+                        <span className="text-white font-mono">cname.vercel-dns.com</span>
+                      </div>
+                    </div>
+                    {!business.custom_domain.startsWith("www.") && (
+                      <div className="p-2.5 rounded-lg bg-black/40 border border-white/5">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">A Record (if CNAME not supported for root)</span>
+                        </div>
+                        <div className="grid grid-cols-[60px_1fr] gap-x-3 text-xs">
+                          <span className="text-zinc-500">Name</span>
+                          <span className="text-white font-mono">@</span>
+                          <span className="text-zinc-500">Value</span>
+                          <span className="text-white font-mono">76.76.21.21</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-500 leading-relaxed">
+                    DNS changes can take up to 48 hours to propagate. Once set, your site will be available at{" "}
+                    <strong className="text-zinc-300">https://{business.custom_domain}</strong>.
+                    SSL is provisioned automatically.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

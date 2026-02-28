@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useBusinessContext } from "@/components/dashboard/BusinessProvider";
 import { LaunchChecklist } from "@/components/dashboard/LaunchChecklist";
+import { WelcomeTour } from "@/components/dashboard/WelcomeTour";
 
 export default function BusinessHome() {
   const params = useParams();
@@ -28,6 +29,8 @@ export default function BusinessHome() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
+      <WelcomeTour />
+
       {/* Business header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div className="flex items-center gap-4">

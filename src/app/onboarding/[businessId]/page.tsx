@@ -35,6 +35,7 @@ interface Business {
   calendly_url?: string;
   stripe_account_id?: string;
   business_email?: string;
+  site_content?: Record<string, unknown>;
   onboarding_step: number;
   onboarding_completed: boolean;
   deployed_url?: string;
@@ -108,7 +109,7 @@ export default function OnboardingPage() {
     if (currentStep < ONBOARDING_STEPS.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
-      router.push("/dashboard");
+      router.push(`/dashboard/${businessId}`);
     }
   }
 
@@ -243,6 +244,7 @@ export default function OnboardingPage() {
             colors={previewColors}
             layout={selectedLayout as "default" | "minimal" | "creator"}
             slug={slugValue || business.slug}
+            siteContent={business.site_content}
           />
 
           {/* Split layout */}
@@ -714,11 +716,11 @@ export default function OnboardingPage() {
                     lastStep
                     onContinue={async () => {
                       await saveStep("email", { businessEmail: businessEmail || undefined });
-                      router.push("/dashboard");
+                      router.push(`/dashboard/${businessId}`);
                     }}
                     onSkip={async () => {
                       await saveStep("email", {});
-                      router.push("/dashboard");
+                      router.push(`/dashboard/${businessId}`);
                     }}
                   />
                 </div>
@@ -735,6 +737,7 @@ export default function OnboardingPage() {
                   colors={previewColors}
                   layout={selectedLayout as "default" | "minimal" | "creator"}
                   slug={slugValue || business.slug}
+                  siteContent={business.site_content}
                 />
               </div>
             </div>
@@ -811,7 +814,7 @@ function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId
       <div style={{
         background: "#111118", borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.08)",
-        width: "100%", maxWidth: 600, maxHeight: "90vh",
+        width: "100%", maxWidth: 900, maxHeight: "95vh",
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
