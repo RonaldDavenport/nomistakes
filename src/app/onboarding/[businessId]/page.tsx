@@ -41,6 +41,7 @@ interface Business {
   onboarding_completed: boolean;
   deployed_url?: string;
   live_url?: string;
+  user_id?: string;
 }
 
 export default function OnboardingPage() {
@@ -82,6 +83,17 @@ export default function OnboardingPage() {
         // Map old 8-step index to new 5-step range
         if (biz.onboarding_step > 0 && biz.onboarding_step < ONBOARDING_STEPS.length) {
           setCurrentStep(Math.min(biz.onboarding_step, ONBOARDING_STEPS.length - 1));
+        }
+
+        // Auto-claim: if user is authed but business has no user_id, claim it
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && !biz.user_id) {
+          await fetch("/api/onboarding", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ businessId, step: "claim", data: { userId: user.id } }),
+          });
+          setBusiness({ ...biz, user_id: user.id });
         }
       }
       setLoading(false);
@@ -1128,11 +1140,29 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
     </div>
   );
 
-  function handleChoosePlan(plan: string) {
-    const msg = encodeURIComponent(
-      `I just signed up for ${plan}. Give me a full audit of my business setup and help me figure out my next steps to start getting customers.`
-    );
-    router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
+  async function handleChoosePlan(planId: "starter" | "growth") {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Please sign in first.");
+        return;
+      }
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId, userId: user.id, email: user.email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("[upsell] Checkout error:", data.error);
+        alert(data.error || "Failed to start checkout. Please try again.");
+      }
+    } catch (err) {
+      console.error("[upsell] Checkout exception:", err);
+      alert("Something went wrong. Please try again.");
+    }
   }
 
   return (
@@ -1215,7 +1245,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </div>
 
               <button
-                onClick={() => handleChoosePlan("the Starter plan")}
+                onClick={() => handleChoosePlan("starter")}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -1290,7 +1320,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </div>
 
               <button
-                onClick={() => handleChoosePlan("the Growth plan")}
+                onClick={() => handleChoosePlan("growth")}
                 style={{
                   width: "100%",
                   padding: "12px 0",
