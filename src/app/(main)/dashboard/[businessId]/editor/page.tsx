@@ -639,9 +639,22 @@ export default function EditorPage() {
   // Undo
   const [undoStack, setUndoStack] = useState<{ siteContent: SiteContent; brand: Brand; layout: string }[]>([]);
 
-  // Iframe
+  // Iframe — uses srcDoc with HTML fetched from /api/site-preview
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+
+  const loadPreview = useCallback(async () => {
+    setIframeLoading(true);
+    try {
+      const res = await fetch(`/api/site-preview?businessId=${businessId}`);
+      if (res.ok) {
+        const html = await res.text();
+        setPreviewHtml(html);
+      }
+    } catch { /* ignore */ }
+    setIframeLoading(false);
+  }, [businessId]);
 
   // Initialize from business
   useEffect(() => {
@@ -651,6 +664,11 @@ export default function EditorPage() {
     setLayout((business.layout as string) || "default");
     setInitialized(true);
   }, [business, initialized]);
+
+  // Load preview HTML on init
+  useEffect(() => {
+    if (initialized) loadPreview();
+  }, [initialized, loadPreview]);
 
   // Auto-recommendations on first load
   useEffect(() => {
@@ -697,12 +715,8 @@ export default function EditorPage() {
           setSaveStatus("saved");
           setDirty(false);
           await refreshBusiness();
-          // Reload preview
-          if (iframeRef.current) {
-            setIframeLoading(true);
-            const separator = previewBaseUrl.includes("?") ? "&" : "?";
-            iframeRef.current.src = `${previewBaseUrl}${separator}t=${Date.now()}`;
-          }
+          // Reload preview from API
+          await loadPreview();
           setTimeout(() => setSaveStatus("idle"), 2000);
         } else {
           setSaveStatus("error");
@@ -877,11 +891,7 @@ export default function EditorPage() {
                   });
                   await refreshBusiness();
                   // Reload preview
-                  if (iframeRef.current) {
-                    setIframeLoading(true);
-                    const sep = previewBaseUrl.includes("?") ? "&" : "?";
-                    iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
-                  }
+                  await loadPreview();
                   setTimeout(() => setImageGenState(null), 4000);
                 } else {
                   setImageGenState({ slot, status: "error", summary: "Image generation failed" });
@@ -921,11 +931,7 @@ export default function EditorPage() {
                   } else {
                     setVideoGenState({ style: vStyle, status: "done", summary: `${vStyle === "promo" ? "Promo" : "Social clip"} video ready!` });
                     await refreshBusiness();
-                    if (iframeRef.current) {
-                      setIframeLoading(true);
-                      const sep = previewBaseUrl.includes("?") ? "&" : "?";
-                      iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
-                    }
+                    await loadPreview();
                   }
                   setTimeout(() => setVideoGenState(null), 6000);
                 } else {
@@ -1012,16 +1018,10 @@ export default function EditorPage() {
     );
   }
 
-  const slug = business.slug as string;
-
-  // Compute proper URLs — deployed site is a separate Vercel app, /site/[slug] is internal preview
+  // Live URL for "View Live" link (the separately deployed Vercel project)
   const liveUrl = business.custom_domain
-    ? `https://${business.custom_domain}?nm_admin=true`
-    : business.deployed_url ? `${business.deployed_url}?nm_admin=true` : `/site/${slug}`;
-
-  // Always use internal /site/[slug] for editor preview — the deployed site uses ISR caching
-  // (60s revalidation) which causes stale previews. Internal route reads fresh from DB.
-  const previewBaseUrl = `/site/${slug}`;
+    ? `https://${business.custom_domain}`
+    : (business.deployed_url as string) || "";
 
   return (
     <>
@@ -1203,13 +1203,7 @@ export default function EditorPage() {
                 </button>
               </div>
               <button
-                onClick={() => {
-                  if (iframeRef.current) {
-                    setIframeLoading(true);
-                    const sep = previewBaseUrl.includes("?") ? "&" : "?";
-                    iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
-                  }
-                }}
+                onClick={() => loadPreview()}
                 className="p-1.5 rounded transition"
                 style={{ color: T.text3 }}
                 title="Refresh preview"
@@ -1229,7 +1223,6 @@ export default function EditorPage() {
                     : "w-full rounded-lg overflow-hidden"
                 }`}
               >
-                {/* Loading overlay */}
                 {iframeLoading && (
                   <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
                     <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
@@ -1237,7 +1230,7 @@ export default function EditorPage() {
                 )}
                 <iframe
                   ref={iframeRef}
-                  src={`${previewBaseUrl}${previewBaseUrl.includes("?") ? "&" : "?"}t=${Date.now()}`}
+                  srcDoc={previewHtml}
                   className="w-full h-full bg-white"
                   onLoad={() => setIframeLoading(false)}
                 />

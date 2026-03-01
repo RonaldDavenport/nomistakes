@@ -165,10 +165,10 @@ export default function SettingsPage() {
     }
   }
 
-  function getSiteUrl(): string {
+  function getSiteUrl(): string | null {
     if (business!.custom_domain) return `https://${business!.custom_domain}`;
     if (business!.deployed_url) return business!.deployed_url;
-    return `/site/${business!.slug}`;
+    return null;
   }
 
   const inputStyle: React.CSSProperties = {

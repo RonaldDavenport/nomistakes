@@ -149,7 +149,7 @@ async function handleBuild(body: {
       revenue_estimate: concept.revenue,
       startup_cost: concept.startup,
       audience: concept.audience,
-      live_url: `/site/${slug}`,
+      live_url: null,
     })
     .select()
     .single();
@@ -208,7 +208,7 @@ async function handleBuild(body: {
   return NextResponse.json({
     business,
     businessId: business.id,
-    siteUrl: `/site/${slug}`,
+    siteUrl: null,
   });
 }
 

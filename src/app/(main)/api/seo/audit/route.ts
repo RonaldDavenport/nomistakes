@@ -58,7 +58,7 @@ Business: ${biz.name}
 Type: ${biz.type}
 Audience: ${biz.audience}
 Tagline: ${biz.tagline}
-Site URL: ${biz.deployed_url || `/site/${biz.slug}`}
+Site URL: ${biz.deployed_url || "Not yet deployed"}
 
 SITE CONTENT:
 - Hero: ${JSON.stringify((siteContent?.hero as Record<string, unknown>) || {})}

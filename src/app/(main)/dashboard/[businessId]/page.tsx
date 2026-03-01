@@ -67,7 +67,8 @@ function getTaskActionUrl(
   if (id.includes("review-site")) {
     const url = business.custom_domain
       ? `https://${business.custom_domain}?nm_admin=true`
-      : business.deployed_url ? `${business.deployed_url}?nm_admin=true` : `/site/${business.slug}`;
+      : business.deployed_url ? `${business.deployed_url}?nm_admin=true` : null;
+    if (!url) return null;
     return { label: "Open your site", href: url, external: true };
   }
 

@@ -22,33 +22,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if the request is on a subdomain of our app domain
-  // e.g., socialvault.nomistakes.app → subdomain = "socialvault"
-  if (host !== appDomain && host.endsWith(`.${appDomain}`)) {
-    const subdomain = host.replace(`.${appDomain}`, "");
-
-    // Skip www
-    if (subdomain === "www") {
-      return NextResponse.next();
-    }
-
-    // Rewrite to the internal /site/[slug] route
-    const url = request.nextUrl.clone();
-    url.pathname = `/site/${subdomain}${pathname === "/" ? "" : pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  // Check if request is on a completely different custom domain
-  // (i.e. not a subdomain of appDomain and not the appDomain itself)
-  if (host !== appDomain && !host.endsWith(`.${appDomain}`)) {
-    // This is a custom domain — look up the slug via a header rewrite
-    // The slug will be resolved by the /site/[slug] route from the domain
-    const url = request.nextUrl.clone();
-    url.pathname = `/site/_domain${pathname === "/" ? "" : pathname}`;
-    url.searchParams.set("_host", host);
-    return NextResponse.rewrite(url);
-  }
-
+  // Subdomains and custom domains are handled by separate Vercel deployments.
+  // No rewriting needed — just pass through.
   return NextResponse.next();
 }
 
