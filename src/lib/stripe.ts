@@ -169,3 +169,51 @@ export async function getStripeDashboardLink(accountId: string): Promise<string>
 export function isStripeConfigured(): boolean {
   return !!process.env.STRIPE_SECRET_KEY;
 }
+
+// ---------------------------------------------------------------------------
+// Platform subscription helpers (users subscribing to No Mistakes plans)
+// ---------------------------------------------------------------------------
+
+function getPriceIdForPlan(planId: string): string | null {
+  const map: Record<string, string | undefined> = {
+    starter: process.env.STRIPE_STARTER_PRICE_ID,
+    growth: process.env.STRIPE_GROWTH_PRICE_ID,
+    pro: process.env.STRIPE_PRO_PRICE_ID,
+  };
+  return map[planId] || null;
+}
+
+// Create a platform subscription checkout (user subscribing to No Mistakes plans)
+export async function createPlatformCheckout(
+  planId: string,
+  email: string,
+  userId: string,
+  successUrl: string,
+  cancelUrl: string,
+): Promise<{ url: string }> {
+  const priceId = getPriceIdForPlan(planId);
+  if (!priceId) throw new Error(`No price configured for plan: ${planId}`);
+
+  const session = await getStripe().checkout.sessions.create({
+    mode: "subscription",
+    customer_email: email,
+    line_items: [{ price: priceId, quantity: 1 }],
+    metadata: { userId, planId },
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+  });
+
+  return { url: session.url || "" };
+}
+
+// Create a billing portal session for managing subscription
+export async function createBillingPortal(
+  customerId: string,
+  returnUrl: string,
+): Promise<{ url: string }> {
+  const session = await getStripe().billingPortal.sessions.create({
+    customer: customerId,
+    return_url: returnUrl,
+  });
+  return { url: session.url };
+}

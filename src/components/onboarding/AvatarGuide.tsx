@@ -134,7 +134,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
             bottom: hasVideo ? 140 : 84,
             width: 300,
             maxWidth: "calc(100vw - 48px)",
-            background: "#1a1a2e",
+            background: "#0A0A0F",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 16,
             padding: "14px 16px",
@@ -172,7 +172,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
             <p
               className="animate-fadeIn"
               style={{
-                color: "#748ffc",
+                color: "#A855F7",
                 fontSize: 11,
                 marginTop: 10,
                 marginBottom: 0,
@@ -192,7 +192,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
               bottom: -6,
               width: 12,
               height: 12,
-              background: "#1a1a2e",
+              background: "#0A0A0F",
               border: "1px solid rgba(255,255,255,0.08)",
               borderTop: "none",
               borderLeft: "none",
@@ -212,7 +212,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
               position: "absolute",
               inset: -6,
               borderRadius: "50%",
-              border: "2px solid #4c6ef5",
+              border: "2px solid #7B39FC",
             }}
           />
         )}
@@ -226,7 +226,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
             style={{
               borderRadius: "50%",
               objectFit: "cover",
-              border: `3px solid ${isPlaying ? "#4c6ef5" : "rgba(255,255,255,0.1)"}`,
+              border: `3px solid ${isPlaying ? "#7B39FC" : "rgba(255,255,255,0.1)"}`,
               transition: "border-color 0.3s",
             }}
           />
@@ -236,13 +236,13 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
             className="avatar-fallback"
             style={{
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #4c6ef5, #7048e8)",
+              background: "linear-gradient(135deg, #7B39FC, #A855F7)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              border: `3px solid ${isPlaying ? "#748ffc" : "rgba(255,255,255,0.1)"}`,
+              border: `3px solid ${isPlaying ? "#A855F7" : "rgba(255,255,255,0.1)"}`,
               transition: "border-color 0.3s",
-              boxShadow: "0 4px 20px rgba(76,110,245,0.3)",
+              boxShadow: "0 4px 20px rgba(123,57,252,0.3)",
             }}
           >
             <span style={{ color: "#fff", fontSize: 28, fontWeight: 800 }}>M</span>
@@ -262,9 +262,9 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
             width: 28,
             height: 28,
             borderRadius: "50%",
-            background: "#1a1a2e",
+            background: "#0A0A0F",
             border: "1px solid rgba(255,255,255,0.1)",
-            color: isMuted ? "rgba(255,255,255,0.3)" : "#748ffc",
+            color: isMuted ? "rgba(255,255,255,0.3)" : "#A855F7",
             fontSize: 14,
             cursor: "pointer",
             display: "flex",

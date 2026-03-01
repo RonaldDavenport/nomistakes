@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NoMistakes - Complete Redesign Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            surface: {
+              0: '#0a0a0f',
+              50: '#0d0d12',
+              100: '#111118',
+              200: '#16161f',
+              300: '#1c1c26',
+              400: '#23232e',
+            },
+            brand: {
+              400: '#a78bfa',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0a0a0f; }
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glow {
+      box-shadow: 0 0 60px rgba(139, 92, 246, 0.15);
+    }
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(139,92,246,0.1);
+    }
+  </style>
+</head>
+<body class="text-white antialiased">
+
+  <!-- NAVIGATION -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-surface-0/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center font-bold text-sm">NM</div>
+        <span class="font-semibold">NoMistakes</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-zinc-500 hidden sm:block">Preview Mode</span>
+        <div class="w-8 h-8 rounded-full bg-surface-200"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="pt-32 pb-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm mb-8">
+        <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+        AI builds your entire business
+      </div>
+      
+      <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
+        No <span class="gradient-text">Mistakes</span>.<br>
+        Just Launch.
+      </h1>
+      
+      <p class="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        Answer 4 questions. Get a complete business with website, branding, and checkout. 
+        Built by AI. Ready in 60 seconds.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button class="px-8 py-4 rounded-xl bg-white text-surface-0 font-semibold text-lg hover:bg-zinc-100 transition-colors">
+          Start Building — Free
+        </button>
+        <button class="px-8 py-4 rounded-xl bg-surface-200 border border-white/10 text-white font-medium hover:bg-surface-300 transition-colors">
+          See Examples
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-white">2,847</div>
+          <div class="text-sm text-zinc-500 mt-1">Businesses Launched</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-white">60s</div>
+          <div class="text-sm text-zinc-500 mt-1">Average Build Time</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-white">$0</div>
+          <div class="text-sm text-zinc-500 mt-1">To Start</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">How it works</h2>
+        <p class="text-zinc-400 text-lg">From idea to live business in 4 steps</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Step 1 -->
+        <div class="relative">
+          <div class="text-6xl font-bold text-surface-300 absolute -top-4 -left-2">01</div>
+          <div class="relative pt-8">
+            <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Tell us your skills</h3>
+            <p class="text-sm text-zinc-500 leading-relaxed">Pick what you're good at. We'll match you with perfect business ideas.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative">
+          <div class="text-6xl font-bold text-surface-300 absolute -top-4 -left-2">02</div>
+          <div class="relative pt-8">
+            <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">AI generates concepts</h3>
+            <p class="text-sm text-zinc-500 leading-relaxed">Get 3 tailored business ideas with revenue estimates and startup costs.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative">
+          <div class="text-6xl font-bold text-surface-300 absolute -top-4 -left-2">03</div>
+          <div class="relative pt-8">
+            <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Pick & build</h3>
+            <p class="text-sm text-zinc-500 leading-relaxed">Choose one. AI builds your brand, website, and business plan instantly.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="relative">
+          <div class="text-6xl font-bold text-surface-300 absolute -top-4 -left-2">04</div>
+          <div class="relative pt-8">
+            <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Launch & grow</h3>
+            <p class="text-sm text-zinc-500 leading-relaxed">Go live with a real URL. Use AI Coach to create content and get customers.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCEPT CARDS PREVIEW -->
+  <section class="py-20 px-6 border-t border-white/5 bg-surface-50/50">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">What you'll get</h2>
+        <p class="text-zinc-400 text-lg">Three AI-generated business concepts</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Concept Card 1 -->
+        <div class="card-hover p-6 sm:p-8 rounded-2xl bg-surface-100 border border-white/5 relative overflow-hidden group cursor-pointer">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="relative flex flex-col sm:flex-row sm:items-center gap-6">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-xl sm:text-2xl font-bold text-white group-hover:text-brand-400 transition-colors">AI Consulting Agency</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">$15K/mo</span>
+              </div>
+              <p class="text-brand-400 font-medium mb-2">Help businesses implement AI</p>
+              <p class="text-zinc-400 text-sm leading-relaxed max-w-xl">Strategic AI consulting for mid-market companies looking to automate workflows, reduce costs, and train teams on AI tools.</p>
+              <div class="flex flex-wrap gap-4 mt-4 text-xs text-zinc-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  $500 startup
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  B2B clients
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  Services
+                </span>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors">
+                <svg class="w-6 h-6 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Concept Card 2 -->
+        <div class="card-hover p-6 sm:p-8 rounded-2xl bg-surface-100 border border-white/5 relative overflow-hidden group cursor-pointer">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="relative flex flex-col sm:flex-row sm:items-center gap-6">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-xl sm:text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">Content Automation Studio</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">$8K/mo</span>
+              </div>
+              <p class="text-purple-400 font-medium mb-2">AI-powered content for creators</p>
+              <p class="text-zinc-400 text-sm leading-relaxed max-w-xl">Done-for-you content systems for YouTubers, podcasters, and influencers. Scripts, thumbnails, and posting schedules.</p>
+              <div class="flex flex-wrap gap-4 mt-4 text-xs text-zinc-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  $200 startup
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  Creators
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  Agency
+                </span>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                <svg class="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Concept Card 3 -->
+        <div class="card-hover p-6 sm:p-8 rounded-2xl bg-surface-100 border border-white/5 relative overflow-hidden group cursor-pointer">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="relative flex flex-col sm:flex-row sm:items-center gap-6">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <h3 class="text-xl sm:text-2xl font-bold text-white group-hover:text-amber-400 transition-colors">AI Prompt Engineering Course</h3>
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">$12K/mo</span>
+              </div>
+              <p class="text-amber-400 font-medium mb-2">Teach professionals to use AI</p>
+              <p class="text-zinc-400 text-sm leading-relaxed max-w-xl">Online course teaching marketers, writers, and analysts how to craft effective prompts for ChatGPT, Claude, and Midjourney.</p>
+              <div class="flex flex-wrap gap-4 mt-4 text-xs text-zinc-500">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  $1,000 startup
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                  Professionals
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  Course
+                </span>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD PREVIEW -->
+  <section class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Your dashboard</h2>
+        <p class="text-zinc-400 text-lg">Everything you need to launch and grow</p>
+      </div>
+
+      <!-- Dashboard Mockup -->
+      <div class="rounded-2xl bg-surface-100 border border-white/5 overflow-hidden">
+        <!-- Dashboard Header -->
+        <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-purple-600"></div>
+            <span class="font-semibold">AI Consulting Agency</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-xs bg-surface-200 text-zinc-400">Free Plan</span>
+            <div class="w-8 h-8 rounded-full bg-surface-200"></div>
+          </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-6">
+          <!-- Progress -->
+          <div class="mb-8">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="text-xs font-medium text-brand-400 uppercase tracking-wider mb-1">Phase 3 of 5</p>
+                <h3 class="text-xl font-bold">Growth & Marketing</h3>
+              </div>
+              <span class="text-sm text-zinc-500">12/20 tasks</span>
+            </div>
+            <div class="h-2 rounded-full bg-surface-200 overflow-hidden">
+              <div class="h-full w-3/5 rounded-full bg-gradient-to-r from-brand-600 to-purple-500"></div>
+            </div>
+          </div>
+
+          <!-- Current Task -->
+          <div class="p-5 rounded-xl bg-surface-50 border border-white/5 mb-4">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h4 class="font-semibold">Write your first blog post</h4>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-brand-500/10 text-brand-400 border border-brand-500/20">AI Generate</span>
+                </div>
+                <p class="text-sm text-zinc-400 mb-3">Create an SEO-optimized blog post to attract organic traffic to your site.</p>
+                
+                <!-- AI Hint -->
+                <div class="p-3 rounded-lg bg-brand-500/5 border border-brand-500/10 flex items-start gap-3">
+                  <svg class="w-5 h-5 text-brand-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm text-zinc-300">Your AI Coach can write this for you in 30 seconds.</p>
+                    <button class="text-sm text-brand-400 font-medium mt-1 hover:text-brand-300">Generate with AI →</button>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs text-zinc-500 shrink-0">~20m</span>
+            </div>
+          </div>
+
+          <!-- Next Tasks -->
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-200/50 text-zinc-500">
+              <div class="w-5 h-5 rounded-full border border-white/10"></div>
+              <span class="text-sm">Set up Google Analytics</span>
+              <span class="ml-auto text-xs">~10m</span>
+            </div>
+            <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-200/50 text-zinc-500">
+              <div class="w-5 h-5 rounded-full border border-white/10"></div>
+              <span class="text-sm">Create social media accounts</span>
+              <span class="ml-auto text-xs">~15m</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="py-20 px-6 border-t border-white/5 bg-surface-50/30">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Simple pricing</h2>
+        <p class="text-zinc-400 text-lg">Start free, upgrade when you're ready</p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-6">
+        <!-- Free -->
+        <div class="p-6 rounded-2xl bg-surface-100 border border-white/5">
+          <h3 class="text-lg font-semibold mb-2">Free</h3>
+          <div class="text-3xl font-bold mb-1">$0</div>
+          <p class="text-sm text-zinc-500 mb-6">Forever free</p>
+          <ul class="space-y-3 text-sm text-zinc-400 mb-6">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              1 business
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              50 AI credits/mo
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Basic templates
+            </li>
+          </ul>
+          <button class="w-full py-3 rounded-xl bg-surface-200 text-white font-medium hover:bg-surface-300 transition-colors">Get Started</button>
+        </div>
+
+        <!-- Starter -->
+        <div class="p-6 rounded-2xl bg-surface-100 border border-brand-500/30 relative overflow-hidden">
+          <div class="absolute top-0 right-0 px-3 py-1 bg-brand-500 text-xs font-medium text-white rounded-bl-lg">Popular</div>
+          <h3 class="text-lg font-semibold mb-2">Starter</h3>
+          <div class="text-3xl font-bold mb-1">$19<span class="text-lg text-zinc-500">/mo</span></div>
+          <p class="text-sm text-zinc-500 mb-6">Perfect for launching</p>
+          <ul class="space-y-3 text-sm text-zinc-400 mb-6">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              3 businesses
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              200 AI credits/mo
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Custom domain
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Priority support
+            </li>
+          </ul>
+          <button class="w-full py-3 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-500 transition-colors">Start Free Trial</button>
+        </div>
+
+        <!-- Growth -->
+        <div class="p-6 rounded-2xl bg-surface-100 border border-white/5">
+          <h3 class="text-lg font-semibold mb-2">Growth</h3>
+          <div class="text-3xl font-bold mb-1">$49<span class="text-lg text-zinc-500">/mo</span></div>
+          <p class="text-sm text-zinc-500 mb-6">For serious founders</p>
+          <ul class="space-y-3 text-sm text-zinc-400 mb-6">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              10 businesses
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              500 AI credits/mo
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Analytics dashboard
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              AI content generation
+            </li>
+          </ul>
+          <button class="w-full py-3 rounded-xl bg-surface-200 text-white font-medium hover:bg-surface-300 transition-colors">Start Free Trial</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-20 px-6 border-t border-white/5">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold mb-4">Ready to build your business?</h2>
+      <p class="text-zinc-400 text-lg mb-8">Join 2,847 entrepreneurs who launched with NoMistakes</p>
+      <button class="px-8 py-4 rounded-xl bg-white text-surface-0 font-semibold text-lg hover:bg-zinc-100 transition-colors">
+        Start Building — Free
+      </button>
+      <p class="text-sm text-zinc-500 mt-4">No credit card required</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 px-6 border-t border-white/5">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-gradient-to-br from-brand-500 to-purple-600 flex items-center justify-center text-xs font-bold">NM</div>
+        <span class="text-sm text-zinc-500">© 2026 NoMistakes</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-zinc-500">
+        <a href="#" class="hover:text-white transition-colors">Privacy</a>
+        <a href="#" class="hover:text-white transition-colors">Terms</a>
+        <a href="#" class="hover:text-white transition-colors">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

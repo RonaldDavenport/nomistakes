@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useBusinessContext } from "./BusinessProvider";
 import { PaywallGate } from "./PaywallGate";
 import { meetsRequiredPlan } from "@/lib/plans";
+import { T, CTA_GRAD, glassCard } from "@/lib/design-tokens";
 import type { ChecklistTask } from "@/lib/checklist-data";
 
 interface TaskWithStatus extends ChecklistTask {
@@ -76,11 +77,11 @@ export function LaunchChecklist() {
 
   if (loading) {
     return (
-      <div className="p-6 rounded-xl border border-white/5 bg-surface/50">
-        <div className="h-6 w-48 bg-white/5 rounded animate-pulse mb-4" />
+      <div className="p-6 rounded-xl" style={{ ...glassCard }}>
+        <div className="h-6 w-48 rounded animate-pulse mb-4" style={{ background: "rgba(255,255,255,0.05)" }} />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-white/5 rounded-lg animate-pulse" />
+            <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.05)" }} />
           ))}
         </div>
       </div>
@@ -97,15 +98,15 @@ export function LaunchChecklist() {
       {/* Overall progress */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-bold text-white">Launch Checklist</h2>
-          <span className="text-sm text-zinc-400">
+          <h2 className="text-lg font-bold" style={{ color: T.text, fontFamily: T.h }}>Launch Checklist</h2>
+          <span className="text-sm" style={{ color: T.text2 }}>
             {totalCompleted}/{totalTasks} tasks ({pctComplete}%)
           </span>
         </div>
-        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
           <div
-            className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all duration-500"
-            style={{ width: `${pctComplete}%` }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${pctComplete}%`, background: CTA_GRAD }}
           />
         </div>
       </div>
@@ -120,16 +121,19 @@ export function LaunchChecklist() {
           const isDone = phaseCompleted === phaseTotal;
 
           return (
-            <div key={phase.phase} className="rounded-xl border border-white/5 bg-surface/50 overflow-hidden">
+            <div key={phase.phase} className="rounded-xl overflow-hidden" style={{ ...glassCard }}>
               <button
                 onClick={() => setExpandedPhase(isExpanded ? null : phase.phase)}
-                className="w-full flex items-center gap-4 p-4 sm:p-5 text-left hover:bg-white/[0.02] transition-all"
+                className="w-full flex items-center gap-4 p-4 sm:p-5 text-left transition-all"
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                  isDone
-                    ? "bg-emerald-500/10 text-emerald-400"
-                    : "bg-brand-600/10 text-brand-400"
-                }`}>
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+                  style={
+                    isDone
+                      ? { background: "rgba(34,197,94,0.10)", color: T.green }
+                      : { background: "rgba(123,57,252,0.10)", color: T.purpleLight }
+                  }
+                >
                   {isDone ? (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -139,17 +143,18 @@ export function LaunchChecklist() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">{phase.title}</p>
-                  <p className="text-xs text-zinc-500">{phaseCompleted}/{phaseTotal} tasks</p>
+                  <p className="text-sm font-semibold" style={{ color: T.text }}>{phase.title}</p>
+                  <p className="text-xs" style={{ color: T.text3 }}>{phaseCompleted}/{phaseTotal} tasks</p>
                 </div>
-                <div className="w-20 h-1.5 rounded-full bg-white/5 shrink-0 hidden sm:block">
+                <div className="w-20 h-1.5 rounded-full shrink-0 hidden sm:block" style={{ background: "rgba(255,255,255,0.05)" }}>
                   <div
-                    className={`h-full rounded-full transition-all ${isDone ? "bg-emerald-500" : "bg-brand-600"}`}
-                    style={{ width: `${phasePct}%` }}
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${phasePct}%`, background: isDone ? T.green : T.purple }}
                   />
                 </div>
                 <svg
-                  className={`w-4 h-4 text-zinc-500 transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+                  className={`w-4 h-4 transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+                  style={{ color: T.text3 }}
                   fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -166,9 +171,11 @@ export function LaunchChecklist() {
                     return (
                       <div
                         key={task.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
-                          isCompleted ? "bg-emerald-500/[0.03]" : "bg-white/[0.02]"
-                        } ${isLocked ? "opacity-60" : ""}`}
+                        className="flex items-start gap-3 p-3 rounded-lg transition-all"
+                        style={{
+                          background: isCompleted ? "rgba(34,197,94,0.03)" : "rgba(255,255,255,0.02)",
+                          opacity: isLocked ? 0.6 : 1,
+                        }}
                       >
                         {/* Checkbox */}
                         <button
@@ -177,13 +184,14 @@ export function LaunchChecklist() {
                             updateTaskStatus(task.id, isCompleted ? "pending" : "completed");
                           }}
                           disabled={isLocked || isUpdating}
-                          className={`w-5 h-5 rounded border shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                          className="w-5 h-5 rounded shrink-0 mt-0.5 flex items-center justify-center transition-all"
+                          style={
                             isCompleted
-                              ? "bg-emerald-500 border-emerald-500"
+                              ? { background: T.green, border: `1px solid ${T.green}` }
                               : isLocked
-                                ? "border-white/10 cursor-not-allowed"
-                                : "border-white/20 hover:border-brand-500"
-                          }`}
+                                ? { border: "1px solid rgba(255,255,255,0.10)", cursor: "not-allowed" }
+                                : { border: "1px solid rgba(255,255,255,0.20)" }
+                          }
                         >
                           {isCompleted && (
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
@@ -193,10 +201,16 @@ export function LaunchChecklist() {
                         </button>
 
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${isCompleted ? "text-zinc-500 line-through" : "text-white"}`}>
+                          <p
+                            className="text-sm font-medium"
+                            style={{
+                              color: isCompleted ? T.text3 : T.text,
+                              textDecoration: isCompleted ? "line-through" : "none",
+                            }}
+                          >
                             {task.title}
                           </p>
-                          <p className="text-xs text-zinc-600 mt-0.5 line-clamp-2">{task.description}</p>
+                          <p className="text-xs mt-0.5 line-clamp-2" style={{ color: T.text3 }}>{task.description}</p>
 
                           {isLocked && (
                             <PaywallGate requiredPlan={task.requiredPlan} compact>
@@ -207,19 +221,22 @@ export function LaunchChecklist() {
 
                         {/* AI badge */}
                         {!isLocked && !isCompleted && task.aiCapability !== "manual" && (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium shrink-0 ${
-                            task.aiCapability === "full"
-                              ? "bg-brand-600/10 text-brand-400"
-                              : task.aiCapability === "draft"
-                                ? "bg-purple-500/10 text-purple-400"
-                                : "bg-amber-500/10 text-amber-400"
-                          }`}>
+                          <span
+                            className="px-2 py-0.5 rounded text-[10px] font-medium shrink-0"
+                            style={
+                              task.aiCapability === "full"
+                                ? { background: "rgba(123,57,252,0.10)", color: T.purpleLight }
+                                : task.aiCapability === "draft"
+                                  ? { background: "rgba(168,85,247,0.10)", color: T.purpleLight }
+                                  : { background: "rgba(245,158,11,0.10)", color: T.gold }
+                            }
+                          >
                             {task.aiCapability === "full" ? "AI Generate" : task.aiCapability === "draft" ? "AI Draft" : "AI Strategy"}
                           </span>
                         )}
 
                         {/* Time estimate */}
-                        <span className="text-[10px] text-zinc-600 shrink-0 hidden sm:block">
+                        <span className="text-[10px] shrink-0 hidden sm:block" style={{ color: T.text3 }}>
                           ~{task.estimatedMinutes}m
                         </span>
                       </div>

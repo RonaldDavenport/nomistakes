@@ -1,8 +1,10 @@
 import { createServerClient } from "@/lib/supabase";
 import { notFound } from "next/navigation";
+import SiteAdminBar from "@/components/SiteAdminBar";
 
 export interface SiteData {
   id: string;
+  user_id?: string;
   name: string;
   slug: string;
   tagline: string;
@@ -40,11 +42,12 @@ function isLightColor(hex: string): boolean {
 
 async function getSiteData(slug: string): Promise<SiteData | null> {
   const db = createServerClient();
+  // No status filter — /site/[slug] is an internal preview route.
+  // Public-facing sites are deployed separately at deployed_url.
   const { data } = await db
     .from("businesses")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "live")
     .single();
   return data as SiteData | null;
 }
@@ -64,10 +67,10 @@ export default async function SiteLayout({
   }
 
   const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#4c6ef5";
-  const bg = colors.background || "#0a0a0f";
+  const primary = colors.primary || "#7B39FC";
+  const bg = colors.background || "#0c0a09";
   const textColor = colors.text || "#e4e4e7";
-  const accent = colors.accent || "#9775fa";
+  const accent = colors.accent || "#A855F7";
   const secondary = colors.secondary || "#1e1b4b";
   const fonts = site.brand?.fonts || {};
   const cta = site.site_content?.cta || {};
@@ -75,10 +78,10 @@ export default async function SiteLayout({
   const light = isLightColor(bg);
   const base = light ? "0,0,0" : "255,255,255";
   const navLinks = [
-    { href: `/site/${slug}`, label: "Home" },
-    { href: `/site/${slug}/about`, label: "About" },
-    { href: `/site/${slug}/products`, label: site.type === "services" ? "Services" : "Products" },
-    { href: `/site/${slug}/contact`, label: "Contact" },
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: "/products", label: site.type === "services" ? "Services" : "Products" },
+    { href: "/contact", label: "Contact" },
   ];
 
   return (
@@ -721,10 +724,19 @@ export default async function SiteLayout({
         `}} />
       </head>
       <body>
+        {/* Admin bar — only renders for logged-in site owner */}
+        {site.user_id && (
+          <SiteAdminBar
+            ownerId={site.user_id}
+            businessId={site.id}
+            businessName={site.name}
+          />
+        )}
+
         {/* Navigation */}
         <nav className="site-nav">
           <div className="site-nav-inner">
-            <a href={`/site/${slug}`} className="site-nav-brand">{site.name}</a>
+            <a href="/" className="site-nav-brand">{site.name}</a>
             <ul className="site-nav-links">
               {navLinks.map((link) => (
                 <li key={link.href}>
@@ -732,7 +744,7 @@ export default async function SiteLayout({
                 </li>
               ))}
             </ul>
-            <a href={`/site/${slug}/products`} className="site-nav-cta">
+            <a href={"/products"} className="site-nav-cta">
               {cta.button_text || "Get Started"}
             </a>
             <button className="site-nav-toggle" aria-label="Menu" onClick={undefined}>
@@ -747,7 +759,7 @@ export default async function SiteLayout({
           {navLinks.map((link) => (
             <a key={link.href} href={link.href}>{link.label}</a>
           ))}
-          <a href={`/site/${slug}/products`} className="cta-btn" style={{ marginTop: 24, textAlign: "center" }}>
+          <a href={"/products"} className="cta-btn" style={{ marginTop: 24, textAlign: "center" }}>
             <span>{cta.button_text || "Get Started"}</span>
           </a>
         </div>
@@ -794,8 +806,8 @@ export default async function SiteLayout({
             <div>
               <p className="site-footer-heading">Company</p>
               <ul className="site-footer-links">
-                <li><a href={`/site/${slug}/about`}>About Us</a></li>
-                <li><a href={`/site/${slug}/contact`}>Contact</a></li>
+                <li><a href={"/about"}>About Us</a></li>
+                <li><a href={"/contact"}>Contact</a></li>
                 <li><a href="#">Privacy Policy</a></li>
                 <li><a href="#">Terms of Service</a></li>
               </ul>

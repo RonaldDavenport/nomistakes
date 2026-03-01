@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ConnectComponentsProvider } from "@stripe/react-connect-js";
 import { loadConnectAndInitialize } from "@stripe/connect-js";
+import { T } from "@/lib/design-tokens";
 
 type StripeConnectInstance = Awaited<ReturnType<typeof loadConnectAndInitialize>>;
 
@@ -38,9 +39,9 @@ export default function StripeConnectProvider({
       appearance: {
         overlays: "dialog",
         variables: {
-          colorBackground: "#111118",
-          colorText: "#e4e4e7",
-          colorPrimary: "#4c6ef5",
+          colorBackground: T.bgEl,
+          colorText: T.text,
+          colorPrimary: T.purple,
           borderRadius: "12px",
           colorSecondaryText: "#a1a1aa",
           colorBorder: "#27272a",
@@ -63,7 +64,7 @@ export default function StripeConnectProvider({
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
         <div style={{
-          width: 24, height: 24, border: "2px solid #4c6ef5",
+          width: 24, height: 24, border: `2px solid ${T.purple}`,
           borderTopColor: "transparent", borderRadius: "50%",
           animation: "spin 0.6s linear infinite",
           margin: "0 auto",

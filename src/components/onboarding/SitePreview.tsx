@@ -148,14 +148,14 @@ export default function SitePreview({
             borderRadius: 16,
             border: "1px solid rgba(255,255,255,0.08)",
             overflow: "hidden",
-            background: "#111118",
+            background: "#0A0A0F",
           }}
         >
           {/* Browser chrome */}
           <div
             style={{
               padding: "10px 14px",
-              background: "#1a1a24",
+              background: "#111118",
               borderBottom: "1px solid rgba(255,255,255,0.06)",
               display: "flex",
               alignItems: "center",
@@ -209,8 +209,8 @@ export default function SitePreview({
             padding: "12px 16px",
             borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.08)",
-            background: "#111118",
-            color: "#748ffc",
+            background: "#0A0A0F",
+            color: "#A855F7",
             fontSize: 13,
             fontWeight: 600,
             cursor: "pointer",
@@ -235,7 +235,7 @@ export default function SitePreview({
               border: "1px solid rgba(255,255,255,0.08)",
               overflow: "hidden",
               marginBottom: 16,
-              background: "#111118",
+              background: "#0A0A0F",
             }}
           >
             <div style={{ height: 380, overflow: "hidden" }}>

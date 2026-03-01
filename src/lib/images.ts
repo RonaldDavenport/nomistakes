@@ -13,6 +13,45 @@ interface ImageSet {
   products: string[];
 }
 
+/**
+ * Generate a single image for a specific slot (hero, about, product_N).
+ * Used by the AI editor for on-demand image generation.
+ */
+export async function generateSingleImage(
+  businessId: string,
+  slot: string,
+  prompt: string
+): Promise<string> {
+  const response = await getOpenAI().images.generate({
+    model: "gpt-image-1",
+    prompt:
+      prompt +
+      " CRITICAL: The image must contain absolutely ZERO text, ZERO letters, ZERO numbers, ZERO words, ZERO logos, ZERO watermarks. All surfaces and screens must be blank or show abstract patterns only.",
+    n: 1,
+    size: "1536x1024",
+    quality: "low",
+  });
+
+  const b64 = response.data?.[0]?.b64_json;
+  if (!b64) throw new Error("No image data returned");
+
+  const buffer = Buffer.from(b64, "base64");
+  const path = `${businessId}/${slot}.webp`;
+  const db = createServerClient();
+
+  const { error: uploadError } = await db.storage
+    .from("business-images")
+    .upload(path, buffer, { contentType: "image/webp", upsert: true });
+
+  if (uploadError) throw uploadError;
+
+  const { data: urlData } = db.storage
+    .from("business-images")
+    .getPublicUrl(path);
+
+  return urlData.publicUrl;
+}
+
 interface ProductInfo {
   name: string;
   desc: string;

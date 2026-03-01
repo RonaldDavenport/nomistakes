@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useBusinessContext } from "@/components/dashboard/BusinessProvider";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { T, CTA_GRAD, glassCard } from "@/lib/design-tokens";
 
 /* ─── Types ─── */
 
@@ -77,9 +78,9 @@ function TextField({ label, value, onChange, maxLength, placeholder }: {
   return (
     <div className="mb-3">
       <div className="flex items-center justify-between mb-1">
-        <label className="text-xs text-zinc-400 font-medium">{label}</label>
+        <label className="text-xs font-medium" style={{ color: T.text2 }}>{label}</label>
         {maxLength && (
-          <span className={`text-[10px] ${value.length > maxLength ? "text-red-400" : "text-zinc-600"}`}>
+          <span className="text-[10px]" style={{ color: value.length > maxLength ? "#ef4444" : T.text3 }}>
             {value.length}/{maxLength}
           </span>
         )}
@@ -89,7 +90,8 @@ function TextField({ label, value, onChange, maxLength, placeholder }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm focus:outline-none focus:border-brand-500 transition placeholder-zinc-600"
+        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none transition"
+        style={{ background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}`, color: T.text, "--tw-placeholder-color": T.text3 } as React.CSSProperties}
       />
     </div>
   );
@@ -102,9 +104,9 @@ function TextAreaField({ label, value, onChange, rows, maxLength }: {
   return (
     <div className="mb-3">
       <div className="flex items-center justify-between mb-1">
-        <label className="text-xs text-zinc-400 font-medium">{label}</label>
+        <label className="text-xs font-medium" style={{ color: T.text2 }}>{label}</label>
         {maxLength && (
-          <span className={`text-[10px] ${value.length > maxLength ? "text-red-400" : "text-zinc-600"}`}>
+          <span className="text-[10px]" style={{ color: value.length > maxLength ? "#ef4444" : T.text3 }}>
             {value.length}/{maxLength}
           </span>
         )}
@@ -113,7 +115,8 @@ function TextAreaField({ label, value, onChange, rows, maxLength }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows || 3}
-        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm focus:outline-none focus:border-brand-500 transition resize-y placeholder-zinc-600"
+        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none transition resize-y"
+        style={{ background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}`, color: T.text }}
       />
     </div>
   );
@@ -128,16 +131,18 @@ function ColorField({ label, value, onChange }: {
         type="color"
         value={value || "#6366f1"}
         onChange={(e) => onChange(e.target.value)}
-        className="w-8 h-8 rounded-lg border border-white/10 cursor-pointer bg-transparent"
+        className="w-8 h-8 rounded-lg cursor-pointer bg-transparent"
+        style={{ border: `1px solid ${T.border}` }}
       />
       <div className="flex-1">
-        <label className="text-xs text-zinc-400 font-medium block mb-0.5">{label}</label>
+        <label className="text-xs font-medium block mb-0.5" style={{ color: T.text2 }}>{label}</label>
         <input
           type="text"
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#hex"
-          className="w-full px-2 py-1 rounded bg-black/30 border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-brand-500 transition"
+          className="w-full px-2 py-1 rounded text-xs font-mono focus:outline-none transition"
+          style={{ background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}`, color: T.text }}
         />
       </div>
     </div>
@@ -150,11 +155,12 @@ function SelectField({ label, value, onChange, options }: {
 }) {
   return (
     <div className="mb-3">
-      <label className="text-xs text-zinc-400 font-medium block mb-1">{label}</label>
+      <label className="text-xs font-medium block mb-1" style={{ color: T.text2 }}>{label}</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm focus:outline-none focus:border-brand-500 transition"
+        className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none transition"
+        style={{ background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}`, color: T.text }}
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -166,25 +172,25 @@ function SelectField({ label, value, onChange, options }: {
 
 /* ─── EditorTopBar ─── */
 
-function EditorTopBar({ businessName, businessId, slug, saveStatus, canUndo, onUndo }: {
-  businessName: string; businessId: string; slug: string;
+function EditorTopBar({ businessName, businessId, liveUrl, saveStatus, canUndo, onUndo }: {
+  businessName: string; businessId: string; liveUrl: string;
   saveStatus: SaveStatus; canUndo: boolean; onUndo: () => void;
 }) {
-  const siteUrl = `/site/${slug}`;
   return (
-    <div className="h-12 border-b border-white/5 bg-surface/95 backdrop-blur-xl flex items-center justify-between px-4 shrink-0">
+    <div className="h-12 flex items-center justify-between px-4 shrink-0" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgEl, backdropFilter: "blur(20px)" }}>
       <div className="flex items-center gap-3">
         <Link
           href={`/dashboard/${businessId}`}
-          className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm transition-colors"
+          className="flex items-center gap-1.5 text-sm transition-colors"
+          style={{ color: T.text2 }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Back
         </Link>
-        <span className="text-white/10">|</span>
-        <span className="text-sm font-medium text-white truncate max-w-[200px]">{businessName}</span>
+        <span style={{ color: T.border }}>|</span>
+        <span className="text-sm font-medium truncate max-w-[200px]" style={{ color: T.text }}>{businessName}</span>
       </div>
 
       <div className="flex items-center gap-3">
@@ -210,8 +216,8 @@ function EditorTopBar({ businessName, businessId, slug, saveStatus, canUndo, onU
           )}
           {saveStatus === "idle" && (
             <>
-              <div className="w-2 h-2 rounded-full bg-zinc-600" />
-              <span className="text-zinc-500">Up to date</span>
+              <div className="w-2 h-2 rounded-full" style={{ background: T.text3 }} />
+              <span style={{ color: T.text3 }}>Up to date</span>
             </>
           )}
         </div>
@@ -220,7 +226,8 @@ function EditorTopBar({ businessName, businessId, slug, saveStatus, canUndo, onU
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className="p-1.5 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-lg transition disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{ color: T.text2 }}
           title="Undo (Ctrl+Z)"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -230,10 +237,11 @@ function EditorTopBar({ businessName, businessId, slug, saveStatus, canUndo, onU
 
         {/* View live */}
         <a
-          href={siteUrl}
+          href={liveUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white border border-white/10 hover:bg-white/5 transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+          style={{ color: T.text2, border: `1px solid ${T.border}` }}
         >
           View Live
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
@@ -272,9 +280,9 @@ function FeaturesPanel({ content, onUpdate }: { content: SiteContent; onUpdate: 
   return (
     <>
       {features.map((f, i) => (
-        <div key={i} className="mb-4 p-3 rounded-lg border border-white/5 bg-black/20">
+        <div key={i} className="mb-4 p-3 rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Feature {i + 1}</span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold">Feature {i + 1}</span>
             <button
               onClick={() => {
                 const updated = features.filter((_, idx) => idx !== i);
@@ -393,9 +401,9 @@ function TestimonialsPanel({ content, onUpdate }: { content: SiteContent; onUpda
   return (
     <>
       {testimonials.map((t, i) => (
-        <div key={i} className="mb-4 p-3 rounded-lg border border-white/5 bg-black/20">
+        <div key={i} className="mb-4 p-3 rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Testimonial {i + 1}</span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold">Testimonial {i + 1}</span>
             <button onClick={() => onUpdate("testimonials", testimonials.filter((_, idx) => idx !== i))} className="text-[10px] text-red-400 hover:text-red-300 transition">Remove</button>
           </div>
           <TextField label="Name" value={t.name} onChange={(v) => {
@@ -429,9 +437,9 @@ function ProcessPanel({ content, onUpdate }: { content: SiteContent; onUpdate: (
     <>
       <TextField label="Section Title" value={process.title || ""} onChange={(v) => onUpdate("process", { ...process, title: v })} />
       {steps.map((s, i) => (
-        <div key={i} className="mb-3 p-3 rounded-lg border border-white/5 bg-black/20">
+        <div key={i} className="mb-3 p-3 rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">Step {i + 1}</span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold">Step {i + 1}</span>
             <button onClick={() => onUpdate("process", { ...process, steps: steps.filter((_, idx) => idx !== i) })} className="text-[10px] text-red-400 hover:text-red-300 transition">Remove</button>
           </div>
           <TextField label="Title" value={s.title} onChange={(v) => {
@@ -457,9 +465,9 @@ function FAQPanel({ content, onUpdate }: { content: SiteContent; onUpdate: (path
   return (
     <>
       {faq.map((f, i) => (
-        <div key={i} className="mb-3 p-3 rounded-lg border border-white/5 bg-black/20">
+        <div key={i} className="mb-3 p-3 rounded-lg">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold">FAQ {i + 1}</span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold">FAQ {i + 1}</span>
             <button onClick={() => onUpdate("faq", faq.filter((_, idx) => idx !== i))} className="text-[10px] text-red-400 hover:text-red-300 transition">Remove</button>
           </div>
           <TextField label="Question" value={f.question} onChange={(v) => {
@@ -528,15 +536,15 @@ function BrandPanel({ brand, layout, onBrandUpdate, onLayoutChange }: {
         ]}
       />
       <div className="mt-3">
-        <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Colors</p>
+        <p className="text-[10px] uppercase tracking-wider font-semibold mb-2">Colors</p>
         <ColorField label="Primary" value={brand.colors?.primary || "#6366f1"} onChange={(v) => onBrandUpdate("colors.primary", v)} />
         <ColorField label="Accent" value={brand.colors?.accent || "#a78bfa"} onChange={(v) => onBrandUpdate("colors.accent", v)} />
         <ColorField label="Secondary" value={brand.colors?.secondary || "#1e1b4b"} onChange={(v) => onBrandUpdate("colors.secondary", v)} />
-        <ColorField label="Background" value={brand.colors?.background || "#0a0a0f"} onChange={(v) => onBrandUpdate("colors.background", v)} />
+        <ColorField label="Background" value={brand.colors?.background || "#0c0a09"} onChange={(v) => onBrandUpdate("colors.background", v)} />
         <ColorField label="Text" value={brand.colors?.text || "#e4e4e7"} onChange={(v) => onBrandUpdate("colors.text", v)} />
       </div>
       <div className="mt-3">
-        <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-2">Fonts</p>
+        <p className="text-[10px] uppercase tracking-wider font-semibold mb-2">Fonts</p>
         <TextField label="Heading Font" value={brand.fonts?.heading || ""} onChange={(v) => onBrandUpdate("fonts.heading", v)} placeholder="e.g. Poppins" />
         <TextField label="Body Font" value={brand.fonts?.body || ""} onChange={(v) => onBrandUpdate("fonts.body", v)} placeholder="e.g. Inter" />
       </div>
@@ -611,6 +619,22 @@ export default function EditorPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiStatus, setAiStatus] = useState<"idle" | "success" | "error">("idle");
+  const [aiChangedSections, setAiChangedSections] = useState<string[]>([]);
+
+  // Multi-action state
+  const [imageGenState, setImageGenState] = useState<{ slot: string; status: "generating" | "done" | "error"; summary: string } | null>(null);
+  const [auditResults, setAuditResults] = useState<{ findings: { category: string; severity: string; title: string; description: string; recommendation: string; section?: string }[]; overall_score: number; summary: string } | null>(null);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+
+  // Auto-recommendations
+  const [recommendations, setRecommendations] = useState<{ title: string; description: string; action: string; severity: string; section: string }[]>([]);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recsDismissed, setRecsDismissed] = useState(false);
+  const recsFetched = useRef(false);
+
+  // Video generation state
+  const [videoGenState, setVideoGenState] = useState<{ style: string; status: "scripting" | "voiceover" | "rendering" | "done" | "error"; summary: string } | null>(null);
 
   // Undo
   const [undoStack, setUndoStack] = useState<{ siteContent: SiteContent; brand: Brand; layout: string }[]>([]);
@@ -627,6 +651,33 @@ export default function EditorPage() {
     setLayout((business.layout as string) || "default");
     setInitialized(true);
   }, [business, initialized]);
+
+  // Auto-recommendations on first load
+  useEffect(() => {
+    if (!initialized || !business || !siteContent || recsFetched.current) return;
+    recsFetched.current = true;
+    setRecsLoading(true);
+    fetch("/api/site-edit/recommendations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessId: business.id,
+        siteContent,
+        brand,
+        businessContext: {
+          name: business.name,
+          tagline: business.tagline,
+          type: business.type,
+          audience: business.audience,
+        },
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => setRecommendations(data.recommendations || []))
+      .catch(() => {})
+      .finally(() => setRecsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized]);
 
   // Autosave
   useEffect(() => {
@@ -649,7 +700,8 @@ export default function EditorPage() {
           // Reload preview
           if (iframeRef.current) {
             setIframeLoading(true);
-            iframeRef.current.src = `/site/${business.slug}?t=${Date.now()}`;
+            const separator = previewBaseUrl.includes("?") ? "&" : "?";
+            iframeRef.current.src = `${previewBaseUrl}${separator}t=${Date.now()}`;
           }
           setTimeout(() => setSaveStatus("idle"), 2000);
         } else {
@@ -727,14 +779,22 @@ export default function EditorPage() {
     setDirty(true);
   }
 
-  // AI edit
+  // AI edit — processes multi-action response from tool_use API
   async function handleAIEdit() {
     if (!aiPrompt.trim() || aiLoading || !business || !siteContent || !brand) return;
     pushUndoStack();
     setAiLoading(true);
     setAiSummary(null);
+    setAiStatus("idle");
+    setAiChangedSections([]);
+    setAiMessage(null);
+    setAuditResults(null);
     const prompt = aiPrompt;
     setAiPrompt("");
+
+    // Snapshot before for diff
+    const beforeContent = JSON.stringify(siteContent);
+    const beforeBrand = JSON.stringify(brand);
 
     try {
       const res = await fetch("/api/site-edit", {
@@ -755,15 +815,189 @@ export default function EditorPage() {
 
       if (!res.ok) throw new Error("AI edit failed");
       const data = await res.json();
+      const actions: Record<string, unknown>[] = data.actions || [];
 
-      setSiteContent(data.site_content);
-      if (data.brand) setBrand(data.brand);
-      setAiSummary(data.summary);
-      setDirty(true);
-      setTimeout(() => setAiSummary(null), 5000);
+      const summaries: string[] = [];
+      const changed: string[] = [];
+
+      for (const action of actions) {
+        switch (action.type) {
+          case "content_edit": {
+            const newContent = action.site_content as SiteContent;
+            const newBrand = action.brand as Brand | null;
+
+            // Detect changed sections
+            const sectionKeys = ["hero", "about", "features", "products", "testimonials", "process", "faq", "cta", "contact", "seo"];
+            const oldContent = JSON.parse(beforeContent) as Record<string, unknown>;
+            for (const key of sectionKeys) {
+              if (JSON.stringify(oldContent[key]) !== JSON.stringify((newContent as Record<string, unknown>)[key])) {
+                changed.push(key);
+              }
+            }
+            if (newBrand && JSON.stringify(newBrand) !== beforeBrand) {
+              changed.push("brand");
+            }
+
+            setSiteContent(newContent);
+            if (newBrand) setBrand(newBrand);
+            setDirty(true);
+            summaries.push(action.summary as string || "Content updated");
+            break;
+          }
+
+          case "image_generating": {
+            const slot = action.slot as string;
+            const imagePrompt = action.imagePrompt as string;
+            summaries.push(action.summary as string || `Generating ${slot} image...`);
+
+            // Fire async image generation
+            setImageGenState({ slot, status: "generating", summary: action.summary as string || `Generating ${slot} image...` });
+            fetch("/api/site-edit/image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ businessId: business.id, slot, imagePrompt }),
+            })
+              .then(async (imgRes) => {
+                if (imgRes.ok) {
+                  const imgData = await imgRes.json();
+                  setImageGenState({ slot, status: "done", summary: `${slot} image generated` });
+                  // Update local images state
+                  setSiteContent((prev) => {
+                    if (!prev) return prev;
+                    const images = { ...(prev.images || {}) } as Record<string, unknown>;
+                    if (slot.startsWith("product_")) {
+                      const idx = parseInt(slot.replace("product_", ""), 10);
+                      const products = Array.isArray(images.products) ? [...(images.products as string[])] : [];
+                      products[idx] = imgData.url;
+                      images.products = products;
+                    } else {
+                      images[slot] = imgData.url;
+                    }
+                    return { ...prev, images: images as SiteContent["images"] };
+                  });
+                  await refreshBusiness();
+                  // Reload preview
+                  if (iframeRef.current) {
+                    setIframeLoading(true);
+                    const sep = previewBaseUrl.includes("?") ? "&" : "?";
+                    iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
+                  }
+                  setTimeout(() => setImageGenState(null), 4000);
+                } else {
+                  setImageGenState({ slot, status: "error", summary: "Image generation failed" });
+                  setTimeout(() => setImageGenState(null), 4000);
+                }
+              })
+              .catch(() => {
+                setImageGenState({ slot, status: "error", summary: "Image generation failed" });
+                setTimeout(() => setImageGenState(null), 4000);
+              });
+            break;
+          }
+
+          case "video_generating": {
+            const vStyle = action.style as string;
+            summaries.push(action.summary as string || `Generating ${vStyle} video...`);
+
+            // Fire async video generation pipeline
+            setVideoGenState({ style: vStyle, status: "scripting", summary: "Writing video script..." });
+            fetch("/api/site-edit/video", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                businessId: business.id,
+                style: vStyle,
+                topic: action.topic,
+                talking_points: action.talking_points,
+              }),
+            })
+              .then(async (vidRes) => {
+                if (vidRes.ok) {
+                  const vidData = await vidRes.json();
+                  if (vidData.partial) {
+                    // Remotion Lambda not configured — show script only
+                    setVideoGenState({ style: vStyle, status: "done", summary: "Video script generated (rendering not configured)" });
+                    setAiMessage(vidData.message);
+                  } else {
+                    setVideoGenState({ style: vStyle, status: "done", summary: `${vStyle === "promo" ? "Promo" : "Social clip"} video ready!` });
+                    await refreshBusiness();
+                    if (iframeRef.current) {
+                      setIframeLoading(true);
+                      const sep = previewBaseUrl.includes("?") ? "&" : "?";
+                      iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
+                    }
+                  }
+                  setTimeout(() => setVideoGenState(null), 6000);
+                } else {
+                  setVideoGenState({ style: vStyle, status: "error", summary: "Video generation failed" });
+                  setTimeout(() => setVideoGenState(null), 5000);
+                }
+              })
+              .catch(() => {
+                setVideoGenState({ style: vStyle, status: "error", summary: "Video generation failed" });
+                setTimeout(() => setVideoGenState(null), 5000);
+              });
+            break;
+          }
+
+          case "video_embed": {
+            const videoUrl = action.video_url as string;
+            summaries.push(action.summary as string || "Video embedded");
+            // PATCH business with video_url
+            fetch(`/api/business/${business.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ video_url: videoUrl }),
+            }).then(() => refreshBusiness());
+            break;
+          }
+
+          case "audit": {
+            setAuditResults({
+              findings: action.findings as { category: string; severity: string; title: string; description: string; recommendation: string; section?: string }[],
+              overall_score: action.overall_score as number,
+              summary: action.summary as string,
+            });
+            summaries.push(action.summary as string || "Audit complete");
+            break;
+          }
+
+          case "blog_created": {
+            summaries.push(action.summary as string || "Blog post created");
+            // POST to /api/blog
+            fetch("/api/blog", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                businessId: business.id,
+                title: action.title,
+                slug: action.slug,
+                content: action.content,
+                meta_description: action.meta_description,
+                keywords: action.keywords,
+              }),
+            });
+            break;
+          }
+
+          case "message": {
+            setAiMessage(action.text as string);
+            summaries.push(action.summary as string || "AI response");
+            break;
+          }
+        }
+      }
+
+      const combinedSummary = summaries.join(" · ");
+      setAiSummary(combinedSummary);
+      setAiStatus("success");
+      setAiChangedSections(changed);
+      // Auto-clear after 8 seconds (but not audit results)
+      setTimeout(() => { setAiStatus("idle"); setAiSummary(null); setAiChangedSections([]); setAiMessage(null); }, 8000);
     } catch {
       setAiSummary("Failed to apply AI edit. Try again.");
-      setTimeout(() => setAiSummary(null), 3000);
+      setAiStatus("error");
+      setTimeout(() => { setAiStatus("idle"); setAiSummary(null); }, 4000);
     } finally {
       setAiLoading(false);
     }
@@ -773,12 +1007,21 @@ export default function EditorPage() {
   if (!business || !siteContent || !brand) {
     return (
       <div className="flex items-center justify-center h-[80vh]">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
       </div>
     );
   }
 
   const slug = business.slug as string;
+
+  // Compute proper URLs — deployed site is a separate Vercel app, /site/[slug] is internal preview
+  const liveUrl = business.custom_domain
+    ? `https://${business.custom_domain}?nm_admin=true`
+    : business.deployed_url ? `${business.deployed_url}?nm_admin=true` : `/site/${slug}`;
+
+  // Always use internal /site/[slug] for editor preview — the deployed site uses ISR caching
+  // (60s revalidation) which causes stale previews. Internal route reads fresh from DB.
+  const previewBaseUrl = `/site/${slug}`;
 
   return (
     <>
@@ -787,30 +1030,31 @@ export default function EditorPage() {
         main { overflow: hidden !important; height: 100vh !important; }
         aside { display: none !important; }
         [data-dashboard-header] { display: none !important; }
-        .site-nav, .site-footer { pointer-events: none; }
       `}</style>
 
-      <div className="flex flex-col h-screen bg-[#0a0a0f]">
+      <div className="flex flex-col h-screen" style={{ background: T.bg }}>
         <EditorTopBar
           businessName={business.name as string}
           businessId={businessId}
-          slug={slug}
+          liveUrl={liveUrl}
           saveStatus={saveStatus}
           canUndo={undoStack.length > 0}
           onUndo={handleUndo}
         />
 
         {/* Mobile tab switcher */}
-        <div className="lg:hidden flex border-b border-white/5 bg-surface/95">
+        <div className="lg:hidden flex" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgEl }}>
           <button
             onClick={() => setMobileTab("edit")}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mobileTab === "edit" ? "text-brand-400 border-b-2 border-brand-500" : "text-zinc-500"}`}
+            className="flex-1 py-2.5 text-xs font-semibold text-center transition"
+            style={mobileTab === "edit" ? { color: T.purpleLight, borderBottom: `2px solid ${T.purple}` } : { color: T.text3 }}
           >
             Edit
           </button>
           <button
             onClick={() => setMobileTab("preview")}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center transition ${mobileTab === "preview" ? "text-brand-400 border-b-2 border-brand-500" : "text-zinc-500"}`}
+            className="flex-1 py-2.5 text-xs font-semibold text-center transition"
+            style={mobileTab === "preview" ? { color: T.purpleLight, borderBottom: `2px solid ${T.purple}` } : { color: T.text3 }}
           >
             Preview
           </button>
@@ -819,13 +1063,14 @@ export default function EditorPage() {
         {/* Main content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Sidebar */}
-          <div className={`w-80 border-r border-white/5 bg-surface/95 flex flex-col shrink-0 overflow-hidden ${mobileTab === "preview" ? "hidden lg:flex" : "flex"} ${mobileTab === "edit" ? "w-full lg:w-80" : ""}`}>
+          <div className={`w-80 flex flex-col shrink-0 overflow-hidden ${mobileTab === "preview" ? "hidden lg:flex" : "flex"} ${mobileTab === "edit" ? "w-full lg:w-80" : ""}`} style={{ borderRight: `1px solid ${T.border}`, background: T.bgEl }}>
             {/* Toggle for larger screens */}
-            <div className="hidden lg:flex items-center justify-between px-4 py-2.5 border-b border-white/5">
-              <span className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Sections</span>
+            <div className="hidden lg:flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${T.border}` }}>
+              <span className="text-xs uppercase tracking-wider font-semibold" style={{ color: T.text3 }}>Sections</span>
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="text-zinc-500 hover:text-white transition p-1"
+                className="transition p-1"
+                style={{ color: T.text3 }}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? "M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" : "M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5"} />
@@ -833,21 +1078,82 @@ export default function EditorPage() {
               </button>
             </div>
 
+            {/* AI Recommendations */}
+            {!recsDismissed && (recsLoading || recommendations.length > 0) && (
+              <div style={{ borderBottom: `1px solid ${T.border}` }}>
+                <div className="px-4 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-3.5 h-3.5" style={{ color: T.gold }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                    </svg>
+                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: T.text2 }}>Quick Wins</span>
+                  </div>
+                  <button
+                    onClick={() => setRecsDismissed(true)}
+                    className="transition p-0.5"
+                    style={{ color: T.text3 }}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {recsLoading ? (
+                  <div className="px-4 pb-3 flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                    <span className="text-[11px]" style={{ color: T.text3 }}>Analyzing your site...</span>
+                  </div>
+                ) : (
+                  <div className="px-3 pb-3 space-y-1.5">
+                    {recommendations.map((rec, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setAiPrompt(rec.action);
+                          setRecsDismissed(true);
+                        }}
+                        className="w-full text-left p-2.5 rounded-lg hover:bg-white/[0.03] transition group"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span style={{
+                            width: 6, height: 6, borderRadius: "50%", marginTop: 5, flexShrink: 0,
+                            backgroundColor: rec.severity === "critical" ? "#ef4444" : rec.severity === "important" ? T.gold : T.purple,
+                          }} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium transition" style={{ color: T.text2 }}>{rec.title}</p>
+                            <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: T.text3 }}>{rec.description}</p>
+                          </div>
+                          <svg className="w-3 h-3 transition shrink-0 mt-0.5" style={{ color: T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                          </svg>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Section accordion */}
             <div className="flex-1 overflow-y-auto">
               {SECTIONS.map((section) => {
                 const isActive = activeSection === section.key;
+                const wasChanged = aiChangedSections.includes(section.key);
                 return (
-                  <div key={section.key} className="border-b border-white/5">
+                  <div key={section.key} style={{ borderBottom: `1px solid ${T.border}` }}>
                     <button
                       onClick={() => setActiveSection(isActive ? "" : section.key)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left transition ${isActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]"}`}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left transition"
+                      style={wasChanged ? { backgroundColor: "rgba(34,197,94,0.06)" } : isActive ? { background: "rgba(123,57,252,0.06)" } : undefined}
                     >
-                      <svg className={`w-4 h-4 shrink-0 ${isActive ? "text-brand-400" : "text-zinc-500"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <svg className="w-4 h-4 shrink-0" style={{ color: isActive ? T.purpleLight : T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d={section.icon} />
                       </svg>
-                      <span className={`text-sm font-medium flex-1 ${isActive ? "text-white" : "text-zinc-400"}`}>{section.label}</span>
-                      <svg className={`w-3 h-3 text-zinc-600 transition-transform ${isActive ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <span className="text-sm font-medium flex-1" style={{ color: isActive ? T.text : T.text2 }}>{section.label}</span>
+                      {wasChanged && (
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#10b981", flexShrink: 0 }} />
+                      )}
+                      <svg className={`w-3 h-3 transition-transform ${isActive ? "rotate-180" : ""}`} style={{ color: T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -871,13 +1177,14 @@ export default function EditorPage() {
           </div>
 
           {/* Preview pane */}
-          <div className={`flex-1 flex flex-col bg-[#1a1a1a] overflow-hidden ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`}>
+          <div className={`flex-1 flex flex-col overflow-hidden ${mobileTab === "edit" ? "hidden lg:flex" : "flex"}`} style={{ background: T.bgAlt }}>
             {/* Preview toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-surface/95 shrink-0">
+            <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ borderBottom: `1px solid ${T.border}`, background: T.bgEl }}>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPreviewMode("desktop")}
-                  className={`p-1.5 rounded transition ${previewMode === "desktop" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                  className="p-1.5 rounded transition"
+                  style={previewMode === "desktop" ? { background: "rgba(255,255,255,0.10)", color: T.text } : { color: T.text3 }}
                   title="Desktop preview"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -886,7 +1193,8 @@ export default function EditorPage() {
                 </button>
                 <button
                   onClick={() => setPreviewMode("mobile")}
-                  className={`p-1.5 rounded transition ${previewMode === "mobile" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"}`}
+                  className="p-1.5 rounded transition"
+                  style={previewMode === "mobile" ? { background: "rgba(255,255,255,0.10)", color: T.text } : { color: T.text3 }}
                   title="Mobile preview"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -898,10 +1206,12 @@ export default function EditorPage() {
                 onClick={() => {
                   if (iframeRef.current) {
                     setIframeLoading(true);
-                    iframeRef.current.src = `/site/${slug}?t=${Date.now()}`;
+                    const sep = previewBaseUrl.includes("?") ? "&" : "?";
+                    iframeRef.current.src = `${previewBaseUrl}${sep}t=${Date.now()}`;
                   }
                 }}
-                className="p-1.5 rounded text-zinc-500 hover:text-white hover:bg-white/5 transition"
+                className="p-1.5 rounded transition"
+                style={{ color: T.text3 }}
                 title="Refresh preview"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -915,19 +1225,19 @@ export default function EditorPage() {
               <div
                 className={`relative h-full transition-all duration-300 ${
                   previewMode === "mobile"
-                    ? "w-[375px] rounded-[2rem] border-4 border-zinc-700 shadow-2xl overflow-hidden"
-                    : "w-full rounded-lg overflow-hidden border border-white/5"
+                    ? "w-[375px] rounded-[2rem] shadow-2xl overflow-hidden"
+                    : "w-full rounded-lg overflow-hidden"
                 }`}
               >
                 {/* Loading overlay */}
                 {iframeLoading && (
                   <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
                   </div>
                 )}
                 <iframe
                   ref={iframeRef}
-                  src={`/site/${slug}?t=${Date.now()}`}
+                  src={`${previewBaseUrl}${previewBaseUrl.includes("?") ? "&" : "?"}t=${Date.now()}`}
                   className="w-full h-full bg-white"
                   onLoad={() => setIframeLoading(false)}
                 />
@@ -936,20 +1246,171 @@ export default function EditorPage() {
           </div>
         </div>
 
+        {/* Audit Results Overlay */}
+        {auditResults && (
+          <div className="fixed inset-0 z-50 flex items-center justify-end">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setAuditResults(null)} />
+            <div className="relative w-full max-w-lg h-full overflow-y-auto" style={{ background: T.bgEl, borderLeft: `1px solid ${T.border}` }}>
+              <div className="sticky top-0 px-5 py-4 flex items-center justify-between" style={{ background: T.bgEl, borderBottom: `1px solid ${T.border}` }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold" style={{ color: T.text, fontFamily: T.h }}>Site Audit</span>
+                  <span style={{
+                    padding: "4px 12px",
+                    borderRadius: 20,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: auditResults.overall_score >= 80 ? "#10b981" : auditResults.overall_score >= 60 ? "#f59e0b" : "#ef4444",
+                    backgroundColor: auditResults.overall_score >= 80 ? "rgba(16,185,129,0.15)" : auditResults.overall_score >= 60 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)",
+                  }}>
+                    {auditResults.overall_score}/100
+                  </span>
+                </div>
+                <button onClick={() => setAuditResults(null)} className="text-zinc-500 hover:text-white transition p-1">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-sm text-zinc-300 mb-5">{auditResults.summary}</p>
+                {(["critical", "important", "suggestion"] as const).map((severity) => {
+                  const items = auditResults.findings.filter((f) => f.severity === severity);
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={severity} className="mb-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span style={{
+                          width: 8, height: 8, borderRadius: "50%",
+                          backgroundColor: severity === "critical" ? "#ef4444" : severity === "important" ? T.gold : T.purple,
+                        }} />
+                        <span className="text-xs font-semibold uppercase tracking-wider" style={{
+                          color: severity === "critical" ? "#ef4444" : severity === "important" ? T.gold : T.purpleLight,
+                        }}>
+                          {severity} ({items.length})
+                        </span>
+                      </div>
+                      {items.map((finding, i) => (
+                        <div key={i} className="mb-3 p-3 rounded-lg border border-white/5 bg-black/30">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-white">{finding.title}</span>
+                            <span className="text-[10px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5">{finding.category}</span>
+                            {finding.section && (
+                              <span className="text-[10px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5">{finding.section}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-zinc-400 mb-1.5">{finding.description}</p>
+                          <p className="text-xs text-emerald-400/80">{finding.recommendation}</p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* AI Prompt Bar */}
-        <div className="border-t border-white/5 bg-surface/95 backdrop-blur-xl px-4 py-3 shrink-0">
-          {aiSummary && (
-            <div className="mb-2 text-xs text-emerald-400 flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <div className="px-4 py-3 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.bgEl, backdropFilter: "blur(20px)" }}>
+          {/* Image generation progress */}
+          {imageGenState && (
+            <div style={{
+              marginBottom: 8, padding: "8px 12px", borderRadius: 8,
+              backgroundColor: imageGenState.status === "error" ? "rgba(239,68,68,0.1)" : "rgba(99,102,241,0.1)",
+              border: `1px solid ${imageGenState.status === "error" ? "rgba(239,68,68,0.2)" : "rgba(99,102,241,0.2)"}`,
+            }} className="flex items-center gap-2">
+              {imageGenState.status === "generating" && (
+                <div className="w-3.5 h-3.5 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin shrink-0" />
+              )}
+              {imageGenState.status === "done" && (
+                <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {imageGenState.status === "error" && (
+                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              )}
+              <span className={`text-xs flex-1 ${imageGenState.status === "error" ? "text-red-300" : imageGenState.status === "done" ? "text-emerald-300" : "text-indigo-300"}`}>
+                {imageGenState.summary}
+                {imageGenState.status === "generating" && " (~15-30s)"}
+              </span>
+            </div>
+          )}
+
+          {/* Video generation progress */}
+          {videoGenState && (
+            <div style={{
+              marginBottom: 8, padding: "8px 12px", borderRadius: 8,
+              backgroundColor: videoGenState.status === "error" ? "rgba(239,68,68,0.1)" : "rgba(168,85,247,0.1)",
+              border: `1px solid ${videoGenState.status === "error" ? "rgba(239,68,68,0.2)" : "rgba(168,85,247,0.2)"}`,
+            }} className="flex items-center gap-2">
+              {videoGenState.status === "done" ? (
+                <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ) : videoGenState.status === "error" ? (
+                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              ) : (
+                <div className="w-3.5 h-3.5 border-2 border-purple-400/30 border-t-purple-400 rounded-full animate-spin shrink-0" />
+              )}
+              <span className={`text-xs flex-1 ${videoGenState.status === "error" ? "text-red-300" : videoGenState.status === "done" ? "text-emerald-300" : "text-purple-300"}`}>
+                {videoGenState.summary}
+              </span>
+              {(videoGenState.status === "scripting" || videoGenState.status === "voiceover" || videoGenState.status === "rendering") && (
+                <span className="text-[10px] text-purple-400/60">~1-3 min</span>
+              )}
+            </div>
+          )}
+
+          {/* AI message response */}
+          {aiMessage && (
+            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)" }} className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              {aiSummary}
+              <span className="text-xs text-zinc-300 flex-1">{aiMessage}</span>
+              <button onClick={() => setAiMessage(null)} className="text-zinc-500 hover:text-white transition p-0.5 shrink-0">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {aiSummary && aiStatus === "success" && (
+            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)" }} className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs text-emerald-300 flex-1">{aiSummary}</span>
+              {aiChangedSections.length > 0 && (
+                <span style={{ padding: "2px 8px", borderRadius: 10, backgroundColor: "rgba(16, 185, 129, 0.15)", fontSize: 10, color: "#6ee7b7", whiteSpace: "nowrap" }}>
+                  {aiChangedSections.length} section{aiChangedSections.length !== 1 ? "s" : ""} updated
+                </span>
+              )}
+              <button onClick={() => { setAiStatus("idle"); setAiSummary(null); setAiChangedSections([]); }} className="text-zinc-500 hover:text-white transition p-0.5">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+          {aiSummary && aiStatus === "error" && (
+            <div style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)" }} className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <span className="text-xs text-red-300 flex-1">{aiSummary}</span>
             </div>
           )}
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <svg className="w-4 h-4" style={{ color: T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                 </svg>
               </div>
@@ -960,15 +1421,17 @@ export default function EditorPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAIEdit();
                 }}
-                placeholder="Tell AI what to change... (e.g., 'Make the hero more urgent')"
+                placeholder="Edit text, generate images, audit site, write blog posts... (Cmd+Enter)"
                 disabled={aiLoading}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-black/30 border border-white/10 text-white text-sm focus:outline-none focus:border-brand-500 transition placeholder-zinc-600 disabled:opacity-50"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm focus:outline-none transition disabled:opacity-50"
+                style={{ background: "rgba(0,0,0,0.30)", border: `1px solid ${T.border}`, color: T.text }}
               />
             </div>
             <button
               onClick={handleAIEdit}
               disabled={aiLoading || !aiPrompt.trim()}
-              className="btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-30 shrink-0 flex items-center gap-2"
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-30 shrink-0 flex items-center gap-2"
+              style={{ background: CTA_GRAD, color: "#fff" }}
             >
               {aiLoading ? (
                 <>
@@ -985,8 +1448,8 @@ export default function EditorPage() {
               )}
             </button>
           </div>
-          <p className="text-[10px] text-zinc-600 mt-1.5">
-            {aiLoading ? "AI is updating your site..." : "Cmd+Enter to send. Changes apply to your live site."}
+          <p className="text-[10px] mt-1.5" style={{ color: T.text3 }}>
+            {aiLoading ? "AI is working..." : "Edit content, generate images, audit your site, write blog posts, embed videos — all from one prompt."}
           </p>
         </div>
       </div>

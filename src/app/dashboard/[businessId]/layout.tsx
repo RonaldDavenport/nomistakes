@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { BusinessProvider, useBusinessContext } from "@/components/dashboard/BusinessProvider";
 import { BusinessSwitcher } from "@/components/dashboard/BusinessSwitcher";
 import { getPlan } from "@/lib/plans";
+import { supabase } from "@/lib/supabase";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 function SidebarNav({ businessId }: { businessId: string }) {
   const pathname = usePathname();
@@ -27,7 +29,7 @@ function SidebarNav({ businessId }: { businessId: string }) {
 
   return (
     <>
-      <div className="p-4 border-b border-white/5">
+      <div className="p-4" style={{ borderBottom: `1px solid ${T.border}` }}>
         <BusinessSwitcher />
       </div>
       <nav className="flex-1 p-4 space-y-1">
@@ -37,11 +39,30 @@ function SidebarNav({ businessId }: { businessId: string }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+              style={
                 active
-                  ? "bg-brand-600/10 text-brand-400 border border-brand-600/20"
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-              }`}
+                  ? {
+                      background: "rgba(123,57,252,0.1)",
+                      color: T.purpleLight,
+                      borderLeft: `3px solid ${T.purple}`,
+                    }
+                  : {
+                      color: T.text3,
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (!active) {
+                  (e.currentTarget as HTMLElement).style.color = T.text2;
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  (e.currentTarget as HTMLElement).style.color = T.text3;
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                }
+              }}
             >
               <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
@@ -51,21 +72,49 @@ function SidebarNav({ businessId }: { businessId: string }) {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-white/5">
+      <div className="p-4" style={{ borderTop: `1px solid ${T.border}` }}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-600 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: CTA_GRAD }}
+            >
               R
             </div>
             <div>
-              <p className="text-sm font-medium text-white">{plan.name} Plan</p>
-              <p className="text-xs text-zinc-600">
+              <p className="text-sm font-medium" style={{ color: T.text }}>{plan.name} Plan</p>
+              <p className="text-xs" style={{ color: T.text3 }}>
                 {plan.price === 0 ? "Free" : `$${(plan.price / 100).toFixed(2)}/mo`}
               </p>
+              <Link
+                href="/dashboard/account"
+                className="text-xs transition"
+                style={{ color: T.text3 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.text2; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.text3; }}
+              >
+                Account Settings
+              </Link>
             </div>
           </div>
           {plan.id === "free" && (
-            <button className="text-xs text-brand-400 font-medium hover:text-brand-300 transition-colors">
+            <button
+              onClick={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+                const res = await fetch("/api/stripe/checkout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ planId: "starter", userId: user.id, email: user.email }),
+                });
+                const { url } = await res.json();
+                if (url) window.location.href = url;
+              }}
+              className="text-xs font-medium transition-colors"
+              style={{ color: T.purpleLight }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.purple; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.purpleLight; }}
+            >
               Upgrade
             </button>
           )}
@@ -93,26 +142,38 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+            className="fixed inset-0 z-40 lg:hidden"
+            style={{ background: "rgba(0,0,0,0.6)" }}
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Sidebar */}
-        <aside className={`
-          fixed inset-y-0 left-0 z-50 w-64 border-r border-white/5 bg-surface/95 backdrop-blur-xl flex flex-col shrink-0
-          transform transition-transform duration-200 ease-out
-          lg:relative lg:translate-x-0
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        `}>
-          <div className="p-6 border-b border-white/5 flex items-center justify-between">
+        <aside
+          className={`
+            fixed inset-y-0 left-0 z-50 w-64 flex flex-col shrink-0
+            transform transition-transform duration-200 ease-out
+            lg:relative lg:translate-x-0
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          `}
+          style={{
+            background: T.bgEl,
+            borderRight: `1px solid ${T.border}`,
+            backdropFilter: "blur(20px)",
+          }}
+        >
+          <div
+            className="p-6 flex items-center justify-between"
+            style={{ borderBottom: `1px solid ${T.border}` }}
+          >
             <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-              <span className="text-white">No</span>
-              <span className="gradient-text">Mistakes</span>
+              <span style={{ color: T.text }}>No</span>
+              <span style={{ color: T.purple }}>Mistakes</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-zinc-400"
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg"
+              style={{ color: T.text3 }}
               aria-label="Close sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -124,12 +185,20 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto min-w-0">
+        <main className="flex-1 overflow-y-auto min-w-0" style={{ background: T.bg }}>
           {/* Mobile top bar */}
-          <div className="sticky top-0 z-30 lg:hidden border-b border-white/5 bg-[rgba(10,10,15,0.85)] backdrop-blur-xl px-4 h-14 flex items-center gap-3">
+          <div
+            className="sticky top-0 z-30 lg:hidden px-4 h-14 flex items-center gap-3"
+            style={{
+              borderBottom: `1px solid ${T.border}`,
+              background: "rgba(0,0,0,0.85)",
+              backdropFilter: "blur(20px)",
+            }}
+          >
             <button
               onClick={() => setSidebarOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/5 text-zinc-300"
+              className="w-10 h-10 flex items-center justify-center rounded-lg"
+              style={{ color: T.text2 }}
               aria-label="Open sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -137,8 +206,8 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
               </svg>
             </button>
             <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-              <span className="text-white">No</span>
-              <span className="gradient-text">Mistakes</span>
+              <span style={{ color: T.text }}>No</span>
+              <span style={{ color: T.purple }}>Mistakes</span>
             </Link>
           </div>
           {children}

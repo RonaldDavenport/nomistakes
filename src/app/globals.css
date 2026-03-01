@@ -1,20 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #f0f4ff;
-  --color-brand-100: #dbe4ff;
-  --color-brand-200: #bac8ff;
-  --color-brand-300: #91a7ff;
-  --color-brand-400: #748ffc;
-  --color-brand-500: #5c7cfa;
-  --color-brand-600: #4c6ef5;
-  --color-brand-700: #4263eb;
-  --color-brand-800: #3b5bdb;
-  --color-brand-900: #364fc7;
-  --color-dark: #0a0a0f;
-  --color-surface: #111118;
-  --color-surface-light: #1a1a24;
-  --color-card: #15151f;
+  --color-brand-50:  #f5f0ff;
+  --color-brand-100: #ede5ff;
+  --color-brand-200: #dccbff;
+  --color-brand-300: #c4a3ff;
+  --color-brand-400: #a855f7;
+  --color-brand-500: #7B39FC;
+  --color-brand-600: #6d28d9;
+  --color-brand-700: #5b21b6;
+  --color-brand-800: #4c1d95;
+  --color-brand-900: #3b0f7a;
+  --color-dark: #000000;
+  --color-surface: #0A0A0F;
+  --color-surface-light: #111118;
+  --color-card: #0A0A0F;
+  --font-serif: "DM Serif Display", Georgia, serif;
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
@@ -24,24 +25,26 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-dark);
-  color: #e4e4e7;
+  background: #000000;
+  color: #FAFAFA;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #748ffc 0%, #9775fa 50%, #da77f2 100%);
+  background: linear-gradient(135deg, #7B39FC, #A855F7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4c6ef5, #7048e8);
+  background: linear-gradient(135deg, #7B39FC, #A855F7);
+  color: #FFFFFF;
   transition: all 0.2s ease;
 }
 .btn-primary:hover {
+  filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 8px 30px rgba(76, 110, 245, 0.3);
+  box-shadow: 0 8px 30px rgba(123, 57, 252, 0.3);
 }
 .btn-primary:disabled {
   opacity: 0.4;
@@ -51,12 +54,12 @@ body {
 }
 
 .btn-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   transition: all 0.2s ease;
 }
 .btn-secondary:hover {
-  border-color: rgba(76, 110, 245, 0.5);
-  background: rgba(76, 110, 245, 0.05);
+  border-color: rgba(123, 57, 252, 0.4);
+  background: rgba(123, 57, 252, 0.06);
 }
 
 @keyframes fadeIn {
@@ -89,8 +92,25 @@ body {
   100% { transform: translateY(-120px) rotate(720deg); opacity: 0; }
 }
 
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
 .animate-slideIn { animation: slideIn 0.4s ease forwards; }
 .animate-pulseRing { animation: pulseRing 1.5s ease-out infinite; }
 .animate-bubbleIn { animation: bubbleIn 0.3s ease forwards; }
 .animate-scaleIn { animation: scaleIn 0.3s ease forwards; }
+.animate-slideUp { animation: slideUp 0.5s ease forwards; }
+.animate-reveal { animation: reveal 0.4s ease forwards; }
+
+@keyframes autoScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

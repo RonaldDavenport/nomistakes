@@ -43,6 +43,8 @@ export async function PATCH(
     "calendly_url",
     "business_email",
     "custom_domain",
+    "video_url",
+    "layout",
   ];
 
   const updates: Record<string, unknown> = {};

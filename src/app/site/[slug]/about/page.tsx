@@ -17,8 +17,8 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
 
   const site = business as SiteData;
   const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#4c6ef5";
-  const accent = colors.accent || "#9775fa";
+  const primary = colors.primary || "#7B39FC";
+  const accent = colors.accent || "#A855F7";
   const about = site.site_content?.about || {};
   const values = site.brand?.values || [];
 
@@ -113,10 +113,10 @@ export default async function SiteAboutPage({ params }: { params: Promise<{ slug
             See what {site.name} can do for you.
           </p>
           <div className="reveal reveal-delay-2" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href={`/site/${slug}/products`} className="cta-btn">
+            <a href={"/products"} className="cta-btn">
               <span>View {site.type === "services" ? "Services" : "Products"}</span>
             </a>
-            <a href={`/site/${slug}/contact`} className="cta-btn-outline">
+            <a href={"/contact"} className="cta-btn-outline">
               Get in Touch
             </a>
           </div>

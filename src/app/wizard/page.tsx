@@ -3,9 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import AuthGateModal from "@/components/onboarding/AuthGateModal";
+import BuildingScreen from "@/components/wizard/BuildingScreen";
 import { supabase } from "@/lib/supabase";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 import {
   SKILLS,
   TIME_OPTIONS,
@@ -16,7 +19,27 @@ import {
   type BusinessConcept,
 } from "@/lib/wizard-data";
 
-type Step = "skills" | "time" | "budget" | "type" | "subtype" | "generating" | "results" | "building" | "done";
+type Step = "skills" | "audience" | "budget" | "time" | "generating" | "building" | "done";
+
+const QUESTION_STEPS = ["skills", "audience", "budget", "time"];
+
+function getStepNumber(step: Step): { current: number; total: number } {
+  const idx = QUESTION_STEPS.indexOf(step);
+  if (idx === -1) return { current: 0, total: 0 };
+  return { current: idx + 1, total: 4 };
+}
+
+/* Subtype descriptions for the second-phase picker */
+const SUBTYPE_DESCS: Record<string, string> = {
+  freelance: "Solo client work",
+  consulting: "Strategic advisory",
+  coaching: "1:1 or group coaching",
+  agency: "Team-based services",
+  courses: "Online education",
+  templates: "Downloadable assets",
+  ebooks: "Written products",
+  memberships: "Recurring community",
+};
 
 export default function WizardPage() {
   const router = useRouter();
@@ -26,6 +49,7 @@ export default function WizardPage() {
   const [selectedBudget, setSelectedBudget] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedSubtype, setSelectedSubtype] = useState("");
+  const [selectedAudience, setSelectedAudience] = useState("");
   const [concepts, setConcepts] = useState<BusinessConcept[]>([]);
   const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
   const [buildProgress, setBuildProgress] = useState(0);
@@ -38,13 +62,7 @@ export default function WizardPage() {
   const [pendingBusinessName, setPendingBusinessName] = useState("");
   const buildStarted = useRef(false);
 
-  const progress =
-    step === "skills" ? 20 :
-    step === "time" ? 40 :
-    step === "budget" ? 60 :
-    step === "type" ? 80 :
-    step === "subtype" ? 90 :
-    100;
+  const stepInfo = getStepNumber(step);
 
   function toggleSkill(id: string) {
     setSelectedSkills((prev) =>
@@ -52,33 +70,41 @@ export default function WizardPage() {
     );
   }
 
-  function handleTimeSelect(id: string) {
-    setSelectedTime(id);
+  function goBack() {
+    const currentIdx = QUESTION_STEPS.indexOf(step);
+    if (currentIdx > 0) {
+      setStep(QUESTION_STEPS[currentIdx - 1] as Step);
+    }
+  }
+
+  /* Phase 1: pick a category. Phase 2: pick subtype (if applicable), then advance. */
+  function handleTypeSelect(id: string) {
+    setSelectedType(id);
+    setSelectedSubtype("");
+    // "both" and "any" have no subtypes — advance immediately
+    if (!SUBTYPE_OPTIONS[id]) {
+      setSelectedAudience(id);
+      setTimeout(() => setStep("budget"), 300);
+    }
+  }
+
+  function handleSubtypeSelect(sub: string) {
+    setSelectedSubtype(sub);
+    setSelectedAudience(`${selectedType}__${sub}`);
     setTimeout(() => setStep("budget"), 300);
   }
 
   function handleBudgetSelect(id: string) {
     setSelectedBudget(id);
-    setTimeout(() => setStep("type"), 300);
+    setTimeout(() => setStep("time"), 300);
   }
 
-  function handleTypeSelect(id: string) {
-    setSelectedType(id);
-    // Show subtype picker for services or digital; skip for both/any
-    if (id === "services" || id === "digital") {
-      setSelectedSubtype("");
-      setStep("subtype");
-    } else {
-      setStep("generating");
-    }
+  function handleTimeSelect(id: string) {
+    setSelectedTime(id);
+    setTimeout(() => setStep("generating"), 300);
   }
 
-  function handleSubtypeSelect(id: string) {
-    setSelectedSubtype(id);
-    setStep("generating");
-  }
-
-  // Generate concepts — try API first, fallback to local
+  // Generate concepts
   useEffect(() => {
     if (step !== "generating") return;
     let cancelled = false;
@@ -102,19 +128,16 @@ export default function WizardPage() {
           const data = await res.json();
           if (data.concepts && data.concepts.length > 0) {
             setConcepts(data.concepts);
-            setStep("results");
             return;
           }
         }
       } catch {
-        // API failed — fallback to local
+        // API failed -- fallback to local
       }
 
-      // Fallback: local generation
       if (!cancelled) {
         const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype || undefined);
         setConcepts(results);
-        setStep("results");
       }
     }
 
@@ -122,24 +145,22 @@ export default function WizardPage() {
     return () => { cancelled = true; };
   }, [step, selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype]);
 
-  // Build: call API to generate brand + site + plan, animate progress in parallel
+  // Build business
   useEffect(() => {
     if (step !== "building" || !chosenConcept || buildStarted.current) return;
     buildStarted.current = true;
     setBuildProgress(0);
     setError("");
 
-    // Start progress animation
     const interval = setInterval(() => {
       setBuildProgress((prev) => {
-        if (prev >= 90) return 90; // hold at 90 until API finishes
+        if (prev >= 90) return 90;
         return prev + 1;
       });
     }, 150);
 
     async function buildBusiness() {
       try {
-        // Get current user (if logged in)
         const { data: { user } } = await supabase.auth.getUser();
 
         const res = await fetch("/api/generate", {
@@ -165,47 +186,39 @@ export default function WizardPage() {
           setSiteSlug(data.siteUrl || "");
           if (bizId) setBusinessIdResult(bizId);
 
-          // Auto-deploy to Vercel
           if (bizId) {
             setBuildProgress(92);
             try {
               const deployRes = await fetch("/api/deploy", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  businessId: bizId,
-                  userId: user?.id || null,
-                }),
+                body: JSON.stringify({ businessId: bizId, userId: user?.id || null }),
               });
-              if (deployRes.ok) {
-                const deployData = await deployRes.json();
-                if (deployData.url) {
-                  setDeployedUrl(deployData.url);
-                }
+              const deployData = await deployRes.json();
+              if (deployRes.ok && deployData.url) {
+                setDeployedUrl(deployData.url);
+              } else {
+                console.error("[wizard] Deploy failed:", deployData.error || deployRes.status);
               }
-            } catch {
-              // Deploy failed — site still available as preview
+            } catch (deployErr) {
+              console.error("[wizard] Deploy exception:", deployErr);
             }
           }
           setBuildProgress(100);
 
           if (bizId) {
-            // Check if user is authenticated
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (authUser) {
               router.push(`/onboarding/${bizId}`);
             } else {
-              // Show auth gate to capture email for winbacks
               setPendingBusinessId(bizId);
               setPendingBusinessName(chosenConcept?.name || "your business");
               setShowAuthGate(true);
             }
           } else {
-            // No business ID — show error inline
             setError("Something went wrong creating your business. Please try again.");
           }
         } else {
-          // API failed
           console.error("[wizard] Build API returned non-ok:", res.status);
           clearInterval(interval);
           setBuildProgress(100);
@@ -230,336 +243,551 @@ export default function WizardPage() {
   }
 
   const buildSteps = [
-    { at: 5, label: "Registering domain..." },
-    { at: 15, label: "Generating brand identity..." },
-    { at: 30, label: "Creating color palette & fonts..." },
-    { at: 45, label: "Writing website copy..." },
-    { at: 60, label: "Building product pages..." },
-    { at: 72, label: "Setting up checkout..." },
-    { at: 82, label: "Configuring SEO..." },
-    { at: 92, label: "Deploying to live URL..." },
+    { at: 5, label: "Picking the perfect name..." },
+    { at: 15, label: "Designing your brand identity..." },
+    { at: 30, label: "Crafting your website copy..." },
+    { at: 50, label: "Building your storefront page by page..." },
+    { at: 65, label: "Setting up checkout so you can get paid..." },
+    { at: 78, label: "Optimizing for search engines..." },
+    { at: 92, label: "Almost there -- deploying to your live URL..." },
   ];
 
   const currentBuildStep = buildSteps.filter((s) => buildProgress >= s.at).pop();
 
+  const pageTransition = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
+  };
+
+  // Shared layout for question steps
+  const questionLayout: React.CSSProperties = {
+    minHeight: "calc(100vh - 144px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 24px",
+  };
+
+  // Glass option button style
+  function optionStyle(isSelected: boolean): React.CSSProperties {
+    return {
+      display: "flex",
+      alignItems: "center",
+      gap: 16,
+      padding: "18px 20px",
+      borderRadius: 16,
+      textAlign: "left" as const,
+      transition: "all 0.2s ease",
+      border: isSelected ? `1px solid rgba(123,57,252,0.3)` : `1px solid ${T.border}`,
+      borderLeft: isSelected ? `3px solid ${T.purple}` : `1px solid ${isSelected ? "rgba(123,57,252,0.3)" : T.border}`,
+      background: isSelected ? "rgba(123,57,252,0.1)" : T.glass,
+      backdropFilter: "blur(12px)",
+      cursor: "pointer",
+      width: "100%",
+    };
+  }
+
+  // Heading style
+  const headingStyle: React.CSSProperties = {
+    fontFamily: T.h,
+    fontSize: "clamp(2rem, 5vw, 3rem)",
+    fontWeight: 600,
+    color: T.text,
+    letterSpacing: "-0.02em",
+    lineHeight: 1.1,
+    marginBottom: 12,
+  };
+
+  // Back button style
+  const backBtnStyle: React.CSSProperties = {
+    background: T.glass,
+    border: `1px solid ${T.border}`,
+    borderRadius: 8,
+    color: T.text3,
+    fontSize: "0.8rem",
+    cursor: "pointer",
+    marginBottom: 40,
+    padding: "6px 14px",
+    backdropFilter: "blur(8px)",
+    transition: "all 0.2s ease",
+  };
+
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto">
 
-          {/* Progress bar */}
-          {!["generating", "building", "done", "results"].includes(step) && (
-            <div className="mb-12">
-              <div className="flex justify-between text-xs text-zinc-600 mb-2">
-                <span>Step {step === "skills" ? 1 : step === "time" ? 2 : step === "budget" ? 3 : step === "type" ? 4 : 5} of {selectedType === "services" || selectedType === "digital" ? 5 : 4}</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-1 rounded-full bg-white/5">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
+      {/* Progress indicator: "Step X of 4" */}
+      {QUESTION_STEPS.includes(step) && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          background: "rgba(255,255,255,0.04)",
+          zIndex: 100,
+        }}>
+          <motion.div
+            style={{ height: "100%", background: CTA_GRAD }}
+            animate={{ width: `${(stepInfo.current / stepInfo.total) * 100}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
+        </div>
+      )}
 
-          {/* STEP: Skills */}
+      <div style={{ minHeight: "100vh", paddingTop: 80, paddingBottom: 64, background: T.bg }}>
+        <AnimatePresence mode="wait">
+
+          {/* ---- SKILLS ---- */}
           {step === "skills" && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">What are you good at?</h2>
-              <p className="text-zinc-500 mb-8">Pick up to 5 skills. We&apos;ll match you with businesses that use them.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-                {SKILLS.map((s) => {
-                  const active = selectedSkills.includes(s.id);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => toggleSkill(s.id)}
-                      className={`p-4 rounded-xl text-left transition-all border ${
-                        active
-                          ? "border-brand-600/50 bg-brand-600/10 text-white"
-                          : "border-white/5 bg-surface/50 text-zinc-400 hover:border-white/15"
-                      }`}
-                    >
-                      <span className="text-lg mr-2">{s.icon}</span>
-                      <span className="text-sm font-medium">{s.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                disabled={selectedSkills.length === 0}
-                onClick={() => setStep("time")}
-                className="btn-primary px-8 py-4 rounded-xl text-base font-bold text-white w-full sm:w-auto"
-              >
-                Continue ({selectedSkills.length} selected)
-              </button>
-            </div>
-          )}
-
-          {/* STEP: Time */}
-          {step === "time" && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">How much time can you commit?</h2>
-              <p className="text-zinc-500 mb-8">This helps us find the right scale for your business.</p>
-              <div className="grid gap-3">
-                {TIME_OPTIONS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleTimeSelect(t.id)}
-                    className={`flex items-center gap-4 p-5 rounded-xl border text-left transition-all ${
-                      selectedTime === t.id
-                        ? "border-brand-600/50 bg-brand-600/10"
-                        : "border-white/5 bg-surface/50 hover:border-white/15"
-                    }`}
-                  >
-                    <span className="text-2xl">{t.icon}</span>
-                    <div>
-                      <p className="text-white font-semibold">{t.label}</p>
-                      <p className="text-zinc-500 text-sm">{t.desc} &middot; {t.hours}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* STEP: Budget */}
-          {step === "budget" && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">What&apos;s your starting budget?</h2>
-              <p className="text-zinc-500 mb-8">$0 is totally fine. Seriously.</p>
-              <div className="grid gap-3">
-                {BUDGET_OPTIONS.map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => handleBudgetSelect(b.id)}
-                    className={`flex items-center gap-4 p-5 rounded-xl border text-left transition-all ${
-                      selectedBudget === b.id
-                        ? "border-brand-600/50 bg-brand-600/10"
-                        : "border-white/5 bg-surface/50 hover:border-white/15"
-                    }`}
-                  >
-                    <span className="text-2xl">{b.icon}</span>
-                    <div>
-                      <p className="text-white font-semibold">{b.label}</p>
-                      <p className="text-zinc-500 text-sm">{b.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* STEP: Type */}
-          {step === "type" && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">What type of business?</h2>
-              <p className="text-zinc-500 mb-8">Or let AI decide based on your profile.</p>
-              <div className="grid gap-3">
-                {TYPE_OPTIONS.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleTypeSelect(t.id)}
-                    className={`flex items-center gap-4 p-5 rounded-xl border text-left transition-all ${
-                      selectedType === t.id
-                        ? "border-brand-600/50 bg-brand-600/10"
-                        : "border-white/5 bg-surface/50 hover:border-white/15"
-                    }`}
-                  >
-                    <span className="text-2xl">{t.icon}</span>
-                    <div>
-                      <p className="text-white font-semibold">{t.label}</p>
-                      <p className="text-zinc-500 text-sm">{t.desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* STEP: Subtype */}
-          {step === "subtype" && SUBTYPE_OPTIONS[selectedType] && (
-            <div className="animate-fadeIn">
-              <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">What kind of {selectedType === "services" ? "service" : "digital product"}?</h2>
-              <p className="text-zinc-500 mb-2">Pick one so we can tailor your launch checklist and AI tools.</p>
-              <p className="text-xs text-brand-400 mb-8">This determines which tasks, templates, and strategies you&apos;ll get.</p>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {SUBTYPE_OPTIONS[selectedType].map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => handleSubtypeSelect(s.id)}
-                    className={`flex items-center gap-3 p-5 rounded-xl border text-left transition-all ${
-                      selectedSubtype === s.id
-                        ? "border-brand-600/50 bg-brand-600/10"
-                        : "border-white/5 bg-surface/50 hover:border-white/15"
-                    }`}
-                  >
-                    <span className="text-2xl">{s.icon}</span>
-                    <div>
-                      <span className="text-white font-semibold block">{s.label}</span>
-                      <span className="text-zinc-500 text-xs">{
-                        s.id === "freelance" ? "Solo client work" :
-                        s.id === "consulting" ? "Strategic advisory" :
-                        s.id === "coaching" ? "1:1 or group coaching" :
-                        s.id === "agency" ? "Team-based services" :
-                        s.id === "courses" ? "Online education" :
-                        s.id === "templates" ? "Downloadable assets" :
-                        s.id === "ebooks" ? "Written products" :
-                        s.id === "memberships" ? "Recurring community" : ""
-                      }</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <p className="text-zinc-600 text-xs text-center">
-                Not sure?{" "}
+            <motion.div key="skills" {...pageTransition} style={questionLayout}>
+              <div style={{ maxWidth: 600, width: "100%" }}>
+                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
+                  Step {stepInfo.current} of {stepInfo.total}
+                </p>
+                <h2 style={headingStyle}>
+                  What are you good at?
+                </h2>
+                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
+                  Pick up to five. We&apos;ll match you with businesses that play to your strengths.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 44 }}>
+                  {SKILLS.map((s) => {
+                    const active = selectedSkills.includes(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleSkill(s.id)}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: 100,
+                          border: active ? `1px solid rgba(123,57,252,0.4)` : `1px solid ${T.border}`,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          background: active ? "rgba(123,57,252,0.12)" : T.glass,
+                          color: active ? T.purpleLight : T.text2,
+                          fontSize: "0.85rem",
+                          fontWeight: 500,
+                          fontFamily: T.h,
+                          backdropFilter: "blur(8px)",
+                          boxShadow: active ? "0 0 16px rgba(123,57,252,0.15)" : "none",
+                        }}
+                      >
+                        <span style={{ marginRight: 6 }}>{s.icon}</span>
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
                 <button
-                  onClick={() => { setSelectedSubtype(""); setStep("generating"); }}
-                  className="text-zinc-500 hover:text-zinc-300 underline transition-colors"
+                  disabled={selectedSkills.length === 0}
+                  onClick={() => setStep("audience")}
+                  style={{
+                    padding: "14px 44px",
+                    borderRadius: 100,
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    fontFamily: T.h,
+                    border: "none",
+                    cursor: selectedSkills.length === 0 ? "not-allowed" : "pointer",
+                    background: selectedSkills.length === 0 ? "rgba(123,57,252,0.2)" : CTA_GRAD,
+                    color: "#fff",
+                    opacity: selectedSkills.length === 0 ? 0.5 : 1,
+                    transition: "all 0.2s ease",
+                  }}
                 >
-                  Let AI pick for you
+                  Continue &middot; {selectedSkills.length} selected
                 </button>
-              </p>
-            </div>
+              </div>
+            </motion.div>
           )}
 
-          {/* GENERATING */}
-          {step === "generating" && (
-            <div className="flex flex-col items-center justify-center py-20 animate-fadeIn">
-              <div className="w-16 h-16 mb-8 relative">
-                <div className="absolute inset-0 rounded-full border-2 border-brand-600/20" />
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-brand-500 animate-spin" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Analyzing your profile...</h2>
-              <p className="text-zinc-500">AI is generating 3 perfect-fit business ideas</p>
-            </div>
-          )}
+          {/* ---- AUDIENCE (two-phase: category → subtype) ---- */}
+          {step === "audience" && (
+            <motion.div key="audience" {...pageTransition} style={questionLayout}>
+              <div style={{ maxWidth: 480, width: "100%" }}>
+                <button onClick={goBack} style={backBtnStyle}>
+                  &larr; Back
+                </button>
+                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
+                  Step {stepInfo.current} of {stepInfo.total}
+                </p>
+                <h2 style={headingStyle}>
+                  Who do you serve?
+                </h2>
+                <p style={{ color: T.text2, marginBottom: 36, fontSize: "1rem", lineHeight: 1.6 }}>
+                  Pick the business model that fits you best.
+                </p>
 
-          {/* RESULTS */}
-          {step === "results" && (
-            <div className="animate-fadeIn">
-              <div className="text-center mb-10">
-                <h2 className="text-2xl md:text-4xl font-bold text-white mb-2">Your top 3 business ideas</h2>
-                <p className="text-zinc-500">Tap one to start building it. Right now.</p>
-              </div>
-              <div className="grid gap-5">
-                {concepts.map((c, i) => (
-                  <button
-                    key={c.name}
-                    onClick={() => pickConcept(c)}
-                    className="text-left p-6 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/40 hover:shadow-[0_0_40px_rgba(76,110,245,0.08)] transition-all animate-fadeIn"
-                    style={{ animationDelay: `${i * 150}ms` }}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4 mb-3">
-                      <div className="min-w-0">
-                        <h3 className="text-lg sm:text-xl font-bold text-white">{c.name}</h3>
-                        <p className="text-brand-400 text-sm font-medium">{c.tagline}</p>
+                {/* Phase 1: Category cards */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {TYPE_OPTIONS.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => handleTypeSelect(t.id)}
+                      style={optionStyle(selectedType === t.id)}
+                    >
+                      <span style={{ fontSize: "1.3rem" }}>{t.icon}</span>
+                      <div>
+                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
+                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc}</p>
                       </div>
-                      <span className="shrink-0 self-start px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        {c.revenue}
-                      </span>
-                    </div>
-                    <p className="text-zinc-400 text-sm mb-3">{c.desc}</p>
-                    <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
-                      <span>Startup: {c.startup}</span>
-                      <span>Audience: {c.audience}</span>
-                      <span className="capitalize">Type: {c.type}{c.subtype ? ` · ${c.subtype}` : ""}</span>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Phase 2: Subtypes slide in when a category with subtypes is selected */}
+                <AnimatePresence>
+                  {selectedType && SUBTYPE_OPTIONS[selectedType] && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      style={{ overflow: "hidden" }}
+                    >
+                      <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginTop: 32, marginBottom: 14 }}>
+                        What kind of {selectedType === "services" ? "service" : "product"}?
+                      </p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                        {SUBTYPE_OPTIONS[selectedType].map((s, i) => (
+                          <motion.button
+                            key={s.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.06 }}
+                            onClick={() => handleSubtypeSelect(s.id)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              padding: "14px 16px",
+                              borderRadius: 14,
+                              textAlign: "left" as const,
+                              transition: "all 0.2s ease",
+                              border: selectedSubtype === s.id
+                                ? `1px solid rgba(123,57,252,0.3)`
+                                : `1px solid ${T.border}`,
+                              background: selectedSubtype === s.id
+                                ? "rgba(123,57,252,0.1)"
+                                : T.glass,
+                              backdropFilter: "blur(12px)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
+                            <div>
+                              <span style={{ color: T.text, fontWeight: 500, display: "block", fontSize: "0.85rem", fontFamily: T.h }}>{s.label}</span>
+                              <span style={{ color: T.text3, fontSize: "0.7rem" }}>{SUBTYPE_DESCS[s.id] || ""}</span>
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* BUILDING */}
-          {step === "building" && chosenConcept && (
-            <div className="flex flex-col items-center justify-center py-20 animate-fadeIn">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Building {chosenConcept.name}...
-              </h2>
-              <p className="text-zinc-500 mb-10">{chosenConcept.tagline}</p>
-              <div className="w-full max-w-md mb-6">
-                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-600 to-purple-500 transition-all duration-300"
-                    style={{ width: `${buildProgress}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-zinc-600 mt-2">
-                  <span>{currentBuildStep?.label ?? "Initializing..."}</span>
-                  <span>{buildProgress}%</span>
+          {/* ---- BUDGET ---- */}
+          {step === "budget" && (
+            <motion.div key="budget" {...pageTransition} style={questionLayout}>
+              <div style={{ maxWidth: 480, width: "100%" }}>
+                <button onClick={goBack} style={backBtnStyle}>
+                  &larr; Back
+                </button>
+                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
+                  Step {stepInfo.current} of {stepInfo.total}
+                </p>
+                <h2 style={headingStyle}>
+                  What&apos;s your<br />starting budget?
+                </h2>
+                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
+                  $0 is totally fine. Seriously.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {BUDGET_OPTIONS.map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => handleBudgetSelect(b.id)}
+                      style={optionStyle(selectedBudget === b.id)}
+                    >
+                      <span style={{ fontSize: "1.3rem" }}>{b.icon}</span>
+                      <div>
+                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{b.label}</p>
+                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{b.desc}</p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-              {error && (
-                <div className="mt-6 text-center">
-                  <p className="text-red-400 text-sm mb-4">{error}</p>
-                  <button
-                    onClick={() => {
-                      setError("");
-                      buildStarted.current = false;
-                      setStep("building");
-                    }}
-                    className="btn-primary px-6 py-3 rounded-xl text-sm font-bold text-white"
-                  >
-                    Try Again
-                  </button>
+            </motion.div>
+          )}
+
+          {/* ---- TIME ---- */}
+          {step === "time" && (
+            <motion.div key="time" {...pageTransition} style={questionLayout}>
+              <div style={{ maxWidth: 480, width: "100%" }}>
+                <button onClick={goBack} style={backBtnStyle}>
+                  &larr; Back
+                </button>
+                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
+                  Step {stepInfo.current} of {stepInfo.total}
+                </p>
+                <h2 style={headingStyle}>
+                  How much time<br />can you commit?
+                </h2>
+                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
+                  This helps us find the right scale.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {TIME_OPTIONS.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => handleTimeSelect(t.id)}
+                      style={optionStyle(selectedTime === t.id)}
+                    >
+                      <span style={{ fontSize: "1.3rem" }}>{t.icon}</span>
+                      <div>
+                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
+                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc} &middot; {t.hours}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ---- GENERATING (spinner + inline concept cards when ready) ---- */}
+          {step === "generating" && (
+            <motion.div
+              key="generating"
+              {...pageTransition}
+              style={{
+                minHeight: "calc(100vh - 144px)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 24px",
+              }}
+            >
+              {/* Show spinner while concepts haven't loaded */}
+              {concepts.length === 0 && (
+                <>
+                  <div style={{ width: 48, height: 48, marginBottom: 32, position: "relative" }}>
+                    <div style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      border: `2px solid rgba(123,57,252,0.12)`,
+                    }} />
+                    <div style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      border: "2px solid transparent",
+                      borderTopColor: T.purple,
+                      animation: "spin 1s linear infinite",
+                    }} />
+                  </div>
+                  <h2 style={{
+                    fontFamily: T.h,
+                    fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: T.text,
+                    letterSpacing: "-0.02em",
+                    marginBottom: 8,
+                  }}>
+                    Analyzing your profile...
+                  </h2>
+                  <p style={{ color: T.text3, fontSize: "0.9rem" }}>
+                    Generating three perfect-fit business ideas
+                  </p>
+                </>
+              )}
+
+              {/* Concepts loaded -- show them inline as glass cards */}
+              {concepts.length > 0 && (
+                <div style={{ maxWidth: 600, width: "100%" }}>
+                  <div style={{ marginBottom: 48, textAlign: "center" }}>
+                    <h2 style={{
+                      ...headingStyle,
+                      textAlign: "center",
+                    }}>
+                      Your top three ideas
+                    </h2>
+                    <p style={{ color: T.text2, fontSize: "1rem" }}>
+                      Pick one to start building. Right now.
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {concepts.map((c, i) => (
+                      <motion.button
+                        key={c.name}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.12 }}
+                        onClick={() => pickConcept(c)}
+                        style={{
+                          textAlign: "left",
+                          padding: 24,
+                          borderRadius: 16,
+                          border: `1px solid ${T.border}`,
+                          background: T.glass,
+                          backdropFilter: "blur(12px)",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          width: "100%",
+                        }}
+                        whileHover={{
+                          backgroundColor: "rgba(123,57,252,0.08)",
+                          borderColor: "rgba(123,57,252,0.25)",
+                        }}
+                      >
+                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
+                          <div>
+                            <h3 style={{
+                              fontFamily: T.h,
+                              fontSize: "1.15rem",
+                              fontWeight: 600,
+                              color: T.text,
+                              marginBottom: 4,
+                            }}>
+                              {c.name}
+                            </h3>
+                            <p style={{ color: T.purpleLight, fontSize: "0.8rem", fontWeight: 500 }}>{c.tagline}</p>
+                          </div>
+                          <span style={{
+                            flexShrink: 0,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            color: T.green,
+                          }}>
+                            {c.revenue}
+                          </span>
+                        </div>
+                        <p style={{ color: T.text2, fontSize: "0.85rem", marginBottom: 12, lineHeight: 1.55 }}>{c.desc}</p>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: "0.75rem", color: T.text3 }}>
+                          <span>Startup: {c.startup}</span>
+                          <span>Audience: {c.audience}</span>
+                          <span style={{ textTransform: "capitalize" }}>Type: {c.type}{c.subtype ? ` \u00b7 ${c.subtype}` : ""}</span>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
-          {/* DONE */}
-          {step === "done" && chosenConcept && (
-            <div className="text-center py-16 animate-fadeIn">
-              <div className="text-5xl mb-6">&#127881;</div>
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                {chosenConcept.name} is live!
-              </h2>
-              <p className="text-zinc-400 text-lg mb-2">
-                {deployedUrl
-                  ? "Your site has been deployed to its own URL."
-                  : "Your business has been created and is ready to go."}
-              </p>
-              {deployedUrl ? (
-                <a
-                  href={deployedUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-brand-400 font-mono text-sm hover:underline mb-10 inline-block"
-                >
-                  {deployedUrl}
-                </a>
-              ) : siteSlug ? (
-                <Link href={siteSlug} className="text-brand-400 font-mono text-sm hover:underline mb-10 inline-block">
-                  Preview: {siteSlug}
-                </Link>
-              ) : null}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                {(deployedUrl || siteSlug) && (
-                  <a
-                    href={deployedUrl || siteSlug}
-                    target={deployedUrl ? "_blank" : undefined}
-                    rel={deployedUrl ? "noopener noreferrer" : undefined}
-                    className="btn-primary px-8 py-4 rounded-xl text-base font-bold text-white w-full sm:w-auto text-center"
-                  >
-                    View Your Site
-                  </a>
-                )}
-                <Link
-                  href="/dashboard"
-                  className="btn-secondary px-8 py-4 rounded-xl text-base font-medium text-zinc-300 w-full sm:w-auto text-center"
-                >
-                  Go to Dashboard
-                </Link>
-              </div>
-            </div>
+          {/* ---- BUILDING ---- */}
+          {step === "building" && chosenConcept && (
+            <motion.div key="building" {...pageTransition}>
+              <BuildingScreen
+                businessName={chosenConcept.name}
+                tagline={chosenConcept.tagline}
+                buildProgress={buildProgress}
+                currentStepLabel={currentBuildStep?.label ?? "Initializing..."}
+                error={error}
+                onRetry={() => {
+                  setError("");
+                  buildStarted.current = false;
+                  setStep("building");
+                }}
+              />
+            </motion.div>
           )}
-        </div>
+
+          {/* ---- DONE ---- */}
+          {step === "done" && chosenConcept && (
+            <motion.div key="done" {...pageTransition} style={{
+              minHeight: "calc(100vh - 144px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0 24px",
+            }}>
+              <div style={{ textAlign: "center", maxWidth: 480 }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: 28 }}>&#127881;</div>
+                <h2 style={{
+                  ...headingStyle,
+                  textAlign: "center",
+                  marginBottom: 16,
+                }}>
+                  {chosenConcept.name} is live.
+                </h2>
+                <p style={{ color: T.text2, fontSize: "1rem", marginBottom: 8 }}>
+                  {deployedUrl
+                    ? "Your site has been deployed."
+                    : "Your business is ready to go."}
+                </p>
+                {deployedUrl ? (
+                  <a
+                    href={deployedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: T.purpleLight, fontFamily: T.mono, fontSize: "0.8rem", display: "inline-block", marginBottom: 40 }}
+                  >
+                    {deployedUrl}
+                  </a>
+                ) : siteSlug ? (
+                  <Link href={siteSlug} style={{ color: T.purpleLight, fontFamily: T.mono, fontSize: "0.8rem", display: "inline-block", marginBottom: 40 }}>
+                    Preview: {siteSlug}
+                  </Link>
+                ) : null}
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 32 }}>
+                  {(deployedUrl || siteSlug) && (
+                    <a
+                      href={deployedUrl || siteSlug}
+                      target={deployedUrl ? "_blank" : undefined}
+                      rel={deployedUrl ? "noopener noreferrer" : undefined}
+                      style={{
+                        padding: "14px 36px",
+                        borderRadius: 100,
+                        fontSize: "0.9rem",
+                        fontWeight: 600,
+                        fontFamily: T.h,
+                        textDecoration: "none",
+                        background: CTA_GRAD,
+                        color: "#fff",
+                        display: "inline-block",
+                      }}
+                    >
+                      View Your Site
+                    </a>
+                  )}
+                  <Link
+                    href="/dashboard"
+                    style={{
+                      padding: "14px 36px",
+                      borderRadius: 100,
+                      fontSize: "0.9rem",
+                      fontWeight: 500,
+                      fontFamily: T.h,
+                      color: T.text2,
+                      textDecoration: "none",
+                      background: T.glass,
+                      border: `1px solid ${T.border}`,
+                      backdropFilter: "blur(8px)",
+                      display: "inline-block",
+                    }}
+                  >
+                    Go to Dashboard
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+        </AnimatePresence>
       </div>
 
-      {/* Auth gate modal — shown after build for unauthenticated users */}
+      {/* Auth gate modal */}
       {showAuthGate && pendingBusinessId && (
         <AuthGateModal
           businessId={pendingBusinessId}
@@ -572,6 +800,12 @@ export default function WizardPage() {
           }}
         />
       )}
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 }

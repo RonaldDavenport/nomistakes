@@ -7,6 +7,7 @@ import {
   getTrackedUrl,
   type AffiliatePartner,
 } from "@/lib/affiliates";
+import { T, CTA_GRAD, glassCard } from "@/lib/design-tokens";
 
 export default function ToolsPage() {
   const { business } = useBusinessContext();
@@ -15,7 +16,7 @@ export default function ToolsPage() {
   if (!business) {
     return (
       <div className="flex items-center justify-center h-[80vh]">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
       </div>
     );
   }
@@ -35,10 +36,10 @@ export default function ToolsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">
+        <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>
           Recommended Tools
         </h1>
-        <p className="text-zinc-500 text-sm">
+        <p className="text-sm" style={{ color: T.text3 }}>
           Essential tools to grow {business.name}. Hand-picked for{" "}
           {business.subtype || business.type} businesses.
         </p>
@@ -50,11 +51,19 @@ export default function ToolsPage() {
           <button
             key={cat}
             onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+            className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+            style={
               filter === cat
-                ? "bg-brand-600/10 text-brand-400 border border-brand-600/20"
-                : "text-zinc-500 hover:text-zinc-300 border border-white/5 hover:border-white/10"
-            }`}
+                ? {
+                    background: "rgba(123,57,252,0.10)",
+                    color: T.purpleLight,
+                    border: "1px solid rgba(123,57,252,0.20)",
+                  }
+                : {
+                    color: T.text3,
+                    border: `1px solid ${T.border}`,
+                  }
+            }
           >
             {cat === "all"
               ? "All"
@@ -68,27 +77,35 @@ export default function ToolsPage() {
         {filtered.map((partner) => (
           <div
             key={partner.id}
-            className="p-5 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/30 transition-all"
+            className="p-5 rounded-xl transition-all"
+            style={{ ...glassCard }}
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
-                <h3 className="text-white font-semibold">{partner.name}</h3>
-                <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-brand-600/10 text-brand-400 mt-1">
+                <h3 className="font-semibold" style={{ color: T.text }}>{partner.name}</h3>
+                <span
+                  className="inline-block px-2 py-0.5 rounded text-xs font-medium mt-1"
+                  style={{ background: "rgba(123,57,252,0.10)", color: T.purpleLight }}
+                >
                   {partner.category}
                 </span>
               </div>
-              <span className="text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2 py-1 rounded">
+              <span
+                className="text-xs font-medium px-2 py-1 rounded"
+                style={{ background: "rgba(34,197,94,0.10)", color: T.green }}
+              >
                 {partner.commission}
               </span>
             </div>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-4">
+            <p className="text-sm leading-relaxed mb-4" style={{ color: T.text3 }}>
               {partner.description}
             </p>
             <a
               href={getTrackedUrl(partner.id, business.id, "dashboard")}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary block text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
+              className="block text-center px-4 py-2.5 rounded-lg text-sm font-semibold"
+              style={{ background: CTA_GRAD, color: "#fff" }}
             >
               Get {partner.name}
             </a>

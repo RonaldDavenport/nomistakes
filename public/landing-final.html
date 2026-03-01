@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No Mistakes — Build Your Business in 60 Seconds</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              purple: '#6C3CE1',
+              blue: '#2563EB',
+              pink: '#EC4899',
+              dark: '#0F0F1A',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #6C3CE1 0%, #2563EB 50%, #EC4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #0F0F1A 0%, #1a1a2e 50%, #0F0F1A 100%);
+    }
+    
+    .gradient-border {
+      position: relative;
+      background: #0F0F1A;
+      border-radius: 16px;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, #6C3CE1, #2563EB, #EC4899);
+      z-index: -1;
+    }
+    
+    .noise {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    
+    .float {
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(2deg); }
+    }
+    
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease-out;
+    }
+    .scroll-reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .bento-card {
+      transition: all 0.3s ease;
+    }
+    .bento-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(108, 60, 225, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-brand-dark text-white antialiased">
+  <div class="noise"></div>
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-brand-dark/80 backdrop-blur-xl border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-purple to-brand-blue flex items-center justify-center font-display font-bold text-lg">NM</div>
+        <span class="font-display font-semibold text-lg">No Mistakes</span>
+      </div>
+      <button class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-blue font-display font-medium text-sm hover:opacity-90 transition-opacity">
+        Start Building
+      </button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden">
+    <!-- Gradient orbs -->
+    <div class="absolute top-20 left-10 w-96 h-96 bg-brand-purple/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-brand-blue/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-pink/10 rounded-full blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto relative z-10">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="text-center lg:text-left">
+          <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+            Build Your
+            <span class="gradient-text">Business</span>
+            in 60 Seconds
+          </h1>
+          
+          <p class="text-lg text-white/60 mb-8 max-w-xl mx-auto lg:mx-0">
+            Answer 4 questions. AI builds your website, brand, products, and checkout. You launch today.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+            <button class="px-8 py-4 rounded-xl bg-gradient-to-r from-brand-purple to-brand-blue font-display font-semibold text-lg hover:opacity-90 transition-opacity shadow-lg shadow-brand-purple/25">
+              Start Building — It's Free
+            </button>
+          </div>
+
+          <p class="text-sm text-white/40">No credit card required. No coding needed.</p>
+
+          <!-- Social proof -->
+          <div class="mt-12 flex items-center gap-4 justify-center lg:justify-start">
+            <div class="flex -space-x-2">
+              <img src="/2026-02-28-founder1.png" class="w-10 h-10 rounded-full border-2 border-brand-dark" alt="Founder">
+              <img src="/2026-02-28-founder2.png" class="w-10 h-10 rounded-full border-2 border-brand-dark" alt="Founder">
+              <img src="/2026-02-28-founder3.png" class="w-10 h-10 rounded-full border-2 border-brand-dark" alt="Founder">
+            </div>
+            <div class="text-sm">
+              <span class="font-semibold text-white">2,000+</span>
+              <span class="text-white/50"> businesses launched</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="float">
+            <img src="/2026-02-28-hero-macbook.png" alt="No Mistakes Platform" class="w-full rounded-2xl shadow-2xl shadow-brand-purple/20">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30">
+      <span class="text-xs font-medium">Scroll to explore</span>
+      <div class="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2">
+        <div class="w-1 h-2 bg-white/40 rounded-full animate-bounce"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <section class="py-12 px-6 border-y border-white/5 bg-white/[0.02]">
+    <div class="max-w-7xl mx-auto">
+      <p class="text-center text-sm text-white/40 mb-8">Powered by industry leaders</p>
+      <div class="flex flex-wrap items-center justify-center gap-12 opacity-50">
+        <span class="text-xl font-semibold hover:opacity-100 transition-opacity">Stripe</span>
+        <span class="text-xl font-semibold hover:opacity-100 transition-opacity">Vercel</span>
+        <span class="text-xl font-semibold hover:opacity-100 transition-opacity">Supabase</span>
+        <span class="text-xl font-semibold hover:opacity-100 transition-opacity">OpenAI</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="py-32 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-20 scroll-reveal">
+        <span class="text-sm font-medium text-brand-purple">How It Works</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">From Idea to Launch in 3 Steps</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5 hover:border-brand-purple/30 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-purple/20 flex items-center justify-center mb-6">
+            <span class="font-display font-bold text-brand-purple">01</span>
+          </div>
+          <img src="/2026-02-28-step1-illustration.png" alt="Tell us about you" class="w-full h-48 object-cover rounded-2xl mb-6">
+          <h3 class="font-display text-xl font-bold mb-3">Tell Us About You</h3>
+          <p class="text-white/50">Share your skills, interests, and budget. Takes 60 seconds.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5 hover:border-brand-blue/30 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-6">
+            <span class="font-display font-bold text-brand-blue">02</span>
+          </div>
+          <img src="/2026-02-28-step2-illustration.png" alt="Pick your business" class="w-full h-48 object-cover rounded-2xl mb-6">
+          <h3 class="font-display text-xl font-bold mb-3">Pick Your Business</h3>
+          <p class="text-white/50">AI generates 3 custom business ideas. You choose your favorite.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5 hover:border-brand-pink/30 transition-colors">
+          <div class="w-12 h-12 rounded-xl bg-brand-pink/20 flex items-center justify-center mb-6">
+            <span class="font-display font-bold text-brand-pink">03</span>
+          </div>
+          <img src="/2026-02-28-step3-illustration.png" alt="Launch instantly" class="w-full h-48 object-cover rounded-2xl mb-6">
+          <h3 class="font-display text-xl font-bold mb-3">Launch Instantly</h3>
+          <p class="text-white/50">AI builds your complete website, brand, products, and checkout. You're live.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENTO GRID -->
+  <section class="py-32 px-6 bg-white/[0.01]">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-20 scroll-reveal">
+        <span class="text-sm font-medium text-brand-blue">What You Get</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">Everything AI Builds For You</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- AI Website -->
+        <div class="bento-card lg:col-span-2 bg-white/[0.02] rounded-3xl p-8 border border-white/5 scroll-reveal">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-brand-purple/20 flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-brand-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h3 class="font-display text-xl font-bold">AI-Generated Website</h3>
+            </div>
+          </div>          <p class="text-white/50 mb-6">Complete website with home, about, products, and contact pages. Mobile-ready and SEO optimized.</p>
+          <img src="/2026-02-28-example-design-agency.png" alt="Website example" class="w-full rounded-2xl">
+        </div>
+
+        <!-- Branding -->
+        <div class="bento-card bg-white/[0.02] rounded-3xl p-8 border border-white/5 scroll-reveal">
+          <div class="w-12 h-12 rounded-xl bg-brand-blue/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+            </svg>
+          </div>
+          <h3 class="font-display text-xl font-bold mb-2">Custom Branding</h3>
+          <p class="text-white/50 text-sm">Colors, fonts, logo, and tone of voice that matches your business.</p>
+        </div>
+
+        <!-- Checkout -->
+        <div class="bento-card bg-white/[0.02] rounded-3xl p-8 border border-white/5 scroll-reveal">
+          <div class="w-12 h-12 rounded-xl bg-brand-pink/20 flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-brand-pink" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+          </div>
+          <h3 class="font-display text-xl font-bold mb-2">Product Pages & Checkout</h3>
+          <p class="text-white/50 text-sm">Stripe-powered, ready to sell. One-time and subscriptions.</p>
+        </div>
+
+        <!-- AI Coach -->
+        <div class="bento-card lg:col-span-2 bg-white/[0.02] rounded-3xl p-8 border border-white/5 scroll-reveal">
+          <div class="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-brand-purple to-brand-pink flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                </svg>
+              </div>
+              <h3 class="font-display text-xl font-bold mb-2">AI Business Coach</h3>
+              <p class="text-white/50 mb-4">24/7 AI assistant for content, strategy, and growth. Always one step ahead.</p>
+              <div class="space-y-2 text-sm">
+                <div class="flex items-center gap-2 text-white/70">
+                  <span class="text-brand-purple">✓</span> Tells you exactly what to do today
+                </div>
+                <div class="flex items-center gap-2 text-white/70">
+                  <span class="text-brand-purple">✓</span> Adapts to your business type
+                </div>
+                <div class="flex items-center gap-2 text-white/70">
+                  <span class="text-brand-purple">✓</span> Learns from your progress
+                </div>
+              </div>
+            </div>
+            <img src="/2026-02-28-ai-coach-chat.png" alt="AI Coach" class="rounded-2xl">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE -->
+  <section class="py-32 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16 scroll-reveal">
+        <span class="text-sm font-medium text-brand-pink">Real Businesses</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">Built by AI in 60 Seconds</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl overflow-hidden border border-white/5">
+          <img src="/2026-02-28-example-fitness.png" alt="Fitness business" class="w-full">
+          <div class="p-6">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-brand-purple/20 text-brand-purple text-xs font-medium">Fitness</span>
+              <span class="text-white/40 text-xs">Built in 60s</span>
+            </div>
+            <h3 class="font-display font-bold">FitPro Coaching</h3>
+          </div>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl overflow-hidden border border-white/5">
+          <img src="/2026-02-28-example-templates.png" alt="Templates business" class="w-full">
+          <div class="p-6">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-brand-blue/20 text-brand-blue text-xs font-medium">Digital Products</span>
+              <span class="text-white/40 text-xs">Built in 60s</span>
+            </div>
+            <h3 class="font-display font-bold">Template Studio</h3>
+          </div>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl overflow-hidden border border-white/5">
+          <img src="/2026-02-28-example-consulting.png" alt="Consulting business" class="w-full">
+          <div class="p-6">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-brand-pink/20 text-brand-pink text-xs font-medium">Consulting</span>
+              <span class="text-white/40 text-xs">Built in 60s</span>
+            </div>
+            <h3 class="font-display font-bold">Strategy Partners</h3>
+          </div>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl overflow-hidden border border-white/5">
+          <img src="/2026-02-28-example-design-agency.png" alt="Design agency" class="w-full">
+          <div class="p-6">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="px-3 py-1 rounded-full bg-brand-purple/20 text-brand-purple text-xs font-medium">Agency</span>
+              <span class="text-white/40 text-xs">Built in 60s</span>
+            </div>
+            <h3 class="font-display font-bold">DesignCraft Studio</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="py-32 px-6 bg-white/[0.01]">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16 scroll-reveal">
+        <span class="text-sm font-medium text-brand-purple">Pricing</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">Start Free. Scale When Ready.</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Free -->
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5">
+          <h3 class="font-display text-lg font-semibold mb-2">Free</h3>
+          <div class="font-display text-4xl font-bold mb-1">$0</div>
+          <p class="text-white/40 text-sm mb-6">Forever</p>
+          
+          <ul class="space-y-3 text-sm text-white/60 mb-8">
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 1 business</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 50 AI credits/mo</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> AI site generation</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> Basic coach</li>
+          </ul>
+          
+          <button class="w-full py-3 rounded-xl border border-white/20 font-display font-medium hover:bg-white hover:text-black transition-all">
+            Get Started
+          </button>
+        </div>
+
+        <!-- Starter -->
+        <div class="scroll-reveal relative">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-brand-purple to-brand-pink text-sm font-medium">
+            Most Popular
+          </div>
+          <div class="bg-white/[0.02] rounded-3xl p-8 border border-brand-purple/30 h-full">
+            <h3 class="font-display text-lg font-semibold mb-2">Starter</h3>
+            <div class="font-display text-4xl font-bold mb-1">$19<span class="text-lg text-white/40">/mo</span></div>
+            <p class="text-white/40 text-sm mb-6">Grow with AI</p>
+            
+            <ul class="space-y-3 text-sm text-white/60 mb-8">
+              <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 3 businesses</li>
+              <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 200 AI credits/mo</li>
+              <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> AI content & ads</li>
+              <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> Full AI coach</li>
+            </ul>
+            
+            <button class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-purple to-brand-blue font-display font-medium hover:opacity-90 transition-opacity">
+              Start Free Trial
+            </button>
+          </div>
+        </div>
+
+        <!-- Growth -->
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5">
+          <h3 class="font-display text-lg font-semibold mb-2">Growth</h3>
+          <div class="font-display text-4xl font-bold mb-1">$49<span class="text-lg text-white/40">/mo</span></div>
+          <p class="text-white/40 text-sm mb-6">Full AI engine</p>
+          
+          <ul class="space-y-3 text-sm text-white/60 mb-8">
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 10 businesses</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> 500 AI credits/mo</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> UGC videos</li>
+            <li class="flex items-center gap-2"><span class="text-brand-purple">✓</span> Priority support</li>
+          </ul>
+          
+          <button class="w-full py-3 rounded-xl border border-white/20 font-display font-medium hover:bg-white hover:text-black transition-all">
+            Start Free Trial
+          </button>
+        </div>
+      </div>
+
+      <p class="text-center text-white/40 text-sm mt-8">All plans include Stripe payments, custom domain support, and AI-generated branding.</p>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="py-32 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16 scroll-reveal">
+        <span class="text-sm font-medium text-brand-blue">Testimonials</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">Founders Who Launched</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5">
+          <p class="text-white/70 mb-6">"I went from idea to live website in under an hour. The AI coach told me exactly what to do each day."</p>
+          <div class="flex items-center gap-4">
+            <img src="/2026-02-28-founder1.png" alt="Sarah" class="w-12 h-12 rounded-full">
+            <div>
+              <div class="font-display font-semibold">Sarah Chen</div>
+              <div class="text-white/40 text-sm">Design Consultant</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5">
+          <p class="text-white/70 mb-6">"No Mistakes eliminated my analysis paralysis. I stopped planning and finally launched."</p>
+          <div class="flex items-center gap-4">
+            <img src="/2026-02-28-founder2.png" alt="Marcus" class="w-12 h-12 rounded-full">
+            <div>
+              <div class="font-display font-semibold">Marcus Johnson</div>
+              <div class="text-white/40 text-sm">Fitness Coach</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-3xl p-8 border border-white/5">
+          <p class="text-white/70 mb-6">"The AI built my entire brand and website while I was making coffee. Unreal."</p>
+          <div class="flex items-center gap-4">
+            <img src="/2026-02-28-founder3.png" alt="Elena" class="w-12 h-12 rounded-full">
+            <div>
+              <div class="font-display font-semibold">Elena Rodriguez</div>
+              <div class="text-white/40 text-sm">Template Creator</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-32 px-6 bg-white/[0.01]">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-16 scroll-reveal">
+        <span class="text-sm font-medium text-brand-pink">FAQ</span>
+        <h2 class="font-display text-4xl sm:text-5xl font-bold mt-4">Questions? Answered.</h2>
+      </div>
+
+      <div class="space-y-4">
+        <div class="scroll-reveal bg-white/[0.02] rounded-2xl p-6 border border-white/5">
+          <h3 class="font-display font-semibold mb-2">How does No Mistakes work?</h3>
+          <p class="text-white/50">You answer 4 questions about your skills and goals. Our AI generates 3 custom business concepts. You pick one, and AI builds your complete website, brand, and checkout in 60 seconds.</p>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-2xl p-6 border border-white/5">
+          <h3 class="font-display font-semibold mb-2">Do I need coding or design skills?</h3>
+          <p class="text-white/50">Nope. Zero. The AI handles everything — from the website code to the brand colors to the product descriptions.</p>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-2xl p-6 border border-white/5">
+          <h3 class="font-display font-semibold mb-2">What types of businesses can I create?</h3>
+          <p class="text-white/50">Service businesses (consulting, coaching, freelancing), digital products (courses, templates, ebooks), agencies, and memberships. If you can sell it online, we can build it.</p>
+        </div>
+
+        <div class="scroll-reveal bg-white/[0.02] rounded-2xl p-6 border border-white/5">
+          <h3 class="font-display font-semibold mb-2">How much does it cost?</h3>
+          <p class="text-white/50">Free to start. $19/month for Starter (3 businesses, 200 credits). $49/month for Growth (10 businesses, 500 credits). No credit card required to try.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="py-32 px-6 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-brand-purple/20 via-brand-dark to-brand-blue/20"></div>
+    
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+      <h2 class="font-display text-4xl sm:text-6xl font-bold mb-6">
+        Your Business Is
+        <span class="gradient-text">One Click Away</span>
+      </h2>
+      
+      <p class="text-white/50 text-lg mb-10">Join thousands of entrepreneurs who stopped planning and started launching.</p>
+
+      <button class="px-10 py-5 rounded-xl bg-gradient-to-r from-brand-purple to-brand-blue font-display font-bold text-lg hover:opacity-90 transition-opacity shadow-lg shadow-brand-purple/25">
+        Build Your Business Now — Free
+      </button>
+
+      <p class="text-white/30 text-sm mt-6">No credit card. No coding. No excuses.</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-12 px-6 border-t border-white/5">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-purple to-brand-blue flex items-center justify-center font-display font-bold text-sm">NM</div>
+        <span class="font-display text-white/40">No Mistakes</span>
+      </div>
+      
+      <div class="flex items-center gap-8 text-sm text-white/40">
+        <a href="#" class="hover:text-white transition-colors">Twitter</a>
+        <a href="#" class="hover:text-white transition-colors">TikTok</a>
+        <a href="#" class="hover:text-white transition-colors">Instagram</a>
+      </div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto mt-8 pt-8 border-t border-white/5 text-center text-white/30 text-sm">
+      © 2026 No Mistakes. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal animation
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.scroll-reveal').forEach((el) => {
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>

@@ -17,8 +17,8 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
 
   const site = business as SiteData;
   const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#4c6ef5";
-  const accent = colors.accent || "#9775fa";
+  const primary = colors.primary || "#7B39FC";
+  const accent = colors.accent || "#A855F7";
   const products = site.site_content?.products || [];
   const features = site.site_content?.features || [];
   const faq = site.site_content?.faq || [];
@@ -131,7 +131,7 @@ export default async function SiteProductsPage({ params }: { params: Promise<{ s
             We&apos;d love to hear from you. Reach out anytime.
           </p>
           <div className="reveal reveal-delay-2">
-            <a href={`/site/${slug}/contact`} className="cta-btn">
+            <a href={"/contact"} className="cta-btn">
               <span>Contact Us</span>
             </a>
           </div>

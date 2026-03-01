@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase";
 import { generateConcepts, generateBrand, generateSiteContent, generateBusinessPlan, generateNames } from "@/lib/claude";
 import { generateBusinessImages } from "@/lib/images";
 
+export const maxDuration = 60;
+
 // POST /api/generate — handles all generation types
 export async function POST(req: Request) {
   try {
@@ -78,8 +80,18 @@ async function handleBuild(body: {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  // 1. Generate brand
-  const brandResult = await generateBrand(concept.name, concept.tagline, concept.type, concept.audience);
+  // 1. Generate brand + site content + business plan ALL in parallel
+  // Site content only uses brand.tone which Claude infers from business context
+  const [brandResult, siteResult, planResult] = await Promise.all([
+    generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
+    generateSiteContent(
+      concept.name, concept.tagline, concept.type, concept.desc, concept.audience, {}
+    ),
+    generateBusinessPlan(
+      concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup
+    ),
+  ]);
+
   let brand;
   try {
     brand = JSON.parse(brandResult.content);
@@ -88,10 +100,6 @@ async function handleBuild(body: {
     brand = match ? JSON.parse(match[0]) : {};
   }
 
-  // 2. Generate site content
-  const siteResult = await generateSiteContent(
-    concept.name, concept.tagline, concept.type, concept.desc, concept.audience, brand
-  );
   let siteContent;
   try {
     siteContent = JSON.parse(siteResult.content);
@@ -100,30 +108,6 @@ async function handleBuild(body: {
     siteContent = match ? JSON.parse(match[0]) : {};
   }
 
-  // 2.5 Generate images (parallel, non-blocking)
-  const productInfos = (siteContent.products || []).slice(0, 3).map((p: { name: string; desc: string }) => ({
-    name: p.name,
-    desc: p.desc,
-  }));
-  try {
-    const images = await generateBusinessImages(
-      slug, // use slug as folder name since we don't have DB id yet
-      concept.name,
-      concept.type,
-      concept.tagline,
-      (brand as { tone?: string }).tone || "professional",
-      productInfos
-    );
-    siteContent.images = images;
-  } catch (err) {
-    console.error("[generate] Image generation failed (non-fatal):", err);
-    // Images are optional — site works without them via gradient fallbacks
-  }
-
-  // 3. Generate business plan
-  const planResult = await generateBusinessPlan(
-    concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup
-  );
   let businessPlan;
   try {
     businessPlan = JSON.parse(planResult.content);
@@ -163,7 +147,7 @@ async function handleBuild(body: {
     return NextResponse.json({ error: "Failed to save business" }, { status: 500 });
   }
 
-  // 5. Log generations for cost tracking
+  // 5. Log generations for cost tracking (fire-and-forget)
   const generations = [
     { type: "concepts", ...brandResult },
     { type: "brand", ...brandResult },
@@ -171,16 +155,43 @@ async function handleBuild(body: {
     { type: "business_plan", ...planResult },
   ];
 
-  for (const gen of generations) {
-    await db.from("generations").insert({
-      business_id: business.id,
-      user_id: userId,
-      type: gen.type,
-      model: gen.model,
-      input_tokens: gen.inputTokens,
-      output_tokens: gen.outputTokens,
-    });
-  }
+  // Don't await — log in background
+  Promise.all(
+    generations.map((gen) =>
+      db.from("generations").insert({
+        business_id: business.id,
+        user_id: userId,
+        type: gen.type,
+        model: gen.model,
+        input_tokens: gen.inputTokens,
+        output_tokens: gen.outputTokens,
+      })
+    )
+  ).catch((err) => console.error("[generate] Logging error:", err));
+
+  // 6. Generate images in background (don't block response)
+  const productInfos = (siteContent.products || []).slice(0, 3).map((p: { name: string; desc: string }) => ({
+    name: p.name,
+    desc: p.desc,
+  }));
+  generateBusinessImages(
+    slug,
+    concept.name,
+    concept.type,
+    concept.tagline,
+    (brand as { tone?: string }).tone || "professional",
+    productInfos
+  ).then((images) => {
+    db.from("businesses")
+      .update({ site_content: { ...siteContent, images } })
+      .eq("id", business.id)
+      .then(({ error }) => {
+        if (error) console.error("[generate] Image DB update failed:", error);
+        else console.log("[generate] Images generated and saved for", business.id);
+      });
+  }).catch((err) => {
+    console.error("[generate] Image generation failed (non-fatal):", err);
+  });
 
   return NextResponse.json({
     business,

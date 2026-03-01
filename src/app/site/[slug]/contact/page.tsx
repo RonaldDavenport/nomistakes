@@ -17,8 +17,8 @@ export default async function SiteContactPage({ params }: { params: Promise<{ sl
 
   const site = business as SiteData;
   const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#4c6ef5";
-  const accent = colors.accent || "#9775fa";
+  const primary = colors.primary || "#7B39FC";
+  const accent = colors.accent || "#A855F7";
   const contact = site.site_content?.contact || {};
 
   const inputStyle = {

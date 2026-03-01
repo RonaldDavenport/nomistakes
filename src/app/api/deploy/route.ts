@@ -40,6 +40,10 @@ export async function POST(req: Request) {
     // Create Vercel project
     const project = await createProject(business.name, business.slug);
 
+    // Determine platform app URL for admin bar links
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+      || (process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` : "");
+
     // Generate site files from template
     const files = generateSiteFiles({
       name: business.name,
@@ -51,6 +55,8 @@ export async function POST(req: Request) {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
       stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      businessId: business.id,
+      appUrl,
     });
 
     // Deploy to Vercel

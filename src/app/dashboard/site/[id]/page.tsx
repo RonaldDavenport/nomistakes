@@ -217,7 +217,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
         }}>
           {deploying && (
             <div style={{
-              width: 16, height: 16, border: "2px solid #4c6ef5",
+              width: 16, height: 16, border: "2px solid #7B39FC",
               borderTopColor: "transparent", borderRadius: "50%",
               animation: "spin 0.6s linear infinite", flexShrink: 0,
             }} />
@@ -241,7 +241,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
         <div className="flex items-center gap-3">
           {business.deployed_url ? (
             <a
-              href={business.custom_domain ? `https://${business.custom_domain}` : business.deployed_url}
+              href={(business.custom_domain ? `https://${business.custom_domain}` : business.deployed_url) + "?nm_admin=true"}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-zinc-300"
@@ -413,7 +413,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
                   <div className="flex items-center gap-3">
                     <input
                       type="color"
-                      value={business.brand.colors?.[key] || "#4c6ef5"}
+                      value={business.brand.colors?.[key] || "#7B39FC"}
                       onChange={(e) => updateColor(key, e.target.value)}
                       className="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer"
                     />
@@ -483,7 +483,7 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
             <p className="text-white font-semibold mb-3">Preview</p>
             <div
               className="rounded-xl p-6 border border-white/5"
-              style={{ background: business.brand.colors?.background || "#0a0a0f" }}
+              style={{ background: business.brand.colors?.background || "#0c0a09" }}
             >
               <h3 style={{
                 color: business.brand.colors?.text || "#e4e4e7",
@@ -493,12 +493,12 @@ export default function SiteEditorPage({ params }: { params: Promise<{ id: strin
               }}>
                 {business.name}
               </h3>
-              <p style={{ color: business.brand.colors?.primary || "#4c6ef5", fontSize: 14, marginBottom: 16 }}>
+              <p style={{ color: business.brand.colors?.primary || "#7B39FC", fontSize: 14, marginBottom: 16 }}>
                 {business.tagline}
               </p>
               <div style={{ display: "flex", gap: 8 }}>
                 <span style={{
-                  background: `linear-gradient(135deg, ${business.brand.colors?.primary || "#4c6ef5"}, ${business.brand.colors?.accent || "#9775fa"})`,
+                  background: `linear-gradient(135deg, ${business.brand.colors?.primary || "#7B39FC"}, ${business.brand.colors?.accent || "#A855F7"})`,
                   color: "#fff", padding: "8px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600,
                 }}>
                   Primary Button

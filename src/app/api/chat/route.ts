@@ -1,11 +1,15 @@
 import { NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { generateStream } from "@/lib/claude";
+
+export const maxDuration = 60;
 import {
   buildCoachSystemPrompt,
   type BusinessRecord,
   type ChecklistProgress,
+  type TaskSummary,
 } from "@/lib/business-context";
+import { getChecklistForSubtype } from "@/lib/checklist-data";
 import { getLimit } from "@/lib/plans";
 
 export async function POST(req: NextRequest) {
@@ -75,25 +79,52 @@ export async function POST(req: NextRequest) {
     .order("created_at", { ascending: true })
     .limit(20);
 
-  // Build checklist progress for coach context
+  // Build checklist progress for coach context — merge DB status with static definitions
   const { data: checklistItems } = await db
     .from("checklist_items")
-    .select("status")
+    .select("task_id, status")
     .eq("business_id", businessId);
 
   let progress: ChecklistProgress | undefined;
   if (checklistItems && checklistItems.length > 0) {
-    const completed = checklistItems.filter((t) => t.status === "completed").length;
-    const total = checklistItems.length;
+    const statusMap = new Map(checklistItems.map((t) => [t.task_id, t.status]));
+    const definitions = getChecklistForSubtype(business.subtype || "freelance");
+
+    // Build task summaries by merging DB status with static definitions
+    const tasks: TaskSummary[] = definitions
+      .filter((def) => statusMap.has(def.id))
+      .map((def) => ({
+        title: def.title,
+        status: (statusMap.get(def.id) === "completed" ? "completed" : "pending") as "completed" | "pending",
+        phase: def.phase,
+      }));
+
+    const completed = tasks.filter((t) => t.status === "completed").length;
+    const total = tasks.length;
+
+    // Find the first pending task to determine current phase and next task
+    const nextTask = tasks.find((t) => t.status === "pending");
+    const currentPhase = nextTask?.phase || tasks[tasks.length - 1]?.phase || 1;
+    const phaseTitle = definitions.find((d) => d.phase === currentPhase)?.phaseTitle || "Launch Checklist";
+
+    // Count tasks blocked by plan tier
+    const userPlan = plan;
+    const planOrder = ["free", "starter", "growth", "pro"];
+    const userPlanIdx = planOrder.indexOf(userPlan);
+    const blockedTasks = definitions.filter(
+      (d) => statusMap.has(d.id) && statusMap.get(d.id) !== "completed" && planOrder.indexOf(d.requiredPlan) > userPlanIdx
+    );
+
     progress = {
-      currentPhase: 1,
-      phaseTitle: "Launch Checklist",
+      currentPhase,
+      phaseTitle,
       completedCount: completed,
       totalCount: total,
-      pctComplete: Math.round((completed / total) * 100),
-      nextTaskTitle: "Continue with your checklist",
-      blockedCount: 0,
-      blockedPlan: "",
+      pctComplete: total > 0 ? Math.round((completed / total) * 100) : 0,
+      nextTaskTitle: nextTask?.title || "All tasks completed!",
+      blockedCount: blockedTasks.length,
+      blockedPlan: blockedTasks.length > 0 ? blockedTasks[0].requiredPlan : "",
+      tasks,
     };
   }
 

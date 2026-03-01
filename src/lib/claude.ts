@@ -11,6 +11,25 @@ export interface GenerationResult {
   model: string;
 }
 
+// ── Tool Use types ──
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+export interface ToolUseResult {
+  toolCalls: Array<{
+    id: string;
+    name: string;
+    input: Record<string, unknown>;
+  }>;
+  textContent: string;
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+}
+
 export async function generate(
   prompt: string,
   systemPrompt: string,
@@ -28,6 +47,48 @@ export async function generate(
 
   return {
     content: textBlock?.text ?? "",
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    model,
+  };
+}
+
+// ── Tool Use Generation ──
+export async function generateWithTools(
+  prompt: string,
+  systemPrompt: string,
+  tools: ToolDefinition[],
+  model: "claude-haiku-4-5-20251001" | "claude-sonnet-4-5-20250929" = "claude-sonnet-4-5-20250929",
+  maxTokens = 8192
+): Promise<ToolUseResult> {
+  const response = await anthropic.messages.create({
+    model,
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: "user", content: prompt }],
+    tools: tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.input_schema as Anthropic.Tool["input_schema"],
+    })),
+  });
+
+  const toolCalls = response.content
+    .filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use")
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      input: b.input as Record<string, unknown>,
+    }));
+
+  const textContent = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("");
+
+  return {
+    toolCalls,
+    textContent,
     inputTokens: response.usage.input_tokens,
     outputTokens: response.usage.output_tokens,
     model,

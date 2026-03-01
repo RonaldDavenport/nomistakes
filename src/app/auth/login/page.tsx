@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,15 +34,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
+    <div style={{ background: T.bg }} className="min-h-screen flex items-center justify-center px-6">
+      <div style={{ background: T.glass, border: `1px solid ${T.border}`, borderRadius: 16, backdropFilter: "blur(12px)", padding: "32px 28px" }} className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold tracking-tight inline-block mb-6">
-            <span className="text-white">No</span>
-            <span className="gradient-text">Mistakes</span>
+            <span style={{ color: T.text }}>No</span>
+            <span style={{ color: T.purple }}>Mistakes</span>
           </Link>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome back</h1>
-          <p className="text-zinc-500 text-sm">Sign in to manage your businesses</p>
+          <p style={{ color: T.text3 }} className="text-sm">Sign in to manage your businesses</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -67,6 +68,11 @@ export default function LoginPage() {
               placeholder="Your password"
             />
           </div>
+          <div className="text-right">
+            <Link href="/auth/forgot-password" className="text-sm text-brand-400 hover:text-brand-300 transition">
+              Forgot password?
+            </Link>
+          </div>
 
           {error && (
             <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">{error}</p>
@@ -75,7 +81,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-3.5 rounded-xl text-sm font-bold text-white"
+            style={{ background: CTA_GRAD, opacity: loading ? 0.6 : 1 }}
+            className="w-full py-3.5 rounded-xl text-sm font-bold text-white border-0 cursor-pointer"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 interface AuthGateModalProps {
   businessId: string;
@@ -118,11 +119,12 @@ export default function AuthGateModal({
         style={{
           width: "100%",
           maxWidth: 440,
-          background: "#111118",
+          background: T.bgEl,
           borderRadius: 20,
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: `1px solid ${T.border}`,
           padding: "32px 28px",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+          backdropFilter: "blur(12px)",
         }}
       >
         {/* Header */}
@@ -132,7 +134,7 @@ export default function AuthGateModal({
               width: 48,
               height: 48,
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #4c6ef5, #7048e8)",
+              backgroundColor: T.purple,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -145,7 +147,7 @@ export default function AuthGateModal({
             Your business is ready!
           </h2>
           <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
-            Create an account to save <strong style={{ color: "#748ffc" }}>{businessName}</strong> and
+            Create an account to save <strong style={{ color: T.purpleLight }}>{businessName}</strong> and
             finish setting it up.
           </p>
         </div>
@@ -169,8 +171,8 @@ export default function AuthGateModal({
                 padding: "10px 0",
                 borderRadius: 8,
                 border: "none",
-                background: tab === t ? "rgba(76,110,245,0.15)" : "transparent",
-                color: tab === t ? "#748ffc" : "rgba(255,255,255,0.4)",
+                background: tab === t ? "rgba(123,57,252,0.15)" : "transparent",
+                color: tab === t ? T.purpleLight : "rgba(255,255,255,0.4)",
                 fontWeight: 600,
                 fontSize: 13,
                 cursor: "pointer",
@@ -268,12 +270,12 @@ export default function AuthGateModal({
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary"
             style={{
               width: "100%",
               padding: "14px 0",
               borderRadius: 12,
               border: "none",
+              background: CTA_GRAD,
               color: "#fff",
               fontWeight: 700,
               fontSize: 15,

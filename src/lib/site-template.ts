@@ -34,6 +34,8 @@ interface BusinessConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   stripePublishableKey?: string;
+  businessId: string;
+  appUrl: string; // NoMistakes platform URL for admin bar links
 }
 
 export function generateSiteFiles(config: BusinessConfig): { file: string; data: string }[] {
@@ -145,6 +147,40 @@ export async function getBusiness(): Promise<Business | null> {
     .eq("id", BUSINESS_ID)
     .single();
   if (data) { _cache = data; _cacheTime = Date.now(); }
+  return data;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  meta_description: string;
+  keywords: string[];
+  status: string;
+  published_at: string | null;
+  word_count: number;
+  created_at: string;
+}
+
+export async function getBlogPosts(): Promise<BlogPost[]> {
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("business_id", BUSINESS_ID)
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
+  return data || [];
+}
+
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("business_id", BUSINESS_ID)
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
   return data;
 }
 `,
@@ -293,6 +329,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: isServices ? "/services" : "/products", label: isServices ? "Services" : "Products" },
+    { href: "/blog", label: "Blog" },
     { href: "/contact", label: "Contact" },
   ];
   const ctaLabel = isServices ? "Book a Call" : "Get Started";
@@ -399,11 +436,167 @@ export default function Nav() {
 `,
   });
 
+  // ── Admin Bar (sessionStorage-based, shows when owner visits from dashboard) ──
+  const appUrl = config.appUrl || "";
+  const bId = config.businessId || "";
+  files.push({
+    file: "src/components/AdminBar.tsx",
+    data: `"use client";
+import { useEffect, useState } from "react";
+
+const APP_URL = "${esc(appUrl)}";
+const BIZ_ID = process.env.NEXT_PUBLIC_BUSINESS_ID || "${esc(bId)}";
+
+export default function AdminBar({ businessName }: { businessName: string }) {
+  const [show, setShow] = useState(false);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    // Check URL for ?nm_admin=true — set by dashboard "View Site" link
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("nm_admin") === "true") {
+      sessionStorage.setItem("nm_admin", "1");
+      // Clean URL
+      params.delete("nm_admin");
+      const clean = params.toString();
+      const newUrl = window.location.pathname + (clean ? "?" + clean : "") + window.location.hash;
+      window.history.replaceState({}, "", newUrl);
+    }
+    if (sessionStorage.getItem("nm_admin") === "1") {
+      setShow(true);
+    }
+  }, []);
+
+  // Push site content down when bar is visible
+  useEffect(() => {
+    if (show && !hidden) {
+      document.body.style.paddingTop = "44px";
+    } else {
+      document.body.style.paddingTop = "0px";
+    }
+    return () => { document.body.style.paddingTop = "0px"; };
+  }, [show, hidden]);
+
+  if (!show) return null;
+
+  const dashUrl = APP_URL + "/dashboard/" + BIZ_ID;
+
+  // "View as visitor" — show small re-show pill
+  if (hidden) {
+    return (
+      <button
+        onClick={() => setHidden(false)}
+        style={{
+          position: "fixed", top: 8, right: 8, zIndex: 9999,
+          background: "#1e1e2e", color: "#a1a1aa",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 20, padding: "6px 14px", fontSize: 12,
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        Admin
+      </button>
+    );
+  }
+
+  const linkStyle = {
+    color: "#d4d4d8", textDecoration: "none" as const, fontSize: 13,
+    padding: "4px 10px", borderRadius: 4, transition: "background 0.15s",
+    whiteSpace: "nowrap" as const,
+  };
+
+  return (
+    <>
+      <style>{\`
+        @media (max-width: 639px) {
+          .nm-admin-label { display: none !important; }
+          .nm-admin-link { padding: 6px !important; }
+        }
+      \`}</style>
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, height: 44, zIndex: 9999,
+        background: "#1e1e2e", borderBottom: "1px solid rgba(255,255,255,0.08)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 16px",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontSize: 13, color: "#e4e4e7",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+          <a href={dashUrl} style={{
+            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+            color: "#fff", fontWeight: 700, fontSize: 11,
+            padding: "3px 8px", borderRadius: 4, textDecoration: "none",
+            letterSpacing: 0.5, flexShrink: 0,
+          }}>NM</a>
+          <span style={{ color: "#a1a1aa", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
+            {businessName}
+          </span>
+          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+          <a href={dashUrl + "/editor"} className="nm-admin-link" style={linkStyle}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              <span className="nm-admin-label">Edit Site</span>
+            </span>
+          </a>
+          <a href={dashUrl} className="nm-admin-link" style={linkStyle}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+              </svg>
+              <span className="nm-admin-label">Dashboard</span>
+            </span>
+          </a>
+          <a href={dashUrl + "/settings"} className="nm-admin-link" style={linkStyle}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+              </svg>
+              <span className="nm-admin-label">Settings</span>
+            </span>
+          </a>
+        </div>
+        <button
+          onClick={() => setHidden(true)}
+          style={{
+            color: "#71717a", background: "transparent",
+            border: "1px solid rgba(255,255,255,0.08)", borderRadius: 4,
+            padding: "4px 10px", fontSize: 12, cursor: "pointer",
+            whiteSpace: "nowrap", transition: "all 0.15s", flexShrink: 0,
+          }}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <span className="nm-admin-label">View as Visitor</span>
+          </span>
+        </button>
+      </div>
+    </>
+  );
+}
+`,
+  });
+
   files.push({
     file: "src/app/layout.tsx",
     data: `import "./globals.css";
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
+import AdminBar from "@/components/AdminBar";
 
 export const metadata: Metadata = {
   title: "${esc(config.siteContent.seo?.title || config.name)}",
@@ -420,6 +613,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <AdminBar businessName="${esc(config.name)}" />
         <Nav />
         {children}
         <footer style={{
@@ -1762,6 +1956,199 @@ export default async function CheckoutSuccess() {
 `,
     });
   }
+
+  // ── Blog List Page ──
+  files.push({
+    file: "src/app/blog/page.tsx",
+    data: `import { getBusiness, getBlogPosts } from "@/lib/data";
+import Nav from "@/components/Nav";
+
+export const revalidate = 60;
+
+export async function generateMetadata() {
+  const biz = await getBusiness();
+  return {
+    title: biz ? \`Blog | \${biz.name}\` : "Blog",
+    description: biz ? \`Latest articles from \${biz.name}\` : "Blog",
+  };
+}
+
+export default async function BlogPage() {
+  const biz = await getBusiness();
+  const posts = await getBlogPosts();
+  if (!biz) return null;
+
+  return (
+    <>
+      <Nav />
+      <main style={{ maxWidth: 800, margin: "0 auto", padding: "80px 24px 60px" }}>
+        <h1 style={{
+          fontSize: "clamp(2rem, 5vw, 3rem)",
+          fontWeight: 800, letterSpacing: "-0.03em",
+          marginBottom: 12,
+        }}>Blog</h1>
+        <p style={{
+          color: "rgba(${tb},0.5)", fontSize: 16,
+          marginBottom: 48, lineHeight: 1.6,
+        }}>
+          Insights and updates from {esc(config.name)}
+        </p>
+
+        {posts.length === 0 ? (
+          <p style={{ color: "rgba(${tb},0.35)", fontSize: 15, textAlign: "center", padding: "60px 0" }}>
+            No posts yet. Check back soon!
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {posts.map((post: any) => (
+              <a
+                key={post.id}
+                href={\`/blog/\${post.slug}\`}
+                style={{
+                  display: "block",
+                  padding: 28,
+                  borderRadius: 16,
+                  border: "1px solid rgba(${tb},0.06)",
+                  background: "rgba(${tb},0.02)",
+                  transition: "all 0.2s",
+                }}
+              >
+                <h2 style={{
+                  fontSize: 22, fontWeight: 700,
+                  letterSpacing: "-0.01em", marginBottom: 8,
+                }}>
+                  {post.title}
+                </h2>
+                {post.meta_description && (
+                  <p style={{
+                    color: "rgba(${tb},0.5)", fontSize: 15,
+                    lineHeight: 1.6, marginBottom: 12,
+                  }}>
+                    {post.meta_description}
+                  </p>
+                )}
+                <div style={{
+                  display: "flex", gap: 16, alignItems: "center",
+                  color: "rgba(${tb},0.3)", fontSize: 13,
+                }}>
+                  <span>{post.word_count} words</span>
+                  <span>{new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
+  );
+}
+`,
+  });
+
+  // ── Blog Post Page ──
+  files.push({
+    file: "src/app/blog/[slug]/page.tsx",
+    data: `import { getBusiness, getBlogPost, getBlogPosts } from "@/lib/data";
+import Nav from "@/components/Nav";
+import { notFound } from "next/navigation";
+
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const posts = await getBlogPosts();
+  return posts.map((p: any) => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = await getBlogPost(slug);
+  if (!post) return { title: "Not Found" };
+  return {
+    title: post.title,
+    description: post.meta_description || "",
+    keywords: post.keywords?.join(", ") || "",
+  };
+}
+
+// Simple markdown-to-HTML (handles headers, paragraphs, bold, italic, lists, links)
+function renderMarkdown(md: string): string {
+  return md
+    .replace(/^### (.+)$/gm, '<h3 style="font-size:20px;font-weight:700;margin:32px 0 12px;letter-spacing:-0.01em">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 style="font-size:24px;font-weight:700;margin:36px 0 14px;letter-spacing:-0.02em">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 style="font-size:32px;font-weight:800;margin:40px 0 16px;letter-spacing:-0.03em">$1</h1>')
+    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+    .replace(/\\*(.+?)\\*/g, '<em>$1</em>')
+    .replace(/\\[(.+?)\\]\\((.+?)\\)/g, '<a href="$2" style="color:${primary};text-decoration:underline">$1</a>')
+    .replace(/^- (.+)$/gm, '<li style="margin-left:20px;margin-bottom:6px;list-style:disc">$1</li>')
+    .replace(/^(?!<[hlu]|<li)(\\S.*)$/gm, '<p style="margin-bottom:16px;line-height:1.8;color:rgba(${tb},0.7)">$1</p>');
+}
+
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const [biz, post] = await Promise.all([getBusiness(), getBlogPost(slug)]);
+  if (!biz || !post) notFound();
+
+  return (
+    <>
+      <Nav />
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px 60px" }}>
+        <a href="/blog" style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          color: "rgba(${tb},0.4)", fontSize: 14, marginBottom: 32,
+          transition: "color 0.2s",
+        }}>
+          &larr; Back to Blog
+        </a>
+
+        <h1 style={{
+          fontSize: "clamp(1.75rem, 5vw, 2.75rem)",
+          fontWeight: 800, letterSpacing: "-0.03em",
+          marginBottom: 16, lineHeight: 1.15,
+        }}>
+          {post.title}
+        </h1>
+
+        <div style={{
+          display: "flex", gap: 16, alignItems: "center",
+          color: "rgba(${tb},0.35)", fontSize: 14,
+          marginBottom: 48, paddingBottom: 32,
+          borderBottom: "1px solid rgba(${tb},0.06)",
+        }}>
+          <span>{post.word_count} words</span>
+          <span>&middot;</span>
+          <span>{Math.ceil(post.word_count / 200)} min read</span>
+          <span>&middot;</span>
+          <span>{new Date(post.published_at || post.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+        </div>
+
+        <article
+          style={{ fontSize: 17, lineHeight: 1.8 }}
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
+        />
+
+        {post.keywords && post.keywords.length > 0 && (
+          <div style={{
+            marginTop: 48, paddingTop: 24,
+            borderTop: "1px solid rgba(${tb},0.06)",
+            display: "flex", gap: 8, flexWrap: "wrap",
+          }}>
+            {post.keywords.map((kw: string) => (
+              <span key={kw} style={{
+                padding: "4px 12px", borderRadius: 20,
+                background: "rgba(${tb},0.05)", fontSize: 12,
+                color: "rgba(${tb},0.4)",
+              }}>
+                {kw}
+              </span>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
+  );
+}
+`,
+  });
 
   return files;
 }

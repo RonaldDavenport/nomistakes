@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -24,11 +25,11 @@ export default function Navbar() {
   if (isDashboard) return null;
 
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-[rgba(10,10,15,0.85)] backdrop-blur-xl">
+    <nav style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }} className="fixed top-0 w-full z-50 border-b border-white/5">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="text-xl font-bold tracking-tight">
-          <span className="text-white">No</span>
-          <span className="gradient-text">Mistakes</span>
+          <span style={{ color: T.text }}>No</span>
+          <span style={{ color: T.purple }}>Mistakes</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
           <Link href="/#how-it-works" className="hover:text-white transition">
@@ -43,12 +44,24 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-3">
           {loggedIn ? (
-            <Link
-              href="/dashboard"
-              className="btn-primary px-5 py-2 rounded-lg text-sm font-semibold text-white"
-            >
-              Dashboard
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                style={{ background: CTA_GRAD }}
+                className="px-5 py-2 rounded-full text-sm font-semibold text-white"
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.href = "/";
+                }}
+                className="text-sm text-zinc-500 hover:text-zinc-300 transition"
+              >
+                Log out
+              </button>
+            </div>
           ) : (
             <>
               <Link
@@ -59,7 +72,8 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/wizard"
-                className="hidden sm:block btn-primary px-5 py-2 rounded-lg text-sm font-semibold text-white"
+                style={{ background: CTA_GRAD }}
+                className="hidden sm:block px-5 py-2 rounded-full text-sm font-semibold text-white"
               >
                 Start Free
               </Link>
@@ -79,7 +93,7 @@ export default function Navbar() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[rgba(10,10,15,0.95)] backdrop-blur-xl animate-fadeIn">
+        <div style={{ background: T.bgEl }} className="md:hidden border-t border-white/5 backdrop-blur-xl animate-fadeIn">
           <div className="px-6 py-4 space-y-1">
             <Link href="/#how-it-works" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
               How It Works
@@ -92,15 +106,26 @@ export default function Navbar() {
             </Link>
             <div className="pt-3 border-t border-white/5 space-y-3">
               {loggedIn ? (
-                <Link href="/dashboard" className="btn-primary block text-center px-5 py-3 rounded-lg text-sm font-semibold text-white">
-                  Dashboard
-                </Link>
+                <>
+                  <Link href="/dashboard" style={{ background: CTA_GRAD }} className="block text-center px-5 py-3 rounded-full text-sm font-semibold text-white">
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      window.location.href = "/";
+                    }}
+                    className="block w-full text-left py-3 text-sm text-zinc-400 hover:text-white transition"
+                  >
+                    Log out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link href="/auth/login" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
                     Sign In
                   </Link>
-                  <Link href="/wizard" className="btn-primary block text-center px-5 py-3 rounded-lg text-sm font-semibold text-white">
+                  <Link href="/wizard" style={{ background: CTA_GRAD }} className="block text-center px-5 py-3 rounded-full text-sm font-semibold text-white">
                     Start Free
                   </Link>
                 </>

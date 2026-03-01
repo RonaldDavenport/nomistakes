@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import AvatarGuide from "@/components/onboarding/AvatarGuide";
 import SitePreview from "@/components/onboarding/SitePreview";
@@ -12,12 +13,12 @@ import { supabase } from "@/lib/supabase";
 import {
   ONBOARDING_STEPS,
   COLOR_PRESETS,
-  LAYOUT_OPTIONS,
   ONBOARDING_AFFILIATES,
   SOCIAL_PROOF_STATS,
   type ColorPreset,
 } from "@/lib/onboarding-data";
 import { getTrackedUrl } from "@/lib/affiliates";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 interface Business {
   id: string;
@@ -56,13 +57,14 @@ export default function OnboardingPage() {
   const [altNames, setAltNames] = useState<{ name: string; slug: string; why: string }[]>([]);
   const [generatingNames, setGeneratingNames] = useState(false);
   const [selectedColors, setSelectedColors] = useState<ColorPreset["colors"] | null>(null);
-  const [selectedLayout, setSelectedLayout] = useState("default");
+  const selectedLayout = "default";
   const [calendlyUrl, setCalendlyUrl] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [domainInput, setDomainInput] = useState("");
   const [logoMode, setLogoMode] = useState<"text" | "upload" | null>(null);
   const [stripeConnecting, setStripeConnecting] = useState(false);
   const [showStripeModal, setShowStripeModal] = useState(false);
+  const [showUpsellModal, setShowUpsellModal] = useState(false);
 
   // Fetch business data
   useEffect(() => {
@@ -75,11 +77,11 @@ export default function OnboardingPage() {
         setNameValue(biz.name);
         setSlugValue(biz.slug);
         if (biz.brand?.colors) setSelectedColors(biz.brand.colors);
-        if (biz.layout) setSelectedLayout(biz.layout);
         if (biz.calendly_url) setCalendlyUrl(biz.calendly_url);
         if (biz.business_email) setBusinessEmail(biz.business_email);
+        // Map old 8-step index to new 5-step range
         if (biz.onboarding_step > 0 && biz.onboarding_step < ONBOARDING_STEPS.length) {
-          setCurrentStep(biz.onboarding_step);
+          setCurrentStep(Math.min(biz.onboarding_step, ONBOARDING_STEPS.length - 1));
         }
       }
       setLoading(false);
@@ -177,8 +179,8 @@ export default function OnboardingPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen pt-24 flex items-center justify-center">
-          <div className="w-10 h-10 rounded-full border-2 border-transparent border-t-brand-500 animate-spin" />
+        <div style={{ minHeight: "100vh", paddingTop: 96, display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
+          <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid transparent", borderTopColor: T.purple, animation: "spin 0.8s linear infinite" }} />
         </div>
       </>
     );
@@ -188,548 +190,767 @@ export default function OnboardingPage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen pt-24 flex flex-col items-center justify-center">
-          <p className="text-zinc-400 mb-4">Business not found</p>
-          <Link href="/dashboard" className="text-brand-400 hover:underline">Back to Dashboard</Link>
+        <div style={{ minHeight: "100vh", paddingTop: 96, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: T.bg }}>
+          <p style={{ color: T.text3, marginBottom: 16 }}>Business not found</p>
+          <Link href="/dashboard" style={{ color: T.purple }}>Back to Dashboard</Link>
         </div>
       </>
     );
   }
 
   const stepDef = ONBOARDING_STEPS[currentStep];
-  const progressPct = Math.round(((currentStep + 1) / ONBOARDING_STEPS.length) * 100);
   const previewColors = selectedColors || business.brand?.colors || {
-    primary: "#4c6ef5",
-    secondary: "#1e1b4b",
-    accent: "#a78bfa",
-    background: "#0f0d1a",
-    text: "#f1f0f5",
+    primary: "#7B39FC",
+    secondary: "#0A0A0F",
+    accent: "#A855F7",
+    background: "#000000",
+    text: "#FAFAFA",
+  };
+
+  const pageTransition = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 },
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
+  };
+
+  // Shared card style helper — purple glassmorphic
+  const cardStyle = (active: boolean): React.CSSProperties => ({
+    padding: 20,
+    borderRadius: 12,
+    textAlign: "left" as const,
+    transition: "all 0.2s ease",
+    border: active ? "1px solid rgba(123,57,252,0.3)" : `1px solid ${T.border}`,
+    background: active ? "rgba(123,57,252,0.1)" : T.glass,
+    borderLeft: active ? "3px solid #7B39FC" : "3px solid transparent",
+    cursor: "pointer",
+    backdropFilter: "blur(12px)",
+  });
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "14px 16px",
+    height: 48,
+    borderRadius: 12,
+    background: T.bgEl,
+    border: `1px solid ${T.border}`,
+    color: T.text,
+    fontSize: "1rem",
+    outline: "none",
+    transition: "box-shadow 0.2s, border-color 0.2s",
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "0.75rem",
+    color: T.text3,
+    textTransform: "uppercase",
+    letterSpacing: "0.06em",
+    marginBottom: 8,
+    display: "block",
   };
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto">
+      <div style={{ minHeight: "100vh", paddingTop: 80, paddingBottom: 64, paddingLeft: 16, paddingRight: 16, background: T.bg }}>
+        <div style={{ maxWidth: 1152, margin: "0 auto" }}>
 
-          {/* Progress + social proof */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex gap-1.5">
+          {/* Progress indicator + social proof */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              {/* Segmented dots */}
+              <div style={{ display: "flex", gap: 6 }}>
                 {ONBOARDING_STEPS.map((s, i) => (
                   <div
                     key={s.id}
-                    className={`h-1.5 rounded-full transition-colors ${
-                      i < currentStep ? "bg-brand-600 w-6" : i === currentStep ? "bg-brand-400 w-8" : "bg-white/5 w-6"
-                    }`}
+                    style={{
+                      height: 4,
+                      borderRadius: 100,
+                      transition: "all 0.3s ease",
+                      width: i === currentStep ? 32 : 24,
+                      background: i < currentStep ? T.purple : i === currentStep ? T.purpleLight : "rgba(255,255,255,0.04)",
+                    }}
                   />
                 ))}
               </div>
-              <span className="text-xs text-zinc-600">{currentStep + 1}/{ONBOARDING_STEPS.length}</span>
+              <span style={{ fontSize: "0.8rem", color: T.text3 }}>Step {currentStep + 1} of {ONBOARDING_STEPS.length}</span>
             </div>
-            <div className="flex items-center gap-4 text-[11px] text-zinc-600">
+            {/* Social proof glass card */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              flexWrap: "wrap",
+              padding: "10px 16px",
+              borderRadius: 12,
+              background: T.glass,
+              border: `1px solid ${T.border}`,
+              backdropFilter: "blur(12px)",
+            }}>
+              <div style={{ width: 4, height: 20, borderRadius: 2, background: CTA_GRAD }} />
               {SOCIAL_PROOF_STATS.map((stat) => (
-                <span key={stat.label}>
-                  <span className="text-zinc-400 font-semibold">{stat.value}</span>{" "}{stat.label}
+                <span key={stat.label} style={{ fontSize: "0.75rem", color: T.text3 }}>
+                  <span style={{ color: T.text2, fontWeight: 600 }}>{stat.value}</span>{" "}{stat.label}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Mobile preview toggle */}
-          <SitePreview
-            businessName={nameValue || business.name}
-            tagline={business.tagline}
-            type={business.type}
-            colors={previewColors}
-            layout={selectedLayout as "default" | "minimal" | "creator"}
-            slug={slugValue || business.slug}
-            siteContent={business.site_content}
-          />
+          {/* Mobile-only preview */}
+          <div className="lg:hidden">
+            <SitePreview
+              businessName={nameValue || business.name}
+              tagline={business.tagline}
+              type={business.type}
+              colors={previewColors}
+              layout={selectedLayout as "default" | "minimal" | "creator"}
+              slug={slugValue || business.slug}
+              siteContent={business.site_content}
+            />
+          </div>
 
           {/* Split layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-8">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 32 }} className="lg:!grid-cols-[1fr_440px]">
             {/* Left: Step form */}
             <div>
               {/* Step header */}
-              <div className="mb-5 animate-fadeIn">
-                <h2 className="text-xl md:text-2xl font-bold text-white mb-1">{stepDef.title}</h2>
-                <p className="text-sm text-zinc-500">{stepDef.subtitle}</p>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div key={stepDef.id + "-header"} {...pageTransition} style={{ marginBottom: 20 }}>
+                  <h2 style={{
+                    fontFamily: T.h,
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: T.text,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.1,
+                    marginBottom: 4,
+                  }}>
+                    {stepDef.title}
+                  </h2>
+                  <p style={{ fontSize: "0.9rem", color: T.text2 }}>{stepDef.subtitle}</p>
+                </motion.div>
+              </AnimatePresence>
 
-              {/* ── STEP 1: Name ── */}
-              {stepDef.id === "name" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">Business Name</label>
-                    <input
-                      type="text"
-                      value={nameValue}
-                      onChange={(e) => {
-                        setNameValue(e.target.value);
-                        setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+              <AnimatePresence mode="wait">
+                {/* ═══ STEP 1: Your Site (name + domain + layout) ═══ */}
+                {stepDef.id === "your-site" && (
+                  <motion.div key="your-site" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    {/* Business name */}
+                    <div>
+                      <label style={labelStyle}>Business Name</label>
+                      <input
+                        type="text"
+                        value={nameValue}
+                        onChange={(e) => {
+                          setNameValue(e.target.value);
+                          setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+                        }}
+                        style={{ ...inputStyle, fontSize: "1.1rem" }}
+                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
+                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+                      />
+                    </div>
+
+                    {/* AI name suggestions */}
+                    <button
+                      onClick={regenerateNames}
+                      disabled={generatingNames}
+                      style={{ fontSize: "0.875rem", color: T.purple, background: "none", border: "none", cursor: "pointer", textAlign: "left", opacity: generatingNames ? 0.5 : 1 }}
+                    >
+                      {generatingNames ? "Generating..." : "Suggest 5 AI alternatives"}
+                    </button>
+
+                    {altNames.length > 0 && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {altNames.map((alt) => (
+                          <button
+                            key={alt.slug}
+                            onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); }}
+                            style={cardStyle(nameValue === alt.name)}
+                          >
+                            <span style={{ color: T.text, fontWeight: 500 }}>{alt.name}</span>
+                            <span style={{ color: T.text3, fontSize: "0.85rem", marginLeft: 8 }}>{alt.why}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Domain / Slug — reveals once name is set */}
+                    <AnimatePresence>
+                      {nameValue.trim().length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 24 }}
+                        >
+                          <div style={{ padding: 20, borderRadius: 16, background: T.glass, border: `1px solid ${T.border}`, backdropFilter: "blur(12px)" }}>
+                            <label style={labelStyle}>Your URL</label>
+                            <p style={{ color: T.text, fontFamily: T.mono, fontSize: "0.9rem", marginBottom: 12 }}>
+                              {business.deployed_url || `nm-${slugValue || business.slug}.vercel.app`}
+                            </p>
+                            <label style={{ ...labelStyle, marginTop: 12 }}>Already own a domain?</label>
+                            <input
+                              type="text"
+                              value={domainInput}
+                              onChange={(e) => setDomainInput(e.target.value)}
+                              placeholder="mybusiness.com"
+                              style={inputStyle}
+                              onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
+                              onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+                            />
+                            {domainInput && (
+                              <p style={{ fontSize: "0.75rem", color: T.text3, marginTop: 8 }}>
+                                After connecting, you&apos;ll need to update your DNS settings. We&apos;ll show you how.
+                              </p>
+                            )}
+                          </div>
+
+                          <AffiliateCard step="domain" businessId={businessId} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <StepActions
+                      saving={saving}
+                      skippable={false}
+                      onContinue={async () => {
+                        await saveStep("name", { name: nameValue, slug: slugValue });
+                        if (domainInput) await saveStep("domain", { customDomain: domainInput });
+                        nextStep();
                       }}
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-white/10 text-white text-lg focus:border-brand-600/50 focus:outline-none transition-colors"
+                      onSkip={skipStep}
                     />
-                    <p className="text-xs text-zinc-600 mt-2">URL: nm-{slugValue}.vercel.app</p>
-                  </div>
+                  </motion.div>
+                )}
 
-                  <button
-                    onClick={regenerateNames}
-                    disabled={generatingNames}
-                    className="text-sm text-brand-400 hover:text-brand-300 transition-colors disabled:opacity-50"
-                  >
-                    {generatingNames ? "Generating..." : "Suggest 5 AI alternatives"}
-                  </button>
+                {/* ═══ STEP 2: Your Brand (colors + logo) ═══ */}
+                {stepDef.id === "your-brand" && (
+                  <motion.div key="your-brand" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    {/* Current selection preview */}
+                    {selectedColors && (
+                      <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                        {Object.entries(selectedColors).map(([key, val]) => (
+                          <div key={key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            <div style={{ width: 48, height: 48, borderRadius: 8, border: `1px solid ${T.border}`, background: val }} />
+                            <span style={{ fontSize: "0.6rem", color: T.text3, textTransform: "capitalize" }}>{key}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                  {altNames.length > 0 && (
-                    <div className="space-y-2">
-                      {altNames.map((alt) => (
-                        <button
-                          key={alt.slug}
-                          onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); }}
-                          className={`w-full text-left p-3 rounded-lg border transition-all ${
-                            nameValue === alt.name
-                              ? "border-brand-600/50 bg-brand-600/10"
-                              : "border-white/5 bg-surface/50 hover:border-white/15"
-                          }`}
-                        >
-                          <span className="text-white font-medium">{alt.name}</span>
-                          <span className="text-zinc-500 text-sm ml-2">{alt.why}</span>
-                        </button>
-                      ))}
+                    {/* Color presets */}
+                    <div>
+                      <label style={labelStyle}>Color Palette</label>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 10 }}>
+                        {COLOR_PRESETS.map((preset, i) => {
+                          const isActive = selectedColors?.primary === preset.colors.primary;
+                          return (
+                            <motion.button
+                              key={preset.id}
+                              initial={{ opacity: 0, y: 12 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.04 }}
+                              onClick={() => setSelectedColors(preset.colors)}
+                              style={cardStyle(isActive)}
+                            >
+                              <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                                {[preset.colors.primary, preset.colors.secondary, preset.colors.accent].map((c, idx) => (
+                                  <div key={idx} style={{ width: 24, height: 24, borderRadius: "50%", background: c }} />
+                                ))}
+                              </div>
+                              <span style={{ fontSize: "0.875rem", fontWeight: 500, color: T.text }}>{preset.name}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
 
-                  <StepActions
-                    saving={saving}
-                    skippable={false}
-                    onContinue={async () => {
-                      await saveStep("name", { name: nameValue, slug: slugValue });
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
-
-              {/* ── STEP 2: Colors ── */}
-              {stepDef.id === "colors" && (
-                <div className="animate-fadeIn space-y-6">
-                  {selectedColors && (
-                    <div className="flex gap-2 mb-2">
-                      {Object.entries(selectedColors).map(([key, val]) => (
-                        <div key={key} className="flex flex-col items-center gap-1">
-                          <div className="w-12 h-12 rounded-lg border border-white/10" style={{ background: val }} />
-                          <span className="text-[10px] text-zinc-600 capitalize">{key}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {COLOR_PRESETS.map((preset) => {
-                      const isActive = selectedColors?.primary === preset.colors.primary;
-                      return (
-                        <button
-                          key={preset.id}
-                          onClick={() => setSelectedColors(preset.colors)}
-                          className={`p-4 rounded-xl border text-left transition-all ${
-                            isActive
-                              ? "border-brand-600/50 bg-brand-600/10"
-                              : "border-white/5 bg-surface/50 hover:border-white/15"
-                          }`}
-                        >
-                          <div className="flex gap-1 mb-2">
-                            {[preset.colors.primary, preset.colors.secondary, preset.colors.accent].map((c, i) => (
-                              <div key={i} className="w-6 h-6 rounded-full" style={{ background: c }} />
+                    {business.brand?.colors && (
+                      <button
+                        onClick={() => setSelectedColors(business.brand.colors!)}
+                        style={cardStyle(
+                          selectedColors?.primary === business.brand.colors.primary &&
+                          !COLOR_PRESETS.some((p) => p.colors.primary === selectedColors?.primary)
+                        )}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            {[business.brand.colors.primary, business.brand.colors.secondary, business.brand.colors.accent].map((c, i) => (
+                              <div key={i} style={{ width: 24, height: 24, borderRadius: "50%", background: c }} />
                             ))}
                           </div>
-                          <span className="text-sm font-medium text-white">{preset.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {business.brand?.colors && (
-                    <button
-                      onClick={() => setSelectedColors(business.brand.colors!)}
-                      className={`w-full p-4 rounded-xl border text-left transition-all ${
-                        selectedColors?.primary === business.brand.colors.primary &&
-                        !COLOR_PRESETS.some((p) => p.colors.primary === selectedColors?.primary)
-                          ? "border-brand-600/50 bg-brand-600/10"
-                          : "border-white/5 bg-surface/50 hover:border-white/15"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex gap-1">
-                          {[business.brand.colors.primary, business.brand.colors.secondary, business.brand.colors.accent].map((c, i) => (
-                            <div key={i} className="w-6 h-6 rounded-full" style={{ background: c }} />
-                          ))}
-                        </div>
-                        <div>
-                          <span className="text-sm font-medium text-white">AI Generated</span>
-                          <span className="text-xs text-zinc-500 ml-2">Custom palette for {business.name}</span>
-                        </div>
-                      </div>
-                    </button>
-                  )}
-
-                  <StepActions
-                    saving={saving}
-                    skippable={false}
-                    onContinue={async () => {
-                      if (selectedColors) await saveStep("colors", { colors: selectedColors });
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
-
-              {/* ── STEP 3: Logo ── */}
-              {stepDef.id === "logo" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div className="p-8 rounded-xl border border-white/5 bg-surface/50 flex items-center justify-center">
-                    <div
-                      style={{
-                        fontSize: "2.5rem",
-                        fontWeight: 800,
-                        letterSpacing: "-0.02em",
-                        color: selectedColors?.primary || business.brand?.colors?.primary || "#4c6ef5",
-                      }}
-                    >
-                      {nameValue || business.name}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      onClick={() => setLogoMode("text")}
-                      className={`p-4 rounded-xl border text-left transition-all ${
-                        logoMode === "text" ? "border-brand-600/50 bg-brand-600/10" : "border-white/5 bg-surface/50 hover:border-white/15"
-                      }`}
-                    >
-                      <p className="text-white font-medium mb-1">Use Text Mark</p>
-                      <p className="text-zinc-500 text-sm">Simple, clean text logo using your business name</p>
-                    </button>
-                    <button
-                      onClick={() => setLogoMode("upload")}
-                      className={`p-4 rounded-xl border text-left transition-all ${
-                        logoMode === "upload" ? "border-brand-600/50 bg-brand-600/10" : "border-white/5 bg-surface/50 hover:border-white/15"
-                      }`}
-                    >
-                      <p className="text-white font-medium mb-1">Upload Your Own</p>
-                      <p className="text-zinc-500 text-sm">Upload a PNG or SVG logo file</p>
-                    </button>
-                  </div>
-
-                  {logoMode === "upload" && (
-                    <div className="p-6 rounded-xl border border-dashed border-white/10 bg-surface/30 text-center">
-                      <input
-                        type="file"
-                        accept="image/png,image/svg+xml,image/jpeg"
-                        className="hidden"
-                        id="logo-upload"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const { data, error } = await supabase.storage
-                            .from("logos")
-                            .upload(`${businessId}/${file.name}`, file, { upsert: true });
-                          if (!error && data) {
-                            const { data: { publicUrl } } = supabase.storage
-                              .from("logos")
-                              .getPublicUrl(data.path);
-                            await saveStep("logo", { logoUrl: publicUrl });
-                          }
-                        }}
-                      />
-                      <label htmlFor="logo-upload" className="cursor-pointer">
-                        <p className="text-zinc-400 mb-1">Click to upload</p>
-                        <p className="text-xs text-zinc-600">PNG, SVG, or JPEG. Max 2MB.</p>
-                      </label>
-                    </div>
-                  )}
-
-                  <AffiliateCard step="logo" businessId={businessId} />
-
-                  <StepActions
-                    saving={saving}
-                    skippable
-                    onContinue={async () => {
-                      if (logoMode === "text") {
-                        await saveStep("logo", {});
-                      }
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
-
-              {/* ── STEP 4: Layout ── */}
-              {stepDef.id === "layout" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div className="grid gap-4">
-                    {LAYOUT_OPTIONS.map((layout) => (
-                      <button
-                        key={layout.id}
-                        onClick={() => setSelectedLayout(layout.id)}
-                        className={`p-5 rounded-xl border text-left transition-all ${
-                          selectedLayout === layout.id
-                            ? "border-brand-600/50 bg-brand-600/10"
-                            : "border-white/5 bg-surface/50 hover:border-white/15"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-white font-semibold text-lg">{layout.name}</h3>
-                          <span className="text-xs text-zinc-500 bg-white/5 px-2 py-1 rounded-full">{layout.bestFor}</span>
-                        </div>
-                        <p className="text-zinc-400 text-sm mb-3">{layout.description}</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {layout.sections.map((s) => (
-                            <span key={s} className="text-[10px] text-zinc-600 bg-white/5 px-2 py-0.5 rounded capitalize">
-                              {s.replace(/_/g, " ")}
-                            </span>
-                          ))}
+                          <div>
+                            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: T.text }}>AI Generated</span>
+                            <span style={{ fontSize: "0.75rem", color: T.text3, marginLeft: 8 }}>Custom palette for {business.name}</span>
+                          </div>
                         </div>
                       </button>
-                    ))}
-                  </div>
-
-                  <StepActions
-                    saving={saving}
-                    skippable={false}
-                    onContinue={async () => {
-                      await saveStep("layout", { layout: selectedLayout });
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
-
-              {/* ── STEP 5: Domain ── */}
-              {stepDef.id === "domain" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
-                    <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Your current URL</p>
-                    <p className="text-white font-mono">
-                      {business.deployed_url || `nm-${slugValue || business.slug}.vercel.app`}
-                    </p>
-                  </div>
-
-                  <AffiliateCard step="domain" businessId={businessId} />
-
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-                      Already own a domain?
-                    </label>
-                    <input
-                      type="text"
-                      value={domainInput}
-                      onChange={(e) => setDomainInput(e.target.value)}
-                      placeholder="mybusiness.com"
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-white/10 text-white focus:border-brand-600/50 focus:outline-none transition-colors"
-                    />
-                    {domainInput && (
-                      <p className="text-xs text-zinc-500 mt-2">
-                        After connecting, you&apos;ll need to update your DNS settings. We&apos;ll show you how.
-                      </p>
                     )}
-                  </div>
 
-                  <StepActions
-                    saving={saving}
-                    skippable
-                    onContinue={async () => {
-                      if (domainInput) {
-                        await saveStep("domain", { customDomain: domainInput });
-                      } else {
-                        await saveStep("domain", {});
-                      }
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
+                    {/* Logo section — reveals after colors are selected */}
+                    <AnimatePresence>
+                      {selectedColors && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 24 }}>
+                            <label style={labelStyle}>Logo</label>
+                            <div style={{
+                              padding: 32,
+                              borderRadius: 16,
+                              background: T.glass,
+                              border: `1px solid ${T.border}`,
+                              backdropFilter: "blur(12px)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginBottom: 16,
+                            }}>
+                              <div style={{
+                                fontFamily: T.h,
+                                fontSize: "2.5rem",
+                                fontWeight: 700,
+                                color: selectedColors?.primary || T.purple,
+                              }}>
+                                {nameValue || business.name}
+                              </div>
+                            </div>
 
-              {/* ── STEP 6: Scheduling ── */}
-              {stepDef.id === "scheduling" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
-                    <p className="text-zinc-400 text-sm">
-                      Add your Calendly link to let visitors book meetings directly from your website.
-                      A booking widget will appear on your site&apos;s contact page.
-                    </p>
-                  </div>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                              <button onClick={() => setLogoMode("text")} style={cardStyle(logoMode === "text")}>
+                                <p style={{ color: T.text, fontWeight: 500, marginBottom: 4 }}>Use Text Mark</p>
+                                <p style={{ color: T.text3, fontSize: "0.85rem" }}>Clean text logo</p>
+                              </button>
+                              <button onClick={() => setLogoMode("upload")} style={cardStyle(logoMode === "upload")}>
+                                <p style={{ color: T.text, fontWeight: 500, marginBottom: 4 }}>Upload Your Own</p>
+                                <p style={{ color: T.text3, fontSize: "0.85rem" }}>PNG, SVG, or JPEG</p>
+                              </button>
+                            </div>
 
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-                      Calendly URL
-                    </label>
-                    <input
-                      type="url"
-                      value={calendlyUrl}
-                      onChange={(e) => setCalendlyUrl(e.target.value)}
-                      placeholder="https://calendly.com/your-name"
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-white/10 text-white focus:border-brand-600/50 focus:outline-none transition-colors"
+                            {logoMode === "upload" && (
+                              <div style={{
+                                padding: 24,
+                                borderRadius: 12,
+                                border: `1px dashed rgba(123,57,252,0.25)`,
+                                background: "rgba(123,57,252,0.04)",
+                                textAlign: "center",
+                                marginTop: 12,
+                              }}>
+                                <input
+                                  type="file"
+                                  accept="image/png,image/svg+xml,image/jpeg"
+                                  style={{ display: "none" }}
+                                  id="logo-upload"
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const { data, error } = await supabase.storage
+                                      .from("logos")
+                                      .upload(`${businessId}/${file.name}`, file, { upsert: true });
+                                    if (!error && data) {
+                                      const { data: { publicUrl } } = supabase.storage
+                                        .from("logos")
+                                        .getPublicUrl(data.path);
+                                      await saveStep("logo", { logoUrl: publicUrl });
+                                    }
+                                  }}
+                                />
+                                <label htmlFor="logo-upload" style={{ cursor: "pointer" }}>
+                                  <p style={{ color: T.text2, marginBottom: 4 }}>Click to upload</p>
+                                  <p style={{ fontSize: "0.75rem", color: T.text3 }}>PNG, SVG, or JPEG. Max 2MB.</p>
+                                </label>
+                              </div>
+                            )}
+
+                            <div style={{ marginTop: 12 }}>
+                              <AffiliateCard step="logo" businessId={businessId} />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <StepActions
+                      saving={saving}
+                      skippable={false}
+                      onContinue={async () => {
+                        if (selectedColors) await saveStep("colors", { colors: selectedColors });
+                        if (logoMode === "text") await saveStep("logo", {});
+                        nextStep();
+                      }}
+                      onSkip={skipStep}
                     />
-                  </div>
+                  </motion.div>
+                )}
 
-                  {calendlyUrl && calendlyUrl.includes("calendly.com") && (
-                    <div className="p-4 rounded-xl border border-brand-600/20 bg-brand-600/5">
-                      <p className="text-xs text-zinc-500 mb-2">Preview</p>
-                      <div style={{ borderRadius: 8, overflow: "hidden" }}>
-                        <iframe
-                          src={`${calendlyUrl}?hide_gdpr_banner=1&background_color=0a0a12&text_color=ffffff&primary_color=4c6ef5`}
-                          style={{ width: "100%", height: 400, border: "none" }}
-                          title="Calendly preview"
-                        />
+                {/* ═══ STEP 3: Payments (Stripe Connect) ═══ */}
+                {stepDef.id === "payments" && (
+                  <motion.div key="payments" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    <div style={{
+                      padding: 20,
+                      borderRadius: 16,
+                      background: T.glass,
+                      border: `1px solid ${T.border}`,
+                      backdropFilter: "blur(12px)",
+                    }}>
+                      <p style={{ color: T.text2, fontSize: "0.9rem" }}>
+                        Connect Stripe to accept payments for your {business.type === "services" ? "services" : "digital products"} directly through your website.
+                        Customers can pay via credit card, Apple Pay, and more.
+                      </p>
+                    </div>
+
+                    {business.stripe_account_id ? (
+                      <>
+                        <div style={{
+                          padding: 16,
+                          borderRadius: 12,
+                          background: "rgba(34,197,94,0.04)",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                        }}>
+                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.green }} />
+                          <div style={{ flex: 1 }}>
+                            <p style={{ color: "#4ade80", fontSize: "0.875rem", fontWeight: 500 }}>Stripe account created</p>
+                            <p style={{ color: T.text3, fontSize: "0.75rem" }}>Complete onboarding to start accepting payments</p>
+                          </div>
+                          <button
+                            onClick={() => setShowStripeModal(true)}
+                            style={{
+                              padding: "8px 16px",
+                              borderRadius: 8,
+                              background: CTA_GRAD,
+                              color: "#fff",
+                              fontSize: "0.85rem",
+                              fontWeight: 500,
+                              border: "none",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Continue Setup
+                          </button>
+                        </div>
+                        {showStripeModal && (
+                          <StripeOnboardingModal
+                            businessId={businessId}
+                            onComplete={async () => {
+                              setShowStripeModal(false);
+                              await saveStep("payments", { stripeAccountId: business.stripe_account_id });
+                              nextStep();
+                            }}
+                            onClose={() => setShowStripeModal(false)}
+                          />
+                        )}
+                      </>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          const ok = await connectStripe();
+                          if (ok) setShowStripeModal(true);
+                        }}
+                        disabled={stripeConnecting}
+                        style={{
+                          width: "100%",
+                          padding: 20,
+                          borderRadius: 16,
+                          border: `1px solid ${T.border}`,
+                          background: T.glass,
+                          backdropFilter: "blur(12px)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "border-color 0.2s",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                          <div style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 12,
+                            background: "rgba(123,57,252,0.1)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: T.purple,
+                            fontWeight: 700,
+                            fontSize: "1.1rem",
+                          }}>
+                            S
+                          </div>
+                          <div>
+                            <p style={{ color: T.text, fontWeight: 500 }}>
+                              {stripeConnecting ? "Connecting..." : "Set Up Stripe"}
+                            </p>
+                            <p style={{ color: T.text3, fontSize: "0.85rem" }}>Set up in 2 minutes. No monthly fees.</p>
+                          </div>
+                        </div>
+                      </button>
+                    )}
+
+                    <StepActions
+                      saving={saving}
+                      skippable
+                      onContinue={async () => {
+                        await saveStep("payments", { stripeAccountId: business.stripe_account_id || undefined });
+                        nextStep();
+                      }}
+                      onSkip={skipStep}
+                    />
+                  </motion.div>
+                )}
+
+                {/* ═══ STEP 4: Booking (Calendly link) ═══ */}
+                {stepDef.id === "booking" && (
+                  <motion.div key="booking" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    <div style={{
+                      padding: 20,
+                      borderRadius: 16,
+                      background: T.glass,
+                      border: `1px solid ${T.border}`,
+                      backdropFilter: "blur(12px)",
+                    }}>
+                      <p style={{ color: T.text2, fontSize: "0.9rem", marginBottom: 16 }}>
+                        Add your Calendly link to let visitors book meetings directly from your website.
+                        A booking widget will appear on your site&apos;s contact page.
+                      </p>
+                      <label style={labelStyle}>Calendly URL</label>
+                      <input
+                        type="url"
+                        value={calendlyUrl}
+                        onChange={(e) => setCalendlyUrl(e.target.value)}
+                        placeholder="https://calendly.com/your-name"
+                        style={inputStyle}
+                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
+                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+                      />
+                    </div>
+
+                    {calendlyUrl && calendlyUrl.includes("calendly.com") && (
+                      <div style={{
+                        padding: 16,
+                        borderRadius: 16,
+                        border: "1px solid rgba(123,57,252,0.15)",
+                        background: "rgba(123,57,252,0.03)",
+                      }}>
+                        <p style={{ fontSize: "0.75rem", color: T.text3, marginBottom: 8 }}>Preview</p>
+                        <div style={{ borderRadius: 8, overflow: "hidden" }}>
+                          <iframe
+                            src={`${calendlyUrl}?hide_gdpr_banner=1&background_color=000000&text_color=fafafa&primary_color=7B39FC`}
+                            style={{ width: "100%", height: 400, border: "none" }}
+                            title="Calendly preview"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <p style={{ fontSize: "0.75rem", color: T.text3 }}>
+                      Don&apos;t have Calendly?{" "}
+                      <a href="https://calendly.com" target="_blank" rel="noopener noreferrer" style={{ color: T.purple }}>
+                        Create a free account
+                      </a>
+                    </p>
+
+                    <StepActions
+                      saving={saving}
+                      skippable
+                      onContinue={async () => {
+                        if (calendlyUrl) {
+                          await saveStep("scheduling", { calendlyUrl });
+                        } else {
+                          await saveStep("scheduling", {});
+                        }
+                        nextStep();
+                      }}
+                      onSkip={skipStep}
+                    />
+                  </motion.div>
+                )}
+
+                {/* ═══ STEP 5: Go Live (email + launch) ═══ */}
+                {stepDef.id === "go-live" && (
+                  <motion.div key="go-live" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    <AffiliateCard step="email" businessId={businessId} />
+
+                    <div>
+                      <label style={labelStyle}>Your business email</label>
+                      <input
+                        type="email"
+                        value={businessEmail}
+                        onChange={(e) => setBusinessEmail(e.target.value)}
+                        placeholder={`hello@${slugValue || business.slug}.com`}
+                        style={inputStyle}
+                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
+                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+                      />
+                      <p style={{ fontSize: "0.75rem", color: T.text3, marginTop: 8 }}>
+                        This will be shown as the contact email on your website.
+                      </p>
+                    </div>
+
+                    <StepActions
+                      saving={saving}
+                      skippable
+                      onContinue={async () => {
+                        await saveStep("email", { businessEmail: businessEmail || undefined });
+                        nextStep();
+                      }}
+                      onSkip={skipStep}
+                    />
+                  </motion.div>
+                )}
+
+                {/* ═══ STEP 6: Meet Your Coach (summary + upsell) ═══ */}
+                {stepDef.id === "meet-your-coach" && (
+                  <motion.div key="meet-your-coach" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    {/* Summary card */}
+                    <div style={{
+                      padding: 24,
+                      borderRadius: 16,
+                      background: T.glass,
+                      border: `1px solid ${T.border}`,
+                      backdropFilter: "blur(12px)",
+                    }}>
+                      <h3 style={{ fontFamily: T.h, fontSize: "1.1rem", fontWeight: 700, color: T.text, marginBottom: 16 }}>
+                        Here&apos;s what we built
+                      </h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
+                          <div>
+                            <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Business Name</p>
+                            <p style={{ color: T.text, fontWeight: 600 }}>{business.name}</p>
+                          </div>
+                        </div>
+                        {(() => {
+                          const siteUrl = business.deployed_url || business.live_url || `nm-${slugValue || business.slug}.vercel.app`;
+                          return (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
+                              <div>
+                                <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Website</p>
+                                <a
+                                  href={siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: T.purple, fontWeight: 600, fontFamily: T.mono, fontSize: "0.9rem", textDecoration: "none" }}
+                                >
+                                  {siteUrl}
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
+                          <div>
+                            <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Business Type</p>
+                            <p style={{ color: T.text, fontWeight: 600, textTransform: "capitalize" }}>{business.type?.replace(/-/g, " ") || "Service Business"}</p>
+                          </div>
+                        </div>
+                        {business.stripe_account_id && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
+                            <div>
+                              <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Payments</p>
+                              <p style={{ color: T.text, fontWeight: 600 }}>Stripe Connected</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
 
-                  <p className="text-xs text-zinc-600">
-                    Don&apos;t have Calendly?{" "}
-                    <a href="https://calendly.com" target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:underline">
-                      Create a free account
-                    </a>
-                  </p>
-
-                  <StepActions
-                    saving={saving}
-                    skippable
-                    onContinue={async () => {
-                      if (calendlyUrl) {
-                        await saveStep("scheduling", { calendlyUrl });
-                      } else {
-                        await saveStep("scheduling", {});
-                      }
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
-
-              {/* ── STEP 7: Payments ── */}
-              {stepDef.id === "payments" && (
-                <div className="animate-fadeIn space-y-6">
-                  <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
-                    <p className="text-zinc-400 text-sm">
-                      Connect Stripe to accept payments for your {business.type === "services" ? "services" : "digital products"} directly through your website.
-                      Customers can pay via credit card, Apple Pay, and more.
-                    </p>
-                  </div>
-
-                  {business.stripe_account_id ? (
-                    <>
-                      <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
-                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e" }} />
-                        <div>
-                          <p className="text-emerald-400 text-sm font-medium">Stripe account created</p>
-                          <p className="text-zinc-500 text-xs">Complete onboarding to start accepting payments</p>
-                        </div>
-                        <button
-                          onClick={() => setShowStripeModal(true)}
-                          className="ml-auto px-4 py-2 rounded-lg bg-[#635bff] hover:bg-[#5146e5] text-white text-sm font-medium transition-colors"
-                        >
-                          Continue Setup
-                        </button>
+                    {/* Meet your coach CTA */}
+                    <div style={{
+                      padding: 32,
+                      borderRadius: 16,
+                      background: "rgba(123,57,252,0.06)",
+                      border: "1px solid rgba(123,57,252,0.18)",
+                      backdropFilter: "blur(12px)",
+                      textAlign: "center",
+                      position: "relative",
+                      overflow: "hidden",
+                    }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: CTA_GRAD }} />
+                      <div style={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: "50%",
+                        background: CTA_GRAD,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 28,
+                        margin: "0 auto 16px",
+                      }}>
+                        <span role="img" aria-label="robot">&#129302;</span>
                       </div>
-                      {showStripeModal && (
-                        <StripeOnboardingModal
-                          businessId={businessId}
-                          onComplete={async () => {
-                            setShowStripeModal(false);
-                            await saveStep("payments", { stripeAccountId: business.stripe_account_id });
-                            nextStep();
-                          }}
-                          onClose={() => setShowStripeModal(false)}
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        const ok = await connectStripe();
-                        if (ok) setShowStripeModal(true);
-                      }}
-                      disabled={stripeConnecting}
-                      className="w-full p-5 rounded-xl border border-white/10 bg-surface/50 hover:border-brand-600/40 transition-all text-left"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-[#635bff]/10 flex items-center justify-center text-[#635bff] font-bold text-lg">
-                          S
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">
-                            {stripeConnecting ? "Connecting..." : "Set Up Stripe"}
-                          </p>
-                          <p className="text-zinc-500 text-sm">Set up in 2 minutes. No monthly fees.</p>
-                        </div>
-                      </div>
-                    </button>
-                  )}
+                      <h3 style={{ fontFamily: T.h, fontSize: "1.4rem", fontWeight: 700, color: T.text, marginBottom: 8 }}>
+                        Meet Your AI Coach
+                      </h3>
+                      <p style={{ color: T.text2, fontSize: "0.9rem", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.6 }}>
+                        Your coach will analyze your setup and create a personalized game plan to grow your business in the first 90 days.
+                      </p>
+                      <button
+                        onClick={() => setShowUpsellModal(true)}
+                        style={{
+                          padding: "14px 36px",
+                          borderRadius: 12,
+                          fontSize: "1rem",
+                          fontWeight: 600,
+                          color: "#fff",
+                          background: CTA_GRAD,
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "transform 0.15s, box-shadow 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow = "0 8px 30px rgba(123,57,252,0.35)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      >
+                        Get My Growth Plan
+                      </button>
+                    </div>
 
-                  <StepActions
-                    saving={saving}
-                    skippable
-                    onContinue={async () => {
-                      await saveStep("payments", {
-                        stripeAccountId: business.stripe_account_id || undefined,
-                      });
-                      nextStep();
-                    }}
-                    onSkip={skipStep}
-                  />
-                </div>
-              )}
+                    {/* Skip to dashboard */}
+                    <div style={{ textAlign: "center" }}>
+                      <button
+                        onClick={() => router.push(`/dashboard/${businessId}`)}
+                        style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer" }}
+                      >
+                        Skip for now — go to dashboard
+                      </button>
+                    </div>
 
-              {/* ── STEP 8: Email ── */}
-              {stepDef.id === "email" && (
-                <div className="animate-fadeIn space-y-6">
-                  <AffiliateCard step="email" businessId={businessId} />
-
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-2 block">
-                      Your business email
-                    </label>
-                    <input
-                      type="email"
-                      value={businessEmail}
-                      onChange={(e) => setBusinessEmail(e.target.value)}
-                      placeholder={`hello@${slugValue || business.slug}.com`}
-                      className="w-full px-4 py-3 rounded-xl bg-surface border border-white/10 text-white focus:border-brand-600/50 focus:outline-none transition-colors"
-                    />
-                    <p className="text-xs text-zinc-600 mt-2">
-                      This will be shown as the contact email on your website.
-                    </p>
-                  </div>
-
-                  <StepActions
-                    saving={saving}
-                    skippable
-                    lastStep
-                    onContinue={async () => {
-                      await saveStep("email", { businessEmail: businessEmail || undefined });
-                      router.push(`/dashboard/${businessId}`);
-                    }}
-                    onSkip={async () => {
-                      await saveStep("email", {});
-                      router.push(`/dashboard/${businessId}`);
-                    }}
-                  />
-                </div>
-              )}
+                    {/* Upsell modal */}
+                    {showUpsellModal && (
+                      <UpsellModal
+                        businessId={businessId}
+                        onClose={() => setShowUpsellModal(false)}
+                        onSkip={() => {
+                          const msg = encodeURIComponent("Give me a full audit of my business setup and walk me through a personalized 90-day growth plan.");
+                          router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
+                        }}
+                      />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Right: Desktop site preview */}
             <div className="hidden lg:block">
-              <div className="sticky top-24">
+              <div style={{ position: "sticky", top: 96 }}>
                 <SitePreview
                   businessName={nameValue || business.name}
                   tagline={business.tagline}
@@ -747,6 +968,12 @@ export default function OnboardingPage() {
 
       {/* Avatar guide */}
       <AvatarGuide stepId={stepDef.id} businessName={business.name} />
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 }
@@ -767,9 +994,18 @@ function StepActions({
   onSkip: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingTop: 16,
+      borderTop: `1px solid ${T.border}`,
+    }}>
       {skippable ? (
-        <button onClick={onSkip} className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+        <button
+          onClick={onSkip}
+          style={{ fontSize: "0.875rem", color: T.text3, background: "none", border: "none", cursor: "pointer" }}
+        >
           Skip for now
         </button>
       ) : (
@@ -778,7 +1014,18 @@ function StepActions({
       <button
         onClick={onContinue}
         disabled={saving}
-        className="btn-primary px-8 py-3 rounded-xl text-sm font-bold text-white"
+        style={{
+          padding: "12px 32px",
+          borderRadius: 12,
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          color: "#fff",
+          background: CTA_GRAD,
+          border: "none",
+          cursor: saving ? "not-allowed" : "pointer",
+          opacity: saving ? 0.6 : 1,
+          transition: "opacity 0.2s",
+        }}
       >
         {saving ? "Saving..." : lastStep ? "Finish Setup" : "Continue"}
       </button>
@@ -795,7 +1042,6 @@ function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId
     });
   }, []);
 
-  // Lock body scroll while modal is open
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -812,25 +1058,24 @@ function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        background: "#111118", borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: T.bgEl, borderRadius: 16,
+        border: `1px solid ${T.border}`,
         width: "100%", maxWidth: 900, maxHeight: "95vh",
         display: "flex", flexDirection: "column",
         overflow: "hidden",
       }}>
-        {/* Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+          padding: "16px 20px", borderBottom: `1px solid ${T.border}`,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: "rgba(99,91,255,0.12)",
+              background: "rgba(123,57,252,0.12)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#635bff", fontWeight: 700, fontSize: 14,
+              color: T.purple, fontWeight: 700, fontSize: 14,
             }}>S</div>
-            <span style={{ color: "#e4e4e7", fontWeight: 600, fontSize: 15 }}>Set Up Stripe</span>
+            <span style={{ color: T.text, fontWeight: 600, fontSize: 15 }}>Set Up Stripe</span>
           </div>
           <button
             onClick={onClose}
@@ -838,12 +1083,11 @@ function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId
               background: "rgba(255,255,255,0.06)", border: "none",
               borderRadius: 8, width: 32, height: 32,
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#a1a1aa", cursor: "pointer", fontSize: 18,
+              color: T.text2, cursor: "pointer", fontSize: 18,
             }}
           >&times;</button>
         </div>
 
-        {/* Stripe embedded onboarding */}
         <div style={{ flex: 1, overflow: "auto", padding: "0 4px" }}>
           <StripeConnectProvider businessId={businessId}>
             {OnboardingComponent ? (
@@ -851,14 +1095,238 @@ function StripeOnboardingModal({ businessId, onComplete, onClose }: { businessId
             ) : (
               <div style={{ padding: 60, textAlign: "center" }}>
                 <div style={{
-                  width: 24, height: 24, border: "2px solid #4c6ef5",
+                  width: 24, height: 24, border: `2px solid ${T.purple}`,
                   borderTopColor: "transparent", borderRadius: "50%",
                   animation: "spin 0.6s linear infinite", margin: "0 auto",
                 }} />
-                <p style={{ color: "#71717a", fontSize: 13, marginTop: 12 }}>Loading Stripe onboarding...</p>
+                <p style={{ color: T.text3, fontSize: 13, marginTop: 12 }}>Loading Stripe onboarding...</p>
               </div>
             )}
           </StripeConnectProvider>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onClose: () => void; onSkip: () => void }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const featureCheck = (text: string, included: boolean) => (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0" }}>
+      <span style={{ fontSize: 14, color: included ? T.green : T.text3, flexShrink: 0 }}>
+        {included ? "\u2713" : "\u2014"}
+      </span>
+      <span style={{ fontSize: "0.85rem", color: included ? T.text : T.text3 }}>{text}</span>
+    </div>
+  );
+
+  function handleChoosePlan(plan: string) {
+    const msg = encodeURIComponent(
+      `I just signed up for ${plan}. Give me a full audit of my business setup and walk me through my personalized 90-day growth plan.`
+    );
+    router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        background: "rgba(0,0,0,0.75)", backdropFilter: "blur(10px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        background: T.bgEl, borderRadius: 20,
+        border: `1px solid ${T.border}`,
+        width: "100%", maxWidth: 720, maxHeight: "92vh",
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+        position: "relative",
+      }}>
+        {/* Top accent bar */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: CTA_GRAD }} />
+
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "20px 24px", borderBottom: `1px solid ${T.border}`,
+        }}>
+          <div>
+            <h2 style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 2 }}>
+              Choose Your Plan
+            </h2>
+            <p style={{ fontSize: "0.8rem", color: T.text3 }}>Unlock the tools that drive real results</p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255,255,255,0.06)", border: "none",
+              borderRadius: 8, width: 32, height: 32,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: T.text2, cursor: "pointer", fontSize: 18,
+            }}
+          >&times;</button>
+        </div>
+
+        {/* Plans */}
+        <div style={{ flex: 1, overflow: "auto", padding: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {/* Starter */}
+            <div style={{
+              padding: 24,
+              borderRadius: 16,
+              background: T.glass,
+              border: `1px solid ${T.border}`,
+              backdropFilter: "blur(12px)",
+              display: "flex",
+              flexDirection: "column",
+            }}>
+              <p style={{ fontSize: "0.7rem", color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Starter</p>
+              <p style={{ fontFamily: T.h, fontSize: "2rem", fontWeight: 700, color: T.text, marginBottom: 4 }}>
+                $19<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
+              </p>
+              <p style={{ color: T.text2, fontSize: "0.8rem", marginBottom: 20, lineHeight: 1.5 }}>
+                Everything you need to look professional and start earning.
+              </p>
+
+              <div style={{ flex: 1, marginBottom: 20 }}>
+                {featureCheck("Custom domain (yourbusiness.com)", true)}
+                {featureCheck("Remove NoMistakes branding", true)}
+                {featureCheck("SSL certificate included", true)}
+                {featureCheck("Google Analytics integration", true)}
+                {featureCheck("Up to 10 products / services", true)}
+                {featureCheck("Contact form + email notifications", true)}
+                {featureCheck("Basic SEO optimization", true)}
+                {featureCheck("Mobile-optimized site", true)}
+                {featureCheck("AI Coach (unlimited sessions)", false)}
+                {featureCheck("Advanced analytics dashboard", false)}
+                {featureCheck("Email marketing tools", false)}
+                {featureCheck("Blog / content management", false)}
+                {featureCheck("A/B testing", false)}
+              </div>
+
+              <button
+                onClick={() => handleChoosePlan("the Starter plan")}
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  borderRadius: 12,
+                  border: `1px solid ${T.border}`,
+                  background: T.glass,
+                  color: T.text,
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "border-color 0.2s, background 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(123,57,252,0.4)";
+                  e.currentTarget.style.background = "rgba(123,57,252,0.06)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = T.border;
+                  e.currentTarget.style.background = T.glass;
+                }}
+              >
+                Start with Starter
+              </button>
+            </div>
+
+            {/* Growth */}
+            <div style={{
+              padding: 24,
+              borderRadius: 16,
+              background: "rgba(123,57,252,0.06)",
+              border: "1px solid rgba(123,57,252,0.25)",
+              backdropFilter: "blur(12px)",
+              display: "flex",
+              flexDirection: "column",
+              position: "relative",
+            }}>
+              <div style={{
+                position: "absolute",
+                top: 14,
+                right: 14,
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                color: "#fff",
+                background: CTA_GRAD,
+                padding: "4px 10px",
+                borderRadius: 100,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}>
+                Most Popular
+              </div>
+              <p style={{ fontSize: "0.7rem", color: T.purpleLight, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Growth</p>
+              <p style={{ fontFamily: T.h, fontSize: "2rem", fontWeight: 700, color: T.text, marginBottom: 4 }}>
+                $49<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
+              </p>
+              <p style={{ color: T.text2, fontSize: "0.8rem", marginBottom: 20, lineHeight: 1.5 }}>
+                The full toolkit to grow, convert, and scale your business.
+              </p>
+
+              <div style={{ flex: 1, marginBottom: 20 }}>
+                {featureCheck("Everything in Starter", true)}
+                {featureCheck("AI Coach — unlimited sessions", true)}
+                {featureCheck("Personalized 90-day growth plan", true)}
+                {featureCheck("Advanced analytics dashboard", true)}
+                {featureCheck("Email marketing (1,000 subscribers)", true)}
+                {featureCheck("Blog / content management", true)}
+                {featureCheck("Social media integrations", true)}
+                {featureCheck("A/B testing on pages + CTAs", true)}
+                {featureCheck("SEO audit + keyword tracking", true)}
+                {featureCheck("Unlimited products / services", true)}
+                {featureCheck("Custom checkout pages", true)}
+                {featureCheck("Priority support", true)}
+                {featureCheck("Weekly performance reports", true)}
+              </div>
+
+              <button
+                onClick={() => handleChoosePlan("the Growth plan")}
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  borderRadius: 12,
+                  border: "none",
+                  background: CTA_GRAD,
+                  color: "#fff",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(123,57,252,0.35)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                Start with Growth
+              </button>
+            </div>
+          </div>
+
+          {/* Skip */}
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <button
+              onClick={onSkip}
+              style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer" }}
+            >
+              Continue with free plan
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -876,14 +1344,23 @@ function AffiliateCard({ step, businessId }: { step: string; businessId: string 
       href={trackedUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="block p-5 rounded-xl border border-white/5 bg-gradient-to-br from-surface to-surface-light hover:border-brand-600/20 transition-all group"
+      style={{
+        display: "block",
+        padding: 20,
+        borderRadius: 16,
+        border: `1px solid ${T.border}`,
+        background: T.glass,
+        backdropFilter: "blur(12px)",
+        transition: "border-color 0.2s",
+        textDecoration: "none",
+      }}
     >
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="text-white font-semibold">{aff.headline}</h4>
-        <span className="text-[10px] text-zinc-600 bg-white/5 px-2 py-0.5 rounded-full">Recommended</span>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+        <h4 style={{ color: T.text, fontWeight: 600 }}>{aff.headline}</h4>
+        <span style={{ fontSize: "0.65rem", color: T.text3, background: "rgba(123,57,252,0.08)", padding: "2px 8px", borderRadius: 100 }}>Recommended</span>
       </div>
-      <p className="text-zinc-400 text-sm mb-3">{aff.pitch}</p>
-      <span className="text-brand-400 text-sm font-medium group-hover:text-brand-300 transition-colors">
+      <p style={{ color: T.text2, fontSize: "0.875rem", marginBottom: 12 }}>{aff.pitch}</p>
+      <span style={{ color: T.purple, fontSize: "0.875rem", fontWeight: 500 }}>
         {aff.ctaLabel} &rarr;
       </span>
     </a>

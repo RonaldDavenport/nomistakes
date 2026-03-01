@@ -18,8 +18,8 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
   const site = business as SiteData;
   const layout = (business.layout as string) || "default";
   const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#4c6ef5";
-  const accent = colors.accent || "#9775fa";
+  const primary = colors.primary || "#7B39FC";
+  const accent = colors.accent || "#A855F7";
   const hero = site.site_content?.hero || {};
   const about = site.site_content?.about || {};
   const features = site.site_content?.features || [];
@@ -65,10 +65,10 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
             {hero.subheadline || site.tagline}
           </p>
           <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <a href={`/site/${slug}/products`} className="cta-btn">
+            <a href={"/products"} className="cta-btn">
               <span>{cta.button_text || "Work With Me"}</span>
             </a>
-            <a href={`/site/${slug}/about`} className="cta-btn-outline">
+            <a href={"/about"} className="cta-btn-outline">
               Learn More
             </a>
           </div>
@@ -192,7 +192,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
             {cta.subheadline || site.tagline}
           </p>
           <div className="reveal reveal-delay-2">
-            <a href={`/site/${slug}/contact`} className="cta-btn">
+            <a href={"/contact"} className="cta-btn">
               <span>{cta.button_text || "Get In Touch"}</span>
             </a>
           </div>
@@ -242,7 +242,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
               {hero.subheadline || site.tagline}
             </p>
             <div className="reveal reveal-delay-3" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-              <a href={`/site/${slug}/products`} className="cta-btn">
+              <a href={"/products"} className="cta-btn">
                 <span>{cta.button_text || "Browse Products"}</span>
               </a>
             </div>
@@ -278,7 +278,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
                     ))}
                   </div>
                 )}
-                <a href={`/site/${slug}/products`} className="cta-btn" style={{ padding: "14px 36px", fontSize: 15 }}>
+                <a href={"/products"} className="cta-btn" style={{ padding: "14px 36px", fontSize: 15 }}>
                   <span>Get Started</span>
                 </a>
               </div>
@@ -369,7 +369,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
               {cta.subheadline || site.tagline}
             </p>
             <div className="reveal reveal-delay-2">
-              <a href={`/site/${slug}/products`} className="cta-btn">
+              <a href={"/products"} className="cta-btn">
                 <span>{cta.button_text || "Get Started Now"}</span>
               </a>
             </div>
@@ -403,10 +403,10 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
             {hero.subheadline || site.tagline}
           </p>
           <div className="reveal reveal-delay-2" style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href={`/site/${slug}/products`} className="cta-btn">
+            <a href={"/products"} className="cta-btn">
               <span>{cta.button_text || "Get Started"}</span>
             </a>
-            <a href={`/site/${slug}/about`} className="cta-btn-outline">
+            <a href={"/about"} className="cta-btn-outline">
               Learn More
             </a>
           </div>
@@ -461,7 +461,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
               {about.text.length > 300 ? about.text.slice(0, 300) + "..." : about.text}
             </p>
             <div className="reveal reveal-delay-2">
-              <a href={`/site/${slug}/about`} style={{ color: primary, fontWeight: 600, fontSize: 14, display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <a href={"/about"} style={{ color: primary, fontWeight: 600, fontSize: 14, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 Read our full story <span style={{ transition: "transform 0.2s", display: "inline-block" }}>&rarr;</span>
               </a>
             </div>
@@ -515,7 +515,7 @@ export default async function SiteHomePage({ params }: { params: Promise<{ slug:
             {cta.subheadline || site.tagline}
           </p>
           <div className="reveal reveal-delay-2">
-            <a href={`/site/${slug}/products`} className="cta-btn">
+            <a href={"/products"} className="cta-btn">
               <span>{cta.button_text || "Get Started Now"}</span>
             </a>
           </div>
