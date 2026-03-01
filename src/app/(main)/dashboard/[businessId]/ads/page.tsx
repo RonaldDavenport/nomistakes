@@ -499,12 +499,11 @@ export default function AdsPage() {
   /* ---------------------------------------------------------------- */
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      <PaywallGate
-        requiredPlan="growth"
-        teaser={{
-          headline: "AI Ad Campaigns & UGC Videos",
-          description: "Create scroll-stopping ads and UGC-style videos that convert across every platform.",
+    <PaywallGate
+      requiredPlan="growth"
+      teaser={{
+        headline: "AI Ad Campaigns & UGC Videos",
+        description: "Create scroll-stopping ads and UGC-style videos that convert across every platform.",
           bullets: [
             "AI-generated ad copy for any platform",
             "UGC-style videos in minutes",
@@ -517,6 +516,7 @@ export default function AdsPage() {
           ],
         }}
       >
+        <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Ad Creator</h1>
@@ -1280,7 +1280,7 @@ export default function AdsPage() {
             )}
           </>
         )}
-      </PaywallGate>
-    </div>
+      </div>
+    </PaywallGate>
   );
 }

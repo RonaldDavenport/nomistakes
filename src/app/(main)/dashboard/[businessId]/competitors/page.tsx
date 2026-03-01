@@ -152,11 +152,10 @@ export default function CompetitorsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      <PaywallGate
-        requiredPlan="starter"
-        teaser={{
-          headline: "Competitive Intelligence",
+    <PaywallGate
+      requiredPlan="starter"
+      teaser={{
+        headline: "Competitive Intelligence",
           description: "Analyze any competitor's positioning, pricing, and strategy in seconds.",
           bullets: [
             "Strengths & weaknesses breakdown",
@@ -170,6 +169,7 @@ export default function CompetitorsPage() {
           ],
         }}
       >
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
@@ -536,7 +536,7 @@ export default function CompetitorsPage() {
             })}
           </div>
         )}
-      </PaywallGate>
-    </div>
+      </div>
+    </PaywallGate>
   );
 }

@@ -190,12 +190,11 @@ export default function ContentPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      <PaywallGate
-        requiredPlan="starter"
-        teaser={{
-          headline: "AI Blog Generator",
-          description: "Publish SEO-optimized blog posts to your site with one click.",
+    <PaywallGate
+      requiredPlan="starter"
+      teaser={{
+        headline: "AI Blog Generator",
+        description: "Publish SEO-optimized blog posts to your site with one click.",
           bullets: [
             "Full blog posts in seconds",
             "SEO-optimized automatically",
@@ -208,6 +207,7 @@ export default function ContentPage() {
           ],
         }}
       >
+      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Content</h1>
@@ -537,7 +537,7 @@ export default function ContentPage() {
           ))}
         </div>
       )}
-      </PaywallGate>
-    </div>
+      </div>
+    </PaywallGate>
   );
 }
