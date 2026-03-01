@@ -26,6 +26,7 @@ export default function DashboardOverview() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const [userPlan, setUserPlan] = useState("free");
+  const [upgradeBanner, setUpgradeBanner] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -39,6 +40,34 @@ export default function DashboardOverview() {
         .single();
       setUserName(profile?.full_name || user.email?.split("@")[0] || "there");
       setUserPlan(profile?.plan || "free");
+
+      // If returning from Stripe checkout, sync subscription status
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("upgraded") === "true") {
+        // Remove the query param from URL
+        window.history.replaceState({}, "", "/dashboard");
+
+        // If plan is still free, call the sync endpoint
+        if (!profile?.plan || profile.plan === "free") {
+          try {
+            const res = await fetch("/api/stripe/sync", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, email: user.email }),
+            });
+            const data = await res.json();
+            if (data.synced && data.plan) {
+              setUserPlan(data.plan);
+              setUpgradeBanner(data.plan);
+            }
+          } catch {
+            // Sync failed silently — webhook will catch it later
+          }
+        } else {
+          // Already upgraded (webhook was fast)
+          setUpgradeBanner(profile.plan);
+        }
+      }
 
       const { data } = await supabase
         .from("businesses")
@@ -64,6 +93,39 @@ export default function DashboardOverview() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
+      {upgradeBanner && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15))",
+            border: "1px solid rgba(99,102,241,0.3)",
+            borderRadius: 12,
+            padding: "16px 20px",
+            marginBottom: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 24 }}>&#10003;</span>
+            <div>
+              <p style={{ color: "#fff", fontWeight: 600, fontSize: 15 }}>
+                Welcome to {getPlan(upgradeBanner).name}!
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
+                Your plan has been upgraded. All features are now unlocked.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setUpgradeBanner(null)}
+            style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       <div className="mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-white mb-1">Welcome back, {userName}</h1>
         <p className="text-zinc-500 text-sm">
