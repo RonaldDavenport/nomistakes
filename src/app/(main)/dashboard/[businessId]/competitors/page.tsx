@@ -193,6 +193,11 @@ export default function CompetitorsPage() {
             "Pricing & positioning analysis",
             "Actionable recommendations",
           ],
+          previewRows: [
+            { label: "Competitors", value: "3 analyzed", color: "#22C55E" },
+            { label: "Weaknesses", value: "7 found", color: "#F59E0B" },
+            { label: "Recommendations", value: "5 actionable" },
+          ],
         }}
       >
         {/* Error Messages */}

@@ -238,6 +238,11 @@ export default function ContentPage() {
               "SEO-optimized automatically",
               "Publish directly to your site",
             ],
+            previewRows: [
+              { label: "Blog Post", value: "Ready to publish", color: "#22C55E" },
+              { label: "SEO Score", value: "94/100" },
+              { label: "Word Count", value: "1,200 words" },
+            ],
           }}
         >
           <div className="mb-6 rounded-xl overflow-hidden" style={{ ...glassCard }}>

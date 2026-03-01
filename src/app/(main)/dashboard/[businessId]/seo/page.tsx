@@ -180,6 +180,11 @@ export default function SeoPage() {
             "Keyword opportunity finder",
             "Actionable fix suggestions",
           ],
+          previewRows: [
+            { label: "Site Health", value: "87/100", color: "#22C55E" },
+            { label: "Keywords Found", value: "12 opportunities" },
+            { label: "Fixes Needed", value: "5 suggestions", color: "#F59E0B" },
+          ],
         }}
       >
         {/* Error Messages */}

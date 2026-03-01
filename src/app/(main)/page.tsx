@@ -31,13 +31,13 @@ const FEATURE_TABS = [
 ];
 
 const FAQS = [
-  { q: "How does No Mistakes work?", a: "Answer 4 questions about your skills, time, budget, and business type. AI generates 3 custom business concepts. Pick one, and AI builds your entire business \u2014 website, brand, products, checkout \u2014 in about 60 seconds." },
+  { q: "How does No Mistakes work?", a: "Answer 4 questions about your skills, time, budget, and business type. AI generates 3 custom business concepts. Pick one, and AI builds your entire business — website, brand, products, checkout — in about 60 seconds." },
   { q: "Do I need any technical skills?", a: "None. No coding, no design, no business experience. If you can tap a button and type a sentence, you can launch a business." },
   { q: "What types of businesses can I create?", a: "Coaching, freelance services, e-commerce stores, consulting, online courses, digital templates, ebooks, and memberships. If you have a skill, we can build a business around it." },
-  { q: "What are AI credits and how do they work?", a: "Credits power AI features like blog posts, ad copy, video scripts, and competitor analysis. Free plan includes 50 credits/month. Each action costs 1\u20135 credits depending on complexity." },
+  { q: "What are AI credits and how do they work?", a: "Credits power AI features like blog posts, ad copy, video scripts, and competitor analysis. Free plan includes 50 credits/month. Each action costs 1–5 credits depending on complexity." },
   { q: "Can I use my own custom domain?", a: "Yes. Connect any domain you own. We handle SSL and DNS guidance. Your site launches on a free subdomain immediately, and you can add a custom domain anytime." },
-  { q: "How is this different from Wix or Shopify?", a: "They give you a blank canvas and say 'good luck.' We give you a finished business. Website, branding, products, copy, checkout \u2014 all done by AI in 60 seconds. Plus an AI coach that pushes you to your first customer." },
-  { q: "Can I edit my site after it's generated?", a: "Absolutely. Use the visual editor or just tell the AI what to change in plain English. Swap images, rewrite copy, add pages \u2014 all without touching code." },
+  { q: "How is this different from Wix or Shopify?", a: "They give you a blank canvas and say 'good luck.' We give you a finished business. Website, branding, products, copy, checkout — all done by AI in 60 seconds. Plus an AI coach that pushes you to your first customer." },
+  { q: "Can I edit my site after it's generated?", a: "Absolutely. Use the visual editor or just tell the AI what to change in plain English. Swap images, rewrite copy, add pages — all without touching code." },
   { q: "What if I want to cancel?", a: "Cancel anytime. No contracts, no penalties. Your site stays live on the free plan. We don't hold your business hostage." },
 ];
 
@@ -968,8 +968,8 @@ export default function Home() {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[
-                "Momentum Mode: Days 1\u201314, one action per day, zero strategy",
-                "Signal Mode: Days 15\u201330, pure outreach until first customer",
+                "Momentum Mode: Days 1–14, one action per day, zero strategy",
+                "Signal Mode: Days 15–30, pure outreach until first customer",
                 "Adapts to your business type, stage, and progress",
               ].map(f => (
                 <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
@@ -1015,9 +1015,9 @@ export default function Home() {
               <p style={{ fontSize: "0.75rem", color: T.text3, marginBottom: 16, fontWeight: 500 }}>Your AI-generated concepts</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { name: "FitCoach Pro", tag: "Online coaching platform", rev: "$2K\u2013$5K/mo", hl: false },
-                  { name: "DesignVault", tag: "Premium template store", rev: "$1K\u2013$3K/mo", hl: true },
-                  { name: "ConsultEdge", tag: "B2B consulting service", rev: "$3K\u2013$8K/mo", hl: false },
+                  { name: "FitCoach Pro", tag: "Online coaching platform", rev: "$2K–$5K/mo", hl: false },
+                  { name: "DesignVault", tag: "Premium template store", rev: "$1K–$3K/mo", hl: true },
+                  { name: "ConsultEdge", tag: "B2B consulting service", rev: "$3K–$8K/mo", hl: false },
                 ].map(c => (
                   <div key={c.name} style={{
                     padding: 16, borderRadius: 12,
@@ -1206,7 +1206,7 @@ export default function Home() {
 
           <div style={{ textAlign: "center", marginTop: 40 }}>
             <p style={{ fontSize: "0.9rem", color: T.text2, marginBottom: 8 }}>All of this starting at <span style={{ fontFamily: T.mono, fontWeight: 700, color: T.text }}>$0/month</span></p>
-            <p style={{ fontSize: "0.8rem", color: T.text3 }}>Most competitors charge $50\u2013$200/mo for half of this. We give you everything.</p>
+            <p style={{ fontSize: "0.8rem", color: T.text3 }}>Most competitors charge $50–$200/mo for half of this. We give you everything.</p>
           </div>
         </div>
       </section>
@@ -1223,7 +1223,7 @@ export default function Home() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             {[
               { name: "Stripe", desc: "Accept payments instantly. Cards, wallets, subscriptions.", color: "#635BFF" },
-              { name: "Custom Domains", desc: "YourBusiness.com \u2014 connected with zero config.", color: T.text },
+              { name: "Custom Domains", desc: "YourBusiness.com — connected with zero config.", color: T.text },
               { name: "Calendly", desc: "Book calls automatically from your generated site.", color: "#006BFF" },
               { name: "Claude & GPT", desc: "Powered by the best AI models for every generation task.", color: T.purple },
             ].map(tool => (
@@ -1295,7 +1295,7 @@ export default function Home() {
               Less than your morning coffee. More than most agencies deliver.
             </h2>
             <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 560, margin: "0 auto" }}>
-              Website + branding + AI coach + content + video ads + payments + launch checklist. Others charge $5K\u2013$15K for this. You get it all starting free.
+              Website + branding + AI coach + content + video ads + payments + launch checklist. Others charge $5K–$15K for this. You get it all starting free.
             </p>
           </div>
 

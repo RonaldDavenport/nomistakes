@@ -518,6 +518,11 @@ export default function AdsPage() {
             "UGC-style videos in minutes",
             "Optimized for Meta, TikTok & Google",
           ],
+          previewRows: [
+            { label: "Ad Variations", value: "6 generated", color: "#22C55E" },
+            { label: "Platforms", value: "Meta, TikTok, Google" },
+            { label: "UGC Videos", value: "3 ready" },
+          ],
         }}
       >
         {/* Tabs */}

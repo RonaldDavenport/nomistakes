@@ -193,6 +193,11 @@ export default function EmailsPage() {
             "Nurture & win-back sequences",
             "Full HTML emails, ready to send",
           ],
+          previewRows: [
+            { label: "Sequence", value: "5-email flow", color: "#22C55E" },
+            { label: "Open Rate Est.", value: "38%" },
+            { label: "Status", value: "Ready to send" },
+          ],
         }}
       >
         {/* Error Messages */}

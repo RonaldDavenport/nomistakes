@@ -149,6 +149,11 @@ export default function ReportsPage() {
             "Highlights & action items",
             "Priority recommendations",
           ],
+          previewRows: [
+            { label: "Period", value: "This week", color: "#22C55E" },
+            { label: "Highlights", value: "4 key trends" },
+            { label: "Action Items", value: "3 priorities" },
+          ],
         }}
       >
         {loading ? (

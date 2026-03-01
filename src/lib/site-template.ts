@@ -1647,7 +1647,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     &ldquo;{t.text}&rdquo;
                   </p>
                   <p style={{ fontWeight: 600, fontSize: 12, color: "rgba(${tb},0.4)" }}>
-                    {t.name}{t.role ? " \\u2014 " + t.role : ""}
+                    {t.name}{t.role ? " — " + t.role : ""}
                   </p>
                 </div>
               ))}
@@ -1700,8 +1700,8 @@ export default async function Contact() {
           </h1>
           <p style={{ color: "rgba(${tb},0.5)", fontSize: 16, lineHeight: 1.7 }}>
             {isServices
-              ? "Ready to discuss your project? Let\\u2019s find a time that works."
-              : "Have a question? We\\u2019d love to hear from you."}
+              ? "Ready to discuss your project? Let's find a time that works."
+              : "Have a question? We'd love to hear from you."}
           </p>
         </div>
       </section>
