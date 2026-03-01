@@ -1200,16 +1200,17 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </p>
 
               <div style={{ flex: 1, marginBottom: 20 }}>
-                {featureCheck("Custom domain (yourbusiness.com)", true)}
+                {featureCheck("3 businesses", true)}
+                {featureCheck("AI Coach (50 messages/day)", true)}
+                {featureCheck("10 blog posts/month", true)}
+                {featureCheck("5 AI images per business", true)}
+                {featureCheck("Custom domain", true)}
                 {featureCheck("Remove NoMistakes branding", true)}
-                {featureCheck("Up to 3 businesses", true)}
-                {featureCheck("SEO tools + site audits", true)}
-                {featureCheck("Blog post generator", true)}
-                {featureCheck("AI image generation", true)}
-                {featureCheck("Ad copy generator", true)}
-                {featureCheck("Cold outreach templates", true)}
-                {featureCheck("AI Coach (unlimited)", false)}
-                {featureCheck("Promo video creation", false)}
+                {featureCheck("SEO tools", true)}
+                {featureCheck("Cold email + outreach scripts", true)}
+                {featureCheck("Lead magnets + proposals", true)}
+                {featureCheck("UGC ad creation", false)}
+                {featureCheck("Ad copy + ad images", false)}
                 {featureCheck("Priority support", false)}
               </div>
 
@@ -1276,14 +1277,15 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
 
               <div style={{ flex: 1, marginBottom: 20 }}>
                 {featureCheck("Everything in Starter", true)}
-                {featureCheck("AI Coach — unlimited sessions", true)}
-                {featureCheck("Up to 10 businesses", true)}
-                {featureCheck("Promo video creation", true)}
-                {featureCheck("UGC-style ad scripts", true)}
-                {featureCheck("Webinar + funnel scripts", true)}
+                {featureCheck("10 businesses", true)}
+                {featureCheck("AI Coach (200 messages/day)", true)}
+                {featureCheck("50 blog posts/month", true)}
+                {featureCheck("10 AI images per business", true)}
+                {featureCheck("UGC ad creation", true)}
+                {featureCheck("Ad copy + ad images", true)}
+                {featureCheck("Video + webinar scripts", true)}
                 {featureCheck("Course + ebook content", true)}
                 {featureCheck("Contracts + SOPs", true)}
-                {featureCheck("Extra AI image credits", true)}
                 {featureCheck("Priority support", true)}
               </div>
 
