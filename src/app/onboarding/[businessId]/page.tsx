@@ -895,7 +895,7 @@ export default function OnboardingPage() {
                         Meet Your AI Coach
                       </h3>
                       <p style={{ color: T.text2, fontSize: "0.9rem", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.6 }}>
-                        Your coach will analyze your setup and create a personalized game plan to grow your business in the first 90 days.
+                        Your AI coach can answer questions, write content, and help you figure out your next steps to get customers.
                       </p>
                       <button
                         onClick={() => setShowUpsellModal(true)}
@@ -919,7 +919,7 @@ export default function OnboardingPage() {
                           e.currentTarget.style.boxShadow = "none";
                         }}
                       >
-                        Get My Growth Plan
+                        Chat With My Coach
                       </button>
                     </div>
 
@@ -939,7 +939,7 @@ export default function OnboardingPage() {
                         businessId={businessId}
                         onClose={() => setShowUpsellModal(false)}
                         onSkip={() => {
-                          const msg = encodeURIComponent("Give me a full audit of my business setup and walk me through a personalized 90-day growth plan.");
+                          const msg = encodeURIComponent("Give me a full audit of my business setup and help me figure out my next steps to start getting customers.");
                           router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
                         }}
                       />
@@ -1130,7 +1130,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
 
   function handleChoosePlan(plan: string) {
     const msg = encodeURIComponent(
-      `I just signed up for ${plan}. Give me a full audit of my business setup and walk me through my personalized 90-day growth plan.`
+      `I just signed up for ${plan}. Give me a full audit of my business setup and help me figure out my next steps to start getting customers.`
     );
     router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
   }
@@ -1202,17 +1202,15 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               <div style={{ flex: 1, marginBottom: 20 }}>
                 {featureCheck("Custom domain (yourbusiness.com)", true)}
                 {featureCheck("Remove NoMistakes branding", true)}
-                {featureCheck("SSL certificate included", true)}
-                {featureCheck("Google Analytics integration", true)}
-                {featureCheck("Up to 10 products / services", true)}
-                {featureCheck("Contact form + email notifications", true)}
-                {featureCheck("Basic SEO optimization", true)}
-                {featureCheck("Mobile-optimized site", true)}
-                {featureCheck("AI Coach (unlimited sessions)", false)}
-                {featureCheck("Advanced analytics dashboard", false)}
-                {featureCheck("Email marketing tools", false)}
-                {featureCheck("Blog / content management", false)}
-                {featureCheck("A/B testing", false)}
+                {featureCheck("Up to 3 businesses", true)}
+                {featureCheck("SEO tools + site audits", true)}
+                {featureCheck("Blog post generator", true)}
+                {featureCheck("AI image generation", true)}
+                {featureCheck("Ad copy generator", true)}
+                {featureCheck("Cold outreach templates", true)}
+                {featureCheck("AI Coach (unlimited)", false)}
+                {featureCheck("Promo video creation", false)}
+                {featureCheck("Priority support", false)}
               </div>
 
               <button
@@ -1279,17 +1277,14 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               <div style={{ flex: 1, marginBottom: 20 }}>
                 {featureCheck("Everything in Starter", true)}
                 {featureCheck("AI Coach — unlimited sessions", true)}
-                {featureCheck("Personalized 90-day growth plan", true)}
-                {featureCheck("Advanced analytics dashboard", true)}
-                {featureCheck("Email marketing (1,000 subscribers)", true)}
-                {featureCheck("Blog / content management", true)}
-                {featureCheck("Social media integrations", true)}
-                {featureCheck("A/B testing on pages + CTAs", true)}
-                {featureCheck("SEO audit + keyword tracking", true)}
-                {featureCheck("Unlimited products / services", true)}
-                {featureCheck("Custom checkout pages", true)}
+                {featureCheck("Up to 10 businesses", true)}
+                {featureCheck("Promo video creation", true)}
+                {featureCheck("UGC-style ad scripts", true)}
+                {featureCheck("Webinar + funnel scripts", true)}
+                {featureCheck("Course + ebook content", true)}
+                {featureCheck("Contracts + SOPs", true)}
+                {featureCheck("Extra AI image credits", true)}
                 {featureCheck("Priority support", true)}
-                {featureCheck("Weekly performance reports", true)}
               </div>
 
               <button
