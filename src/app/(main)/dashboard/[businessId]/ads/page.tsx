@@ -500,14 +500,6 @@ export default function AdsPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Ad Creator</h1>
-        <p className="text-sm" style={{ color: T.text3 }}>
-          AI-generated ad copy for Meta, TikTok, and Google
-        </p>
-      </div>
-
       <PaywallGate
         requiredPlan="growth"
         teaser={{
@@ -525,6 +517,14 @@ export default function AdsPage() {
           ],
         }}
       >
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Ad Creator</h1>
+          <p className="text-sm" style={{ color: T.text3 }}>
+            AI-generated ad copy for Meta, TikTok, and Google
+          </p>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {(["ads", "ugc"] as const).map((tab) => (

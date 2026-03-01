@@ -126,6 +126,23 @@ export default function SeoPage() {
   const displayAudit = activeAudit?.audit || (audits.length > 0 ? audits[0] : null);
 
   return (
+    <PaywallGate
+      requiredPlan="starter"
+      teaser={{
+        headline: "AI SEO Audits",
+        description: "Get a full SEO health score with actionable fixes and keyword opportunities.",
+        bullets: [
+          "Site health score 0-100",
+          "Keyword opportunity finder",
+          "Actionable fix suggestions",
+        ],
+        previewRows: [
+          { label: "Site Health", value: "87/100", color: "#22C55E" },
+          { label: "Keywords Found", value: "12 opportunities" },
+          { label: "Fixes Needed", value: "5 suggestions", color: "#F59E0B" },
+        ],
+      }}
+    >
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
@@ -170,25 +187,8 @@ export default function SeoPage() {
         </div>
       </div>
 
-      <PaywallGate
-        requiredPlan="starter"
-        teaser={{
-          headline: "AI SEO Audits",
-          description: "Get a full SEO health score with actionable fixes and keyword opportunities.",
-          bullets: [
-            "Site health score 0-100",
-            "Keyword opportunity finder",
-            "Actionable fix suggestions",
-          ],
-          previewRows: [
-            { label: "Site Health", value: "87/100", color: "#22C55E" },
-            { label: "Keywords Found", value: "12 opportunities" },
-            { label: "Fixes Needed", value: "5 suggestions", color: "#F59E0B" },
-          ],
-        }}
-      >
-        {/* Error Messages */}
-        {error === "insufficient_credits" && (
+      {/* Error Messages */}
+      {error === "insufficient_credits" && (
           <div
             className="mb-6 p-4 rounded-xl flex items-center justify-between"
             style={{ border: "1px solid rgba(239,68,68,0.20)", background: "rgba(239,68,68,0.05)" }}
@@ -532,7 +532,7 @@ export default function SeoPage() {
             )}
           </div>
         )}
-      </PaywallGate>
     </div>
+    </PaywallGate>
   );
 }

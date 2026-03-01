@@ -191,6 +191,23 @@ export default function ContentPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "AI Blog Generator",
+          description: "Publish SEO-optimized blog posts to your site with one click.",
+          bullets: [
+            "Full blog posts in seconds",
+            "SEO-optimized automatically",
+            "Publish directly to your site",
+          ],
+          previewRows: [
+            { label: "Blog Post", value: "Ready to publish", color: "#22C55E" },
+            { label: "SEO Score", value: "94/100" },
+            { label: "Word Count", value: "1,200 words" },
+          ],
+        }}
+      >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Content</h1>
@@ -228,23 +245,6 @@ export default function ContentPage() {
 
       {/* AI Generation Panel */}
       {showGenPanel && (
-        <PaywallGate
-          requiredPlan="starter"
-          teaser={{
-            headline: "AI Blog Generator",
-            description: "Publish SEO-optimized blog posts to your site with one click.",
-            bullets: [
-              "Full blog posts in seconds",
-              "SEO-optimized automatically",
-              "Publish directly to your site",
-            ],
-            previewRows: [
-              { label: "Blog Post", value: "Ready to publish", color: "#22C55E" },
-              { label: "SEO Score", value: "94/100" },
-              { label: "Word Count", value: "1,200 words" },
-            ],
-          }}
-        >
           <div className="mb-6 rounded-xl overflow-hidden" style={{ ...glassCard }}>
             <div className="px-5 py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
               <div className="flex items-center justify-between">
@@ -403,7 +403,6 @@ export default function ContentPage() {
               </div>
             </div>
           </div>
-        </PaywallGate>
       )}
 
       {/* Inline editor */}
@@ -538,6 +537,7 @@ export default function ContentPage() {
           ))}
         </div>
       )}
+      </PaywallGate>
     </div>
   );
 }

@@ -275,7 +275,7 @@ export function PaywallGate({ requiredPlan, children, compact, teaser }: Paywall
               letterSpacing: "-0.2px",
             }}
           >
-            {loading ? "Redirecting..." : `Unlock ${teaser.headline.split(" ")[0]} — $${(upgrade.price / 100).toFixed(2)}/mo`}
+            {loading ? "Redirecting..." : `Start ${upgrade.name} — $${(upgrade.price / 100).toFixed(2)}/mo`}
           </button>
 
           {/* Error message */}

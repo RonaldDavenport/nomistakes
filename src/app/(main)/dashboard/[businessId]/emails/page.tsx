@@ -153,6 +153,23 @@ export default function EmailsPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "AI Email Sequences",
+          description: "Generate complete email flows — welcome, nurture, win-back — ready to send.",
+          bullets: [
+            "Welcome & onboarding flows",
+            "Nurture & win-back sequences",
+            "Full HTML emails, ready to send",
+          ],
+          previewRows: [
+            { label: "Sequence", value: "5-email flow", color: "#22C55E" },
+            { label: "Open Rate Est.", value: "38%" },
+            { label: "Status", value: "Ready to send" },
+          ],
+        }}
+      >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
@@ -183,23 +200,6 @@ export default function EmailsPage() {
         </div>
       </div>
 
-      <PaywallGate
-        requiredPlan="starter"
-        teaser={{
-          headline: "AI Email Sequences",
-          description: "Generate complete email flows — welcome, nurture, win-back — ready to send.",
-          bullets: [
-            "Welcome & onboarding flows",
-            "Nurture & win-back sequences",
-            "Full HTML emails, ready to send",
-          ],
-          previewRows: [
-            { label: "Sequence", value: "5-email flow", color: "#22C55E" },
-            { label: "Open Rate Est.", value: "38%" },
-            { label: "Status", value: "Ready to send" },
-          ],
-        }}
-      >
         {/* Error Messages */}
         {error === "insufficient_credits" && (
           <div

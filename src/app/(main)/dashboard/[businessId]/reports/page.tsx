@@ -99,6 +99,23 @@ export default function ReportsPage() {
   }
 
   return (
+    <PaywallGate
+      requiredPlan="starter"
+      teaser={{
+        headline: "Weekly AI Reports",
+        description: "Automated business progress reports with trends, highlights, and priorities.",
+        bullets: [
+          "Weekly progress tracking",
+          "Highlights & action items",
+          "Priority recommendations",
+        ],
+        previewRows: [
+          { label: "Period", value: "This week", color: "#22C55E" },
+          { label: "Highlights", value: "4 key trends" },
+          { label: "Action Items", value: "3 priorities" },
+        ],
+      }}
+    >
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div>
@@ -139,23 +156,6 @@ export default function ReportsPage() {
         </div>
       )}
 
-      <PaywallGate
-        requiredPlan="starter"
-        teaser={{
-          headline: "Weekly AI Reports",
-          description: "Automated business progress reports with trends, highlights, and priorities.",
-          bullets: [
-            "Weekly progress tracking",
-            "Highlights & action items",
-            "Priority recommendations",
-          ],
-          previewRows: [
-            { label: "Period", value: "This week", color: "#22C55E" },
-            { label: "Highlights", value: "4 key trends" },
-            { label: "Action Items", value: "3 priorities" },
-          ],
-        }}
-      >
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
@@ -264,7 +264,7 @@ export default function ReportsPage() {
             })}
           </div>
         )}
-      </PaywallGate>
     </div>
+    </PaywallGate>
   );
 }
