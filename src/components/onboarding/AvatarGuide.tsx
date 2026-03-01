@@ -56,14 +56,11 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
       video.src = script.videoUrl;
       video.muted = isMuted;
       video.play().catch(() => {
-        // Autoplay blocked (no prior user gesture) — retry on first interaction
-        const retry = () => {
-          video.play().catch(() => {});
-          document.removeEventListener("click", retry);
-          document.removeEventListener("touchstart", retry);
-        };
-        document.addEventListener("click", retry);
-        document.addEventListener("touchstart", retry);
+        // Unmuted autoplay blocked — start muted then unmute once playing
+        video.muted = true;
+        video.play().then(() => {
+          if (!isMuted) video.muted = false;
+        }).catch(() => {});
       });
     } else {
       // No video — just show text for a duration, then stop "playing"
