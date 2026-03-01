@@ -74,11 +74,23 @@ async function handleBuild(body: {
   const resolvedSubtype = subtype || concept.subtype || "";
   const db = createServerClient();
 
-  // Create slug
-  const slug = concept.name
+  // Create slug — ensure uniqueness
+  let slug = concept.name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+
+  // Check if slug is already taken — append random suffix if so
+  const { data: existing } = await db
+    .from("businesses")
+    .select("id")
+    .eq("slug", slug)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    const suffix = Math.random().toString(36).slice(2, 6);
+    slug = `${slug}-${suffix}`;
+  }
 
   // 1. Generate brand + site content + business plan ALL in parallel
   // Site content only uses brand.tone which Claude infers from business context

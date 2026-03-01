@@ -27,8 +27,8 @@ export interface DeployResult {
   readyState: string;
 }
 
-// Ensure project exists — create if needed, return name
-async function ensureProject(slug: string): Promise<string> {
+// Ensure project exists — create if needed, return { name, isNew }
+async function ensureProject(slug: string): Promise<{ name: string; isNew: boolean }> {
   const projectName = `nm-${slug}`;
 
   // Try to get existing project first (faster than create-then-catch)
@@ -39,7 +39,7 @@ async function ensureProject(slug: string): Promise<string> {
 
   if (checkRes.ok) {
     console.log(`[vercel] project ${projectName} exists`);
-    return projectName; // Already exists
+    return { name: projectName, isNew: false };
   }
 
   console.log(`[vercel] project ${projectName} not found (${checkRes.status}), creating...`);
@@ -60,13 +60,13 @@ async function ensureProject(slug: string): Promise<string> {
     const err = await res.json();
     if (err.error?.code === "project_already_exists" || err.error?.code === "conflict") {
       console.log(`[vercel] project ${projectName} race-created, OK`);
-      return projectName;
+      return { name: projectName, isNew: false };
     }
     throw new Error(`Failed to create project: ${JSON.stringify(err)}`);
   }
 
   console.log(`[vercel] project ${projectName} created`);
-  return projectName;
+  return { name: projectName, isNew: true };
 }
 
 // Set env vars on a project (only for new projects — skips if already set)
@@ -116,10 +116,10 @@ export async function deploy(
   files: { file: string; data: string }[],
   envVars?: Record<string, string>
 ): Promise<DeployResult> {
-  // Step 1: Ensure project exists + set env vars
-  const projectName = await ensureProject(slug);
+  // Step 1: Ensure project exists + set env vars (only for new projects)
+  const { name: projectName, isNew } = await ensureProject(slug);
 
-  if (envVars && Object.keys(envVars).length > 0) {
+  if (isNew && envVars && Object.keys(envVars).length > 0) {
     await ensureEnvVars(projectName, envVars);
   }
 
