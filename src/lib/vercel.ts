@@ -32,13 +32,17 @@ async function ensureProject(slug: string): Promise<string> {
   const projectName = `nm-${slug}`;
 
   // Try to get existing project first (faster than create-then-catch)
+  console.log(`[vercel] checking project ${projectName}`);
   const checkRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}${teamParam()}`, {
     headers: headers(),
   });
 
   if (checkRes.ok) {
+    console.log(`[vercel] project ${projectName} exists`);
     return projectName; // Already exists
   }
+
+  console.log(`[vercel] project ${projectName} not found (${checkRes.status}), creating...`);
 
   // Create new project
   const res = await fetch(`${VERCEL_API}/v10/projects${teamParam()}`, {
@@ -55,17 +59,20 @@ async function ensureProject(slug: string): Promise<string> {
   if (!res.ok) {
     const err = await res.json();
     if (err.error?.code === "project_already_exists" || err.error?.code === "conflict") {
+      console.log(`[vercel] project ${projectName} race-created, OK`);
       return projectName;
     }
     throw new Error(`Failed to create project: ${JSON.stringify(err)}`);
   }
 
+  console.log(`[vercel] project ${projectName} created`);
   return projectName;
 }
 
 // Set env vars on a project (only for new projects — skips if already set)
 async function ensureEnvVars(projectName: string, envVars: Record<string, string>): Promise<void> {
   // Check which env vars already exist
+  console.log(`[vercel] listing env vars for ${projectName}`);
   const listRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}/env${teamParam()}`, {
     headers: headers(),
   });
@@ -80,8 +87,12 @@ async function ensureEnvVars(projectName: string, envVars: Record<string, string
 
   // Only set vars that don't exist yet
   const missing = Object.entries(envVars).filter(([key]) => !existingKeys.has(key));
-  if (missing.length === 0) return;
+  if (missing.length === 0) {
+    console.log(`[vercel] all env vars already set`);
+    return;
+  }
 
+  console.log(`[vercel] setting ${missing.length} missing env vars: ${missing.map(([k]) => k).join(", ")}`);
   await Promise.all(
     missing.map(([key, value]) =>
       fetch(`${VERCEL_API}/v10/projects/${projectName}/env${teamParam()}`, {
@@ -96,6 +107,7 @@ async function ensureEnvVars(projectName: string, envVars: Record<string, string
       })
     )
   );
+  console.log(`[vercel] env vars set`);
 }
 
 // Deploy files to a Vercel project
@@ -104,7 +116,7 @@ export async function deploy(
   files: { file: string; data: string }[],
   envVars?: Record<string, string>
 ): Promise<DeployResult> {
-  // Step 1: Ensure project exists + set env vars in parallel
+  // Step 1: Ensure project exists + set env vars
   const projectName = await ensureProject(slug);
 
   if (envVars && Object.keys(envVars).length > 0) {
@@ -112,33 +124,39 @@ export async function deploy(
   }
 
   // Step 2: Deploy
+  const payload = {
+    name: projectName,
+    target: "production",
+    files: files.map((f) => ({
+      file: f.file,
+      data: Buffer.from(f.data).toString("base64"),
+      encoding: "base64",
+    })),
+    projectSettings: {
+      framework: "nextjs",
+      buildCommand: "next build",
+      outputDirectory: ".next",
+      nodeVersion: "20.x",
+    },
+  };
+
+  const payloadSize = JSON.stringify(payload).length;
+  console.log(`[vercel] deploying ${files.length} files (${(payloadSize / 1024).toFixed(0)}KB payload) to ${projectName}`);
+
   const res = await fetch(`${VERCEL_API}/v13/deployments${teamParam()}`, {
     method: "POST",
     headers: headers(),
-    body: JSON.stringify({
-      name: projectName,
-      target: "production",
-      files: files.map((f) => ({
-        file: f.file,
-        data: Buffer.from(f.data).toString("base64"),
-        encoding: "base64",
-      })),
-      projectSettings: {
-        framework: "nextjs",
-        buildCommand: "next build",
-        outputDirectory: ".next",
-        nodeVersion: "20.x",
-      },
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
     const err = await res.json();
-    throw new Error(`Deployment failed: ${JSON.stringify(err)}`);
+    throw new Error(`Deployment API ${res.status}: ${JSON.stringify(err)}`);
   }
 
   const deployment = await res.json();
   const projectUrl = `https://${projectName}.vercel.app`;
+  console.log(`[vercel] deployment created: ${deployment.id} → ${projectUrl}`);
   return {
     projectId: deployment.projectId,
     deploymentId: deployment.id,
