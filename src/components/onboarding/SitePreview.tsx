@@ -64,30 +64,37 @@ export default function SitePreview({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "16px 32px",
-          borderBottom: `1px solid ${tx}12`,
+          padding: "0 24px",
+          height: 64,
+          borderBottom: `1px solid ${tx}06`,
           background: `${bg}dd`,
-          backdropFilter: "blur(12px)",
+          backdropFilter: "blur(20px)",
           position: "sticky",
           top: 0,
           zIndex: 10,
         }}
       >
-        <span style={{ fontWeight: 800, fontSize: 18, color: tx }}>{businessName}</span>
-        <div style={{ display: "flex", gap: 28, fontSize: 13, alignItems: "center" }}>
-          <span style={{ opacity: 0.5 }}>Home</span>
-          <span style={{ opacity: 0.5 }}>About</span>
-          <span style={{ opacity: 0.5 }}>{type === "services" ? "Services" : "Products"}</span>
-          <span style={{ opacity: 0.5 }}>Contact</span>
+        <span style={{
+          fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em",
+          background: `linear-gradient(135deg, ${p}, ${ac})`,
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+        }}>{businessName}</span>
+        <div style={{ display: "flex", gap: 28, fontSize: 14, alignItems: "center" }}>
+          <span style={{ color: `${tx}80`, fontWeight: 500 }}>Home</span>
+          <span style={{ color: `${tx}80`, fontWeight: 500 }}>About</span>
+          <span style={{ color: `${tx}80`, fontWeight: 500 }}>{type === "services" ? "Services" : "Products"}</span>
+          <span style={{ color: `${tx}80`, fontWeight: 500 }}>Blog</span>
+          <span style={{ color: `${tx}80`, fontWeight: 500 }}>Contact</span>
           <span style={{
             padding: "8px 20px",
-            borderRadius: 8,
+            borderRadius: 10,
             background: p,
             color: "#fff",
             fontWeight: 600,
-            fontSize: 12,
+            fontSize: 13,
+            boxShadow: `0 4px 16px ${p}33`,
           }}>
-            Get Started
+            {type === "services" ? "Book a Call" : "Get Started"}
           </span>
         </div>
       </div>
@@ -102,38 +109,28 @@ export default function SitePreview({
 
       {/* Footer */}
       <div style={{
-        borderTop: `1px solid ${tx}08`,
-        padding: "48px 32px 32px",
-        position: "relative",
+        borderTop: `1px solid ${tx}06`,
+        padding: "48px 24px",
       }}>
         <div style={{
-          position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
-          width: 160, height: 1, background: `linear-gradient(90deg, transparent, ${p}44, transparent)`,
-        }} />
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 32, maxWidth: 900, margin: "0 auto" }}>
-          <div>
-            <p style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>{businessName}</p>
-            <p style={{ opacity: 0.35, fontSize: 12, lineHeight: 1.6 }}>{tagline || "Your tagline here"}</p>
-          </div>
-          <div>
-            <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>Pages</p>
-            {["Home", "About", type === "services" ? "Services" : "Products", "Contact"].map(l => (
-              <p key={l} style={{ opacity: 0.35, fontSize: 12, padding: "3px 0" }}>{l}</p>
-            ))}
-          </div>
-          <div>
-            <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 10 }}>Connect</p>
-            {["Twitter", "Instagram", "LinkedIn"].map(l => (
-              <p key={l} style={{ opacity: 0.35, fontSize: 12, padding: "3px 0" }}>{l}</p>
-            ))}
-          </div>
-        </div>
-        <div style={{
-          borderTop: `1px solid ${tx}08`, marginTop: 24, paddingTop: 20,
-          display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.25,
+          maxWidth: 1100, margin: "0 auto",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
         }}>
-          <span>&copy; 2026 {businessName}</span>
-          <span>Built with No Mistakes</span>
+          <span style={{
+            fontSize: 16, fontWeight: 700,
+            background: `linear-gradient(135deg, ${p}, ${ac})`,
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+          }}>
+            {businessName}
+          </span>
+          <div style={{ display: "flex", gap: 24 }}>
+            {["Home", "About", type === "services" ? "Services" : "Products", "Blog", "Contact"].map(l => (
+              <span key={l} style={{ fontSize: 13, color: `${tx}59` }}>{l}</span>
+            ))}
+          </div>
+          <p style={{ color: `${tx}33`, fontSize: 12, marginTop: 8 }}>
+            &copy; 2026 {businessName}. All rights reserved.
+          </p>
         </div>
       </div>
     </div>
@@ -389,11 +386,12 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type, s
   const aiTestimonials = siteContent?.testimonials;
   const aiCta = siteContent?.cta;
   const heroImage = siteContent?.images?.hero;
+  const isServices = type === "services";
 
   const features = aiFeatures && aiFeatures.length >= 3
     ? aiFeatures.slice(0, 3).map((f, i) => ({ icon: ["\u2728", "\u26A1", "\u{1F680}"][i], title: f.title, desc: f.desc }))
     : [
-        { icon: "\u2728", title: `Expert ${type === "services" ? "Service" : "Products"}`, desc: "Tailored solutions built around your specific needs and goals." },
+        { icon: "\u2728", title: `Expert ${isServices ? "Service" : "Products"}`, desc: "Tailored solutions built around your specific needs and goals." },
         { icon: "\u26A1", title: "Fast Results", desc: "See measurable improvements from day one with our proven approach." },
         { icon: "\u{1F680}", title: "24/7 Support", desc: "Round-the-clock assistance whenever you need help or guidance." },
       ];
@@ -407,115 +405,219 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type, s
       ];
 
   const testimonials = aiTestimonials && aiTestimonials.length >= 2
-    ? aiTestimonials.slice(0, 2)
+    ? aiTestimonials.slice(0, 3)
     : [
-        { name: "Sarah M.", role: "Business Owner", text: "Transformed our online presence. Couldn\u2019t be happier with the results." },
-        { name: "James R.", role: "Startup Founder", text: "The best investment we made this year. Professional and fast." },
+        { name: "Sarah M.", role: "Business Owner", text: "Transformed our online presence. Couldn\u2019t be happier with the results.", rating: 5 },
+        { name: "James R.", role: "Startup Founder", text: "The best investment we made this year. Professional and fast.", rating: 5 },
+        { name: "Lisa K.", role: "Freelancer", text: "Incredible quality and attention to detail. Highly recommend.", rating: 5 },
       ];
 
   return (
     <>
-      {/* Hero with blobs */}
-      <div style={{ padding: "80px 32px 60px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <Blob color={primary} size={400} top={-180} left={-80} opacity={0.25} />
-        <Blob color={accent} size={320} top={-120} right={-60} opacity={0.18} />
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 700, margin: "0 auto" }}>
-          {hero?.badge && (
-            <span style={{
-              display: "inline-block", padding: "6px 14px", borderRadius: 100,
-              border: `1px solid ${tx}12`, background: `${tx}05`,
-              fontSize: 11, fontWeight: 500, opacity: 0.6, marginBottom: 18,
+      {/* Hero — matches deployed template */}
+      <div style={{
+        minHeight: "90vh",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        textAlign: "center", padding: "80px 24px 40px",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Radial gradient glow (matches deployed) */}
+        <div style={{
+          position: "absolute", top: "-40%", left: "50%", transform: "translateX(-50%)",
+          width: "80%", maxWidth: 700, height: 500,
+          background: `radial-gradient(ellipse, ${primary}15 0%, transparent 70%)`,
+          filter: "blur(60px)", pointerEvents: "none",
+        }} />
+        <div style={{ position: "relative", maxWidth: 720, margin: "0 auto" }}>
+          {hero?.badge ? (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "6px 16px", borderRadius: 100,
+              border: `1px solid ${tx}1a`, background: `${tx}0a`,
+              fontSize: 13, fontWeight: 500, color: `${tx}99`,
+              marginBottom: 24,
             }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: primary, boxShadow: `0 0 12px ${primary}66`,
+                display: "inline-block",
+              }} />
               {hero.badge}
-            </span>
+            </div>
+          ) : (
+            <p style={{
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: primary, marginBottom: 20,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: primary, boxShadow: `0 0 12px ${primary}66`,
+                display: "inline-block",
+              }} />
+              {isServices ? "Professional Services" : "Digital Products"}
+            </p>
           )}
-          <h1 style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.08, marginBottom: 16, letterSpacing: "-0.01em" }}>
+          <h1 style={{
+            fontSize: 48, fontWeight: 800, lineHeight: 1.08,
+            letterSpacing: "-0.03em", marginBottom: 24,
+          }}>
             {hero?.headline || name}
           </h1>
-          <p style={{ fontSize: 17, opacity: 0.55, marginBottom: 36, lineHeight: 1.7, maxWidth: 520, margin: "0 auto 36px" }}>
+          <p style={{
+            fontSize: 17, color: `${tx}8c`,
+            lineHeight: 1.7, marginBottom: 40,
+            maxWidth: 560, margin: "0 auto 40px",
+          }}>
             {hero?.subheadline || tagline || "Your tagline goes here"}
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
-            <GradientButton primary={primary} accent={accent}>
-              {aiCta?.button_text || "Get Started"}
-            </GradientButton>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "14px 32px", borderRadius: 10,
+              background: primary, color: "#fff",
+              fontWeight: 600, fontSize: 15,
+              boxShadow: `0 4px 16px ${primary}33`,
+            }}>
+              {aiCta?.button_text || (isServices ? "Book a Strategy Call" : "View Products")}
+              <span style={{ fontSize: 18 }}>&rarr;</span>
+            </div>
             <OutlineButton tx={tx}>Learn More</OutlineButton>
           </div>
         </div>
+
+        {/* Hero image */}
+        <div style={{
+          position: "relative", maxWidth: 900, width: "100%",
+          margin: "56px auto 0", padding: "0 24px",
+        }}>
+          {heroImage ? (
+            <div style={{
+              borderRadius: 16, overflow: "hidden",
+              border: `1px solid ${tx}1a`,
+              boxShadow: `0 24px 80px rgba(0,0,0,0.3), 0 0 120px ${primary}08`,
+            }}>
+              <img src={heroImage} alt={name} style={{ width: "100%", height: "auto", display: "block" }} />
+            </div>
+          ) : (
+            <div style={{
+              height: 340, borderRadius: 16, overflow: "hidden",
+              border: `1px solid ${tx}1a`,
+              background: `linear-gradient(135deg, ${primary}18, ${accent}12, ${tx}08)`,
+              boxShadow: `0 24px 80px rgba(0,0,0,0.3), 0 0 120px ${primary}08`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <span style={{
+                fontSize: 96, fontWeight: 800,
+                background: `linear-gradient(135deg, ${primary}44, ${accent}33)`,
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              }}>
+                {name.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Hero image */}
-      {heroImage && (
-        <div style={{ padding: "0 32px 24px", maxWidth: 700, margin: "0 auto" }}>
-          <div style={{ borderRadius: 12, overflow: "hidden", border: `1px solid ${tx}10` }}>
-            <img src={heroImage} alt={name} style={{ width: "100%", height: "auto", display: "block" }} />
+      {/* Stats bar */}
+      {stats.length > 0 && (
+        <div style={{
+          borderTop: `1px solid ${tx}0d`,
+          borderBottom: `1px solid ${tx}0d`,
+          padding: "40px 24px",
+        }}>
+          <div style={{
+            display: "flex", justifyContent: "center", flexWrap: "wrap",
+            gap: "40px 64px",
+          }}>
+            {stats.map((s) => (
+              <div key={s.label} style={{ textAlign: "center" }}>
+                <GradientText primary={primary} accent={accent} style={{ fontSize: 36, fontWeight: 800, lineHeight: 1 }}>
+                  {s.num}
+                </GradientText>
+                <p style={{ color: `${tx}66`, fontSize: 13, fontWeight: 500, marginTop: 4 }}>{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Trust bar with gradient numbers */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 56, padding: "36px 32px", textAlign: "center" }}>
-        {stats.map((s) => (
-          <div key={s.label}>
-            <StatNumber primary={primary} accent={accent}>
-              <span style={{ fontSize: 28 }}>{s.num}</span>
-            </StatNumber>
-            <p style={{ fontSize: 12, opacity: 0.35, marginTop: 4 }}>{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <Divider tx={tx} />
-
-      {/* Glass feature cards with icons */}
-      <div style={{ padding: "56px 32px" }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700, textAlign: "center", marginBottom: 10 }}>Why Choose {name}</h2>
-        <p style={{ textAlign: "center", opacity: 0.4, fontSize: 14, marginBottom: 36 }}>Everything you need, nothing you don&apos;t.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 18 }}>
+      {/* Features — matches deployed */}
+      <div style={{ padding: "80px 24px", borderTop: `1px solid ${tx}0d` }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p style={{
+            fontSize: 13, fontWeight: 600, textTransform: "uppercase",
+            letterSpacing: "0.08em", color: primary, marginBottom: 12,
+          }}>
+            Why Choose Us
+          </p>
+          <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.02em" }}>
+            Built different.
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
           {features.map((f) => (
-            <GlassCard key={f.title} tx={tx} primary={primary}>
-              <FeatureIcon primary={primary} accent={accent} icon={f.icon} />
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{f.title}</h3>
-              <p style={{ fontSize: 13, opacity: 0.45, lineHeight: 1.6 }}>{f.desc}</p>
-            </GlassCard>
+            <div key={f.title} style={{
+              padding: "32px 28px", borderRadius: 16,
+              border: `1px solid ${tx}0f`, background: `${tx}05`,
+              transition: "all 0.3s",
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: `${primary}12`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 16, fontSize: 18,
+              }}>
+                {f.icon}
+              </div>
+              <h3 style={{ fontWeight: 600, fontSize: 17, marginBottom: 8 }}>{f.title}</h3>
+              <p style={{ color: `${tx}80`, fontSize: 14, lineHeight: 1.7 }}>{f.desc}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Testimonials */}
-      <div style={{ padding: "0 32px 56px" }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, textAlign: "center", marginBottom: 28 }}>What People Say</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      {/* Testimonials — matches deployed (3 col, yellow stars) */}
+      <div style={{ padding: "80px 24px", borderTop: `1px solid ${tx}0d` }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <p style={{
+            fontSize: 13, fontWeight: 600, textTransform: "uppercase",
+            letterSpacing: "0.08em", color: primary, marginBottom: 12,
+          }}>
+            Testimonials
+          </p>
+          <h2 style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.02em" }}>
+            What people are saying
+          </h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 }}>
           {testimonials.map((t) => (
             <div key={t.name} style={{
-              padding: 22, borderRadius: 16,
-              border: `1px solid ${tx}08`, background: `${tx}03`,
-              position: "relative",
+              padding: "32px 28px", borderRadius: 16,
+              border: `1px solid ${tx}0f`, background: `${tx}05`,
+              display: "flex", flexDirection: "column",
             }}>
-              <span style={{
-                fontSize: 52, fontFamily: "Georgia, serif", color: `${primary}20`,
-                position: "absolute", top: 8, left: 18, lineHeight: 1,
-              }}>&ldquo;</span>
-              <div style={{ marginBottom: 12, paddingLeft: 28 }}>
-                {[1,2,3,4,5].map(i => (
-                  <span key={i} style={{ color: primary, fontSize: 13, marginRight: 2 }}>&#9733;</span>
-                ))}
-              </div>
-              <p style={{ opacity: 0.5, fontSize: 13, lineHeight: 1.7, marginBottom: 16, paddingLeft: 28, fontStyle: "italic" }}>
+              {(t.rating || 5) > 0 && (
+                <div style={{ marginBottom: 12, color: "#facc15", fontSize: 14, letterSpacing: 2 }}>
+                  {"★".repeat(t.rating || 5)}{"☆".repeat(5 - (t.rating || 5))}
+                </div>
+              )}
+              <p style={{ color: `${tx}99`, fontSize: 14, lineHeight: 1.7, flex: 1, marginBottom: 20 }}>
                 &ldquo;{t.text}&rdquo;
               </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${primary}33, ${accent}33)`,
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${primary}44, ${accent}44)`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 13, fontWeight: 700,
+                  fontSize: 14, fontWeight: 600,
                 }}>
                   {t.name[0]}
                 </div>
                 <div>
-                  <p style={{ fontWeight: 600, fontSize: 13 }}>{t.name}</p>
-                  <p style={{ opacity: 0.35, fontSize: 11 }}>{t.role}</p>
+                  <p style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</p>
+                  <p style={{ color: `${tx}66`, fontSize: 12 }}>{t.role}</p>
                 </div>
               </div>
             </div>
@@ -523,19 +625,35 @@ function DefaultPreview({ name, tagline, primary, accent, secondary, tx, type, s
         </div>
       </div>
 
-      {/* CTA with blob */}
-      <div style={{ padding: "56px 32px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <Blob color={secondary} size={250} top={-80} left="30%" opacity={0.2} />
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <h2 style={{ fontSize: 30, fontWeight: 800, marginBottom: 14 }}>
+      {/* CTA — matches deployed (radial glow, not blob) */}
+      <div style={{
+        padding: "80px 24px", textAlign: "center",
+        borderTop: `1px solid ${tx}0d`,
+        position: "relative", overflow: "hidden",
+      }}>
+        <div style={{
+          position: "absolute", bottom: "-50%", left: "50%", transform: "translateX(-50%)",
+          width: "90%", maxWidth: 800, height: 400,
+          background: `radial-gradient(ellipse, ${primary}10 0%, transparent 70%)`,
+          filter: "blur(80px)", pointerEvents: "none",
+        }} />
+        <div style={{ position: "relative", maxWidth: 550, margin: "0 auto" }}>
+          <h2 style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 16 }}>
             {aiCta?.headline || "Ready to get started?"}
           </h2>
-          <p style={{ opacity: 0.4, marginBottom: 32, fontSize: 15 }}>
+          <p style={{ color: `${tx}80`, fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
             {aiCta?.subheadline || tagline || "Join thousands of happy customers"}
           </p>
-          <GradientButton primary={primary} accent={accent}>
-            {aiCta?.button_text || "Get Started Now"}
-          </GradientButton>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "14px 32px", borderRadius: 10,
+            background: primary, color: "#fff",
+            fontWeight: 600, fontSize: 15,
+            boxShadow: `0 4px 16px ${primary}33`,
+          }}>
+            {aiCta?.button_text || (isServices ? "Book a Strategy Call" : "Get Started")}
+            <span style={{ fontSize: 18 }}>&rarr;</span>
+          </div>
         </div>
       </div>
     </>
