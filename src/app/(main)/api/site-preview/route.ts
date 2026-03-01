@@ -10,18 +10,26 @@ interface SiteData {
   brand: {
     colors?: { primary?: string; secondary?: string; accent?: string; background?: string; text?: string };
     fonts?: { heading?: string; body?: string };
+    values?: string[];
   };
   site_content: {
-    hero?: { headline?: string; subheadline?: string };
+    hero?: { headline?: string; subheadline?: string; badge?: string };
     about?: { title?: string; text?: string; mission?: string };
-    features?: { title: string; desc: string; icon?: string }[];
-    products?: { name: string; desc: string; price: string; features?: string[] }[];
+    features?: { title: string; desc: string }[];
+    products?: { name: string; slug?: string; tagline?: string; desc: string; long_desc?: string; price: string; audience?: string; what_you_get?: string[]; features?: string[]; guarantee?: string }[];
     testimonials?: { name: string; role: string; text: string; rating?: number }[];
+    process?: { title?: string; steps?: { step: string; title: string; desc: string }[] };
+    stats?: { value: string; label: string }[];
+    social_proof?: { logos?: string[] };
     cta?: { headline?: string; subheadline?: string; button_text?: string };
+    seo?: { title?: string; description?: string };
+    contact?: { email?: string; phone?: string; address?: string; hours?: string };
     faq?: { question: string; answer: string }[];
+    images?: { hero?: string; about?: string; products?: string[] };
   };
   layout?: string;
   calendly_url?: string;
+  video_url?: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -41,1121 +49,656 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-// ─── CSS Generator ───────────────────────────────────────────────────
-function buildCSS(site: SiteData): string {
-  const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#7B39FC";
-  const bg = colors.background || "#0c0a09";
-  const textColor = colors.text || "#e4e4e7";
-  const accent = colors.accent || "#A855F7";
-  const secondary = colors.secondary || "#1e1b4b";
-  const fonts = site.brand?.fonts || {};
-  const light = isLightColor(bg);
-  const base = light ? "0,0,0" : "255,255,255";
+// ─── Compute theme variables (same logic as site-template.ts) ────────
+function computeTheme(site: SiteData) {
+  const primary = site.brand?.colors?.primary || "#6366f1";
+  const accent = site.brand?.colors?.accent || "#a78bfa";
+  const bg = site.brand?.colors?.background || "#09090b";
+  const headingFont = site.brand?.fonts?.heading || "Inter";
+  const bodyFont = site.brand?.fonts?.body || "Inter";
+  const isServices = site.type === "services";
+  const isLight = isLightColor(bg);
+  const textColor = isLight ? "#111111" : "#fafafa";
+  const tb = isLight ? "0,0,0" : "255,255,255";
+  const shadowAlpha = isLight ? "0.08" : "0.3";
+  const ctaText = isLightColor(primary) ? "#111" : "#fff";
 
-  return `
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: ${bg};
-      color: ${textColor};
-      font-family: ${fonts.body ? `"${fonts.body}", system-ui, sans-serif` : '"Inter", system-ui, sans-serif'};
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-    a { text-decoration: none; color: inherit; }
-    img { max-width: 100%; height: auto; }
-
-    :root {
-      --site-primary: ${primary};
-      --site-accent: ${accent};
-      --site-secondary: ${secondary};
-      --site-bg: ${bg};
-      --site-text: ${textColor};
-      --site-heading-font: ${fonts.heading ? `"${fonts.heading}"` : "inherit"};
-      --base: ${base};
-      --muted: rgba(${base}, 0.6);
-      --faint: rgba(${base}, 0.5);
-      --subtle: rgba(${base}, 0.4);
-      --ghost: rgba(${base}, 0.25);
-      --border: rgba(${base}, 0.08);
-      --border-hover: rgba(${base}, 0.15);
-      --card-bg: rgba(${base}, 0.03);
-    }
-
-    /* ── Animations ── */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(40px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeInLeft {
-      from { opacity: 0; transform: translateX(-40px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes fadeInRight {
-      from { opacity: 0; transform: translateX(40px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes scaleIn {
-      from { opacity: 0; transform: scale(0.92); }
-      to { opacity: 1; transform: scale(1); }
-    }
-    @keyframes blurIn {
-      from { opacity: 0; filter: blur(12px); }
-      to { opacity: 1; filter: blur(0); }
-    }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      33% { transform: translateY(-20px) rotate(1deg); }
-      66% { transform: translateY(10px) rotate(-1deg); }
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-    @keyframes glowPulse {
-      0%, 100% { opacity: 0.4; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.05); }
-    }
-    @keyframes borderGlow {
-      0%, 100% { border-color: ${primary}33; }
-      50% { border-color: ${accent}66; }
-    }
-    @keyframes countUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideInStagger {
-      from { opacity: 0; transform: translateY(30px) scale(0.97); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    @keyframes morphBlob {
-      0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-      25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
-      50% { border-radius: 50% 60% 30% 60% / 40% 70% 60% 50%; }
-      75% { border-radius: 60% 30% 60% 40% / 70% 50% 40% 60%; }
-    }
-
-    /* Scroll reveal */
-    .reveal {
-      opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal.from-left { transform: translateX(-40px); }
-    .reveal.from-right { transform: translateX(40px); }
-    .reveal.from-scale { transform: scale(0.92); }
-    .reveal.visible { opacity: 1; transform: translateY(0) translateX(0) scale(1); }
-    .reveal-delay-1 { transition-delay: 0.1s; }
-    .reveal-delay-2 { transition-delay: 0.2s; }
-    .reveal-delay-3 { transition-delay: 0.3s; }
-    .reveal-delay-4 { transition-delay: 0.4s; }
-    .reveal-delay-5 { transition-delay: 0.5s; }
-
-    /* Gradient text */
-    .gradient-text {
-      background: linear-gradient(135deg, ${primary}, ${accent}, ${primary});
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 4s ease-in-out infinite;
-    }
-
-    /* Blobs */
-    .hero-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.3;
-      pointer-events: none;
-      animation: float 12s ease-in-out infinite, morphBlob 15s ease-in-out infinite;
-    }
-    .hero-blob-1 {
-      width: 500px; height: 500px;
-      background: ${primary};
-      top: -200px; left: -100px;
-      animation-delay: 0s;
-    }
-    .hero-blob-2 {
-      width: 400px; height: 400px;
-      background: ${accent};
-      top: -150px; right: -80px;
-      animation-delay: -4s;
-    }
-    .hero-blob-3 {
-      width: 300px; height: 300px;
-      background: ${secondary};
-      bottom: -100px; left: 40%;
-      animation-delay: -8s;
-    }
-
-    /* Glass card */
-    .glass-card {
-      padding: 28px;
-      border-radius: 16px;
-      border: 1px solid rgba(${base}, 0.06);
-      background: rgba(${base}, 0.03);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-    }
-    .glass-card:hover {
-      border-color: ${primary}44;
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px ${primary}15, 0 0 0 1px ${primary}22;
-    }
-    .glass-card h3 { font-weight: 600; margin-bottom: 10px; font-family: var(--site-heading-font); }
-    .glass-card p { color: var(--faint); font-size: 14px; line-height: 1.7; }
-
-    /* Glow card */
-    .glow-card {
-      padding: 28px;
-      border-radius: 16px;
-      border: 1px solid ${primary}22;
-      background: linear-gradient(135deg, ${primary}08, transparent, ${accent}05);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .glow-card::before {
-      content: '';
-      position: absolute;
-      inset: -1px;
-      border-radius: 17px;
-      background: linear-gradient(135deg, ${primary}33, ${accent}33, ${primary}33);
-      background-size: 300% 300%;
-      animation: gradientShift 6s ease infinite;
-      z-index: -1;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .glow-card:hover::before { opacity: 1; }
-    .glow-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px ${primary}18;
-    }
-    .glow-card h3 { font-weight: 700; margin-bottom: 6px; font-family: var(--site-heading-font); }
-    .glow-card p { color: var(--faint); font-size: 14px; line-height: 1.7; }
-
-    /* ── Nav ── */
-    .site-nav {
-      border-bottom: 1px solid var(--border);
-      padding: 0 20px;
-      position: sticky;
-      top: 0;
-      background: ${bg}dd;
-      backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      z-index: 50;
-      transition: background 0.3s;
-    }
-    .site-nav-inner {
-      max-width: 1100px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 64px;
-    }
-    .site-nav-brand {
-      font-size: 20px;
-      font-weight: 800;
-      font-family: var(--site-heading-font);
-      color: var(--site-text);
-      transition: opacity 0.2s;
-    }
-    .site-nav-brand:hover { opacity: 0.8; }
-    .site-nav-links {
-      display: none;
-      list-style: none;
-      gap: 32px;
-      align-items: center;
-    }
-    .site-nav-links a {
-      font-size: 14px;
-      color: var(--faint);
-      transition: color 0.2s;
-      position: relative;
-    }
-    .site-nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: ${primary};
-      transition: width 0.3s ease;
-      border-radius: 1px;
-    }
-    .site-nav-links a:hover::after { width: 100%; }
-    .site-nav-links a:hover { color: var(--site-text); }
-    .site-nav-cta {
-      background: ${primary};
-      color: #fff;
-      padding: 10px 24px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: none;
-    }
-    .site-nav-cta:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px ${primary}44;
-    }
-
-    /* Mobile hamburger */
-    .site-nav-toggle {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 8px;
-    }
-    .site-nav-toggle span {
-      display: block;
-      width: 20px;
-      height: 2px;
-      background: var(--muted);
-      transition: all 0.3s;
-    }
-
-    /* Mobile menu */
-    .site-mobile-menu {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: ${bg}f8;
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      z-index: 100;
-      flex-direction: column;
-      padding: 80px 32px 32px;
-    }
-    .site-mobile-menu.open { display: flex; }
-    .site-mobile-menu a {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--muted);
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-      transition: color 0.2s, padding-left 0.3s;
-    }
-    .site-mobile-menu a:hover { color: var(--site-text); padding-left: 8px; }
-    .site-mobile-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      color: var(--faint);
-      font-size: 28px;
-      cursor: pointer;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* ── Sections ── */
-    .section {
-      padding: 80px 20px;
-      position: relative;
-    }
-    .section-inner { max-width: 1000px; margin: 0 auto; }
-    .section-narrow { max-width: 800px; margin: 0 auto; }
-    .section-title {
-      font-size: clamp(1.5rem, 3.5vw, 2.25rem);
-      font-weight: 700;
-      margin-bottom: 16px;
-      font-family: var(--site-heading-font);
-    }
-    .section-title-center { text-align: center; margin-bottom: 20px; }
-    .section-subtitle {
-      color: var(--faint);
-      font-size: 16px;
-      text-align: center;
-      margin-bottom: 48px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .section-divider {
-      border: none;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-      margin: 0;
-    }
-
-    .grid-cards {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    /* Legacy card */
-    .card {
-      padding: 24px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-    }
-    .card:hover {
-      border-color: ${primary}33;
-      transform: translateY(-3px);
-      box-shadow: 0 16px 50px rgba(0,0,0,0.12);
-    }
-    .card h3 { font-weight: 600; margin-bottom: 8px; font-family: var(--site-heading-font); }
-    .card p { color: var(--faint); font-size: 14px; line-height: 1.6; }
-
-    .product-card {
-      padding: 28px;
-      border-radius: 16px;
-      border: 1px solid ${primary}22;
-      background: linear-gradient(135deg, ${primary}06, transparent);
-      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-    .product-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, ${primary}, ${accent});
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.4s ease;
-    }
-    .product-card:hover::after { transform: scaleX(1); }
-    .product-card:hover {
-      border-color: ${primary}55;
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px ${primary}18;
-    }
-    .product-card h3 { font-weight: 700; margin-bottom: 4px; font-family: var(--site-heading-font); }
-    .product-card .price { color: ${primary}; font-weight: 700; font-size: 20px; margin-bottom: 12px; }
-    .product-card p { color: var(--faint); font-size: 14px; line-height: 1.6; }
-    .product-card .product-features { list-style: none; margin-top: 16px; padding: 0; }
-    .product-card .product-features li {
-      padding: 8px 0; font-size: 13px; color: var(--faint);
-      display: flex; align-items: center; gap: 10px;
-    }
-    .product-card .product-features li::before {
-      content: "\\2713";
-      color: ${primary};
-      font-weight: 700;
-      font-size: 14px;
-    }
-    .product-card .product-btn {
-      display: block; width: 100%; text-align: center;
-      margin-top: 24px; padding: 14px; border-radius: 12px;
-      background: linear-gradient(135deg, ${primary}, ${accent});
-      color: #fff; font-weight: 600; font-size: 14px;
-      border: none; cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .product-card .product-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px ${primary}44;
-    }
-
-    /* ── Buttons ── */
-    .cta-btn {
-      display: inline-block;
-      background: linear-gradient(135deg, ${primary}, ${accent});
-      color: #fff;
-      padding: 16px 40px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      transition: transform 0.3s, box-shadow 0.3s;
-      border: none;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .cta-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, ${accent}, ${primary});
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .cta-btn:hover::before { opacity: 1; }
-    .cta-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px ${primary}55;
-    }
-    .cta-btn span { position: relative; z-index: 1; }
-    .cta-btn-outline {
-      display: inline-block;
-      border: 1px solid var(--border-hover);
-      color: var(--muted);
-      padding: 16px 40px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      transition: border-color 0.3s, background 0.3s, color 0.3s;
-    }
-    .cta-btn-outline:hover {
-      border-color: ${primary}66;
-      background: ${primary}0a;
-      color: var(--site-text);
-    }
-
-    /* Stat counter */
-    .stat-number {
-      font-size: clamp(1.5rem, 4vw, 2.5rem);
-      font-weight: 800;
-      background: linear-gradient(135deg, ${primary}, ${accent});
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Feature icon */
-    .feature-icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, ${primary}18, ${accent}12);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; margin-bottom: 16px;
-      border: 1px solid ${primary}15;
-    }
-
-    /* Testimonial */
-    .testimonial-card {
-      padding: 28px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      transition: border-color 0.3s, transform 0.3s;
-      position: relative;
-    }
-    .testimonial-card::before {
-      content: '\\201C';
-      font-size: 64px;
-      font-family: Georgia, serif;
-      color: ${primary}22;
-      position: absolute;
-      top: 12px; left: 20px;
-      line-height: 1;
-    }
-    .testimonial-card:hover {
-      border-color: ${primary}33;
-      transform: translateY(-2px);
-    }
-
-    /* FAQ */
-    .faq-item {
-      padding: 24px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      transition: border-color 0.3s;
-    }
-    .faq-item:hover { border-color: ${primary}22; }
-
-    /* ── Footer ── */
-    .site-footer {
-      border-top: 1px solid var(--border);
-      padding: 60px 20px;
-      position: relative;
-    }
-    .site-footer::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 50%; transform: translateX(-50%);
-      width: 200px; height: 1px;
-      background: linear-gradient(90deg, transparent, ${primary}44, transparent);
-    }
-    .site-footer-inner {
-      max-width: 1000px; margin: 0 auto;
-      display: grid; grid-template-columns: 1fr; gap: 32px;
-    }
-    .site-footer-brand { font-size: 18px; font-weight: 800; font-family: var(--site-heading-font); margin-bottom: 8px; }
-    .site-footer-desc { color: var(--subtle); font-size: 13px; line-height: 1.6; max-width: 300px; }
-    .site-footer-heading { font-weight: 600; font-size: 14px; margin-bottom: 12px; }
-    .site-footer-links { list-style: none; padding: 0; }
-    .site-footer-links li { padding: 4px 0; }
-    .site-footer-links a { color: var(--subtle); font-size: 13px; transition: color 0.2s, padding-left 0.2s; }
-    .site-footer-links a:hover { color: var(--site-text); padding-left: 4px; }
-    .site-footer-bottom {
-      border-top: 1px solid var(--border);
-      padding-top: 24px; margin-top: 16px;
-      display: flex; flex-direction: column; gap: 12px; align-items: center;
-    }
-    .site-footer-copy { color: var(--ghost); font-size: 12px; }
-    .site-footer-copy a { color: ${primary}; transition: opacity 0.2s; }
-    .site-footer-copy a:hover { opacity: 0.7; }
-
-    /* ── Responsive ── */
-    @media (min-width: 640px) {
-      .section { padding: 100px 24px; }
-      .grid-cards { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-      .site-footer-inner { grid-template-columns: 2fr 1fr 1fr; }
-      .site-footer-bottom { flex-direction: row; justify-content: space-between; }
-    }
-    @media (min-width: 768px) {
-      .site-nav-links { display: flex; }
-      .site-nav-cta { display: inline-block; }
-      .site-nav-toggle { display: none; }
-    }
-    @media (min-width: 960px) {
-      .grid-cards { grid-template-columns: repeat(3, 1fr); }
-      .site-footer-inner { grid-template-columns: 2fr 1fr 1fr 1fr; }
-    }
-  `;
+  return { primary, accent, bg, headingFont, bodyFont, isServices, isLight, textColor, tb, shadowAlpha, ctaText };
 }
 
-// ─── Nav Builder ─────────────────────────────────────────────────────
-function buildNav(site: SiteData): string {
-  const cta = site.site_content?.cta || {};
-  const svcLabel = site.type === "services" ? "Services" : "Products";
-  const navLinks = [
-    { href: "#", label: "Home" },
-    { href: "#about", label: "About" },
-    { href: "#products", label: svcLabel },
-    { href: "#contact", label: "Contact" },
-  ];
-
-  const linkItems = navLinks.map((l) => `<li><a href="${l.href}">${esc(l.label)}</a></li>`).join("");
-
-  const mobileLinks = navLinks
-    .map((l) => `<a href="${l.href}">${esc(l.label)}</a>`)
-    .join("");
+// ─── CSS (exact copy from site-template.ts globals.css) ──────────────
+function buildCSS(site: SiteData): string {
+  const { primary, accent, bg, headingFont, bodyFont, textColor, tb, shadowAlpha, ctaText } = computeTheme(site);
 
   return `
-    <nav class="site-nav">
-      <div class="site-nav-inner">
-        <a href="#" class="site-nav-brand">${esc(site.name)}</a>
-        <ul class="site-nav-links">${linkItems}</ul>
-        <a href="#products" class="site-nav-cta">${esc(cta.button_text || "Get Started")}</a>
-        <button class="site-nav-toggle" aria-label="Menu">
-          <span></span><span></span><span></span>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: ${bg};
+  color: ${textColor};
+  font-family: "${bodyFont}", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a { text-decoration: none; color: inherit; }
+h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(135deg, ${primary}, ${accent});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Primary CTA button */
+.cta-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: ${primary};
+  color: ${ctaText};
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  box-shadow: 0 4px 16px ${primary}33;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px ${primary}44;
+  filter: brightness(1.1);
+}
+
+/* Secondary button */
+.btn-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: transparent;
+  color: ${textColor};
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid rgba(${tb},0.12);
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+}
+.btn-secondary:hover {
+  background: rgba(${tb},0.05);
+  border-color: rgba(${tb},0.2);
+}
+
+/* Layout */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
+.section { padding: 80px 24px; }
+
+/* Cards */
+.card {
+  padding: 32px 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(${tb},0.06);
+  background: rgba(${tb},0.02);
+  transition: all 0.3s ease-out;
+}
+.card:hover {
+  border-color: ${primary}33;
+  background: rgba(${tb},0.04);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,${shadowAlpha});
+}
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+/* Glow dot */
+.glow-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: ${primary};
+  box-shadow: 0 0 12px ${primary}66;
+  display: inline-block;
+}
+
+/* Form inputs */
+.input {
+  width: 100%; padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(${tb},0.04);
+  border: 1px solid rgba(${tb},0.08);
+  color: inherit; font-size: 15px; font-family: inherit;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input:focus { border-color: ${primary}66; }
+.input::placeholder { color: rgba(${tb},0.25); }
+
+/* Mobile nav */
+.mobile-menu-btn { display: none !important; }
+.desktop-nav { display: flex !important; }
+
+@media (max-width: 767px) {
+  .mobile-menu-btn { display: block !important; }
+  .desktop-nav { display: none !important; }
+}
+
+/* Two-column product layout */
+.product-two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (min-width: 640px) {
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 768px) {
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .section { padding: 100px 24px; }
+  .product-two-col { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 960px) {
+  .grid-2 { gap: 24px; }
+  .grid-3 { gap: 24px; }
+}
+`;
+}
+
+// ─── Nav Builder (matches Nav component from site-template.ts) ───────
+function buildNav(site: SiteData): string {
+  const { primary, bg, tb, ctaText, isServices } = computeTheme(site);
+
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: isServices ? "/services" : "/products", label: isServices ? "Services" : "Products" },
+    { href: "/blog", label: "Blog" },
+    { href: "/contact", label: "Contact" },
+  ];
+  const ctaLabel = isServices ? "Book a Call" : "Get Started";
+
+  const desktopLinks = navLinks
+    .map(
+      (l) =>
+        `<a href="${l.href}" style="font-size:14px;font-weight:500;color:rgba(${tb},0.5);transition:color 0.2s">${esc(l.label)}</a>`
+    )
+    .join("\n            ");
+
+  return `
+    <nav style="border-bottom:1px solid rgba(${tb},0.06);padding:0 24px;position:sticky;top:0;background:${bg}dd;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:50">
+      <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;height:64px">
+        <a href="/" style="font-size:18px;font-weight:700;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px">
+          <span class="gradient-text">${esc(site.name)}</span>
+        </a>
+
+        <!-- Desktop nav -->
+        <div class="desktop-nav" style="display:flex;gap:28px;align-items:center">
+          ${desktopLinks}
+          <a href="/contact" class="cta-btn" style="padding:8px 20px;font-size:13px">
+            ${esc(ctaLabel)}
+          </a>
+        </div>
+
+        <!-- Mobile hamburger -->
+        <button class="mobile-menu-btn" aria-label="Menu" style="display:none;background:none;border:none;color:rgba(${tb},0.7);font-size:24px;cursor:pointer;padding:8px;line-height:1">
+          &#9776;
         </button>
       </div>
     </nav>
-    <div id="mobile-menu" class="site-mobile-menu">
-      <button class="site-mobile-close" aria-label="Close">&times;</button>
-      ${mobileLinks}
-      <a href="#products" class="cta-btn" style="margin-top:24px;text-align:center">
-        <span>${esc(cta.button_text || "Get Started")}</span>
-      </a>
-    </div>
   `;
 }
 
-// ─── Footer Builder ──────────────────────────────────────────────────
+// ─── Footer Builder (matches layout.tsx footer from site-template.ts) ─
 function buildFooter(site: SiteData): string {
-  const svcLabel = site.type === "services" ? "Services" : "Products";
+  const { tb, isServices } = computeTheme(site);
+
   const navLinks = [
-    { href: "#", label: "Home" },
-    { href: "#about", label: "About" },
-    { href: "#products", label: svcLabel },
-    { href: "#contact", label: "Contact" },
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: isServices ? "/services" : "/products", label: isServices ? "Services" : "Products" },
+    { href: "/blog", label: "Blog" },
+    { href: "/contact", label: "Contact" },
   ];
 
-  const pageLinks = navLinks.map((l) => `<li><a href="${l.href}">${esc(l.label)}</a></li>`).join("");
+  const footerLinks = navLinks
+    .map(
+      (l) =>
+        `<a href="${l.href}" style="font-size:13px;color:rgba(${tb},0.35);transition:color 0.2s">${esc(l.label)}</a>`
+    )
+    .join("\n              ");
 
   return `
-    <footer class="site-footer">
-      <div class="site-footer-inner">
-        <div>
-          <p class="site-footer-brand">${esc(site.name)}</p>
-          <p class="site-footer-desc">${esc(site.tagline)}</p>
+    <footer style="border-top:1px solid rgba(${tb},0.06);padding:48px 24px">
+      <div style="max-width:1100px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <span class="gradient-text" style="font-size:16px;font-weight:700">
+          ${esc(site.name)}
+        </span>
+        <div style="display:flex;gap:24px">
+          ${footerLinks}
         </div>
-        <div>
-          <p class="site-footer-heading">Pages</p>
-          <ul class="site-footer-links">${pageLinks}</ul>
-        </div>
-        <div>
-          <p class="site-footer-heading">Company</p>
-          <ul class="site-footer-links">
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#contact">Contact</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
-          </ul>
-        </div>
-        <div>
-          <p class="site-footer-heading">Connect</p>
-          <ul class="site-footer-links">
-            <li><a href="#">Twitter</a></li>
-            <li><a href="#">Instagram</a></li>
-            <li><a href="#">LinkedIn</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="site-footer-bottom">
-        <p class="site-footer-copy">&copy; 2026 ${esc(site.name)}. All rights reserved.</p>
-        <p class="site-footer-copy">Built with <a href="https://nomistakes.vercel.app">No Mistakes</a></p>
+        <p style="color:rgba(${tb},0.2);font-size:12px;margin-top:8px">
+          &copy; 2026 ${esc(site.name)}. All rights reserved.
+        </p>
       </div>
     </footer>
   `;
 }
 
-// ─── Content Builders (per layout) ──────────────────────────────────
+// ─── Page Content Builder (matches page.tsx from site-template.ts) ───
+function buildPageContent(site: SiteData): string {
+  const { primary, accent, bg, tb, shadowAlpha, ctaText, isServices } = computeTheme(site);
 
-function buildDefaultContent(site: SiteData): string {
-  const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#7B39FC";
-  const accent = colors.accent || "#A855F7";
   const hero = site.site_content?.hero || {};
-  const about = site.site_content?.about || {};
   const features = site.site_content?.features || [];
-  const products = site.site_content?.products || [];
   const testimonials = site.site_content?.testimonials || [];
-  const cta = site.site_content?.cta || {};
-  const featureIcons = ["\u2726", "\u25C6", "\u25B2", "\u25CF", "\u2605", "\u25C9"];
-
-  let html = "";
-
-  // Hero
-  html += `
-    <section style="padding:100px 20px 80px;text-align:center;position:relative;overflow:hidden">
-      <div class="hero-blob hero-blob-1"></div>
-      <div class="hero-blob hero-blob-2"></div>
-      <div style="max-width:740px;margin:0 auto;position:relative;z-index:1">
-        <h1 class="reveal" style="font-size:clamp(2.25rem,6vw,4rem);font-weight:800;line-height:1.08;margin-bottom:20px;font-family:var(--site-heading-font);letter-spacing:-0.01em">
-          ${esc(hero.headline || site.name)}
-        </h1>
-        <p class="reveal reveal-delay-1" style="font-size:clamp(1rem,2.5vw,1.15rem);color:var(--muted);line-height:1.7;margin-bottom:40px;max-width:560px;margin:0 auto 40px">
-          ${esc(hero.subheadline || site.tagline)}
-        </p>
-        <div class="reveal reveal-delay-2" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-          <a href="#products" class="cta-btn"><span>${esc(cta.button_text || "Get Started")}</span></a>
-          <a href="#about" class="cta-btn-outline">Learn More</a>
-        </div>
-      </div>
-    </section>
-  `;
-
-  // Trust bar
-  html += `
-    <section class="reveal" style="padding:48px 20px;text-align:center">
-      <div style="display:flex;justify-content:center;gap:clamp(32px,6vw,64px);flex-wrap:wrap">
-        <div class="reveal" style="text-align:center">
-          <p class="stat-number" data-count="500" data-suffix="+">0+</p>
-          <p style="font-size:13px;color:var(--subtle);margin-top:4px">Happy Customers</p>
-        </div>
-        <div class="reveal" style="text-align:center">
-          <p class="stat-number" data-count="4.9" data-suffix="/5">0/5</p>
-          <p style="font-size:13px;color:var(--subtle);margin-top:4px">5-Star Reviews</p>
-        </div>
-        <div class="reveal" style="text-align:center">
-          <p class="stat-number" data-count="100" data-suffix="%">0%</p>
-          <p style="font-size:13px;color:var(--subtle);margin-top:4px">Satisfaction</p>
-        </div>
-      </div>
-    </section>
-    <hr class="section-divider" />
-  `;
-
-  // Features
-  if (features.length > 0) {
-    const featureCards = features.slice(0, 6).map((f, i) => `
-      <div class="reveal glass-card reveal-delay-${Math.min(i + 1, 5)}">
-        <div class="feature-icon">${featureIcons[i % featureIcons.length]}</div>
-        <h3>${esc(f.title)}</h3>
-        <p>${esc(f.desc)}</p>
-      </div>
-    `).join("");
-
-    html += `
-      <section class="section">
-        <div class="section-inner">
-          <h2 class="reveal section-title section-title-center">Why Choose ${esc(site.name)}</h2>
-          <p class="reveal reveal-delay-1 section-subtitle">Everything you need, nothing you don&apos;t.</p>
-          <div class="grid-cards">${featureCards}</div>
-        </div>
-      </section>
-    `;
-  }
-
-  // About
-  if (about.text) {
-    const aboutText = about.text.length > 300 ? about.text.slice(0, 300) + "..." : about.text;
-    html += `
-      <section id="about" class="section">
-        <div class="section-narrow" style="text-align:center">
-          <h2 class="reveal section-title" style="text-align:center">${esc(about.title || `About ${site.name}`)}</h2>
-          <p class="reveal reveal-delay-1" style="color:var(--muted);line-height:1.8;margin-bottom:28px;font-size:15px">
-            ${esc(aboutText)}
-          </p>
-          <div class="reveal reveal-delay-2">
-            <a href="#about" style="color:${primary};font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px">
-              Read our full story <span style="display:inline-block">&rarr;</span>
-            </a>
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  // Testimonials
-  if (testimonials.length > 0) {
-    const testimonialCards = testimonials.map((t, i) => {
-      const stars = Array.from({ length: 5 }).map(() =>
-        `<span style="color:${primary};font-size:14px;margin-right:2px">&#9733;</span>`
-      ).join("");
-      return `
-        <div class="reveal testimonial-card reveal-delay-${Math.min(i + 1, 5)}">
-          <div style="margin-bottom:14px;padding-left:32px">${stars}</div>
-          <p style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:18px;padding-left:32px;font-style:italic">
-            &ldquo;${esc(t.text)}&rdquo;
-          </p>
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,${primary}33,${accent}33);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">
-              ${esc(t.name[0])}
-            </div>
-            <div>
-              <p style="font-weight:600;font-size:14px">${esc(t.name)}</p>
-              <p style="color:var(--subtle);font-size:12px">${esc(t.role)}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    html += `
-      <section class="section">
-        <div class="section-inner">
-          <h2 class="reveal section-title section-title-center">What People Say</h2>
-          <div class="grid-cards">${testimonialCards}</div>
-        </div>
-      </section>
-    `;
-  }
-
-  // CTA
-  html += `
-    <section class="section" style="text-align:center;position:relative;overflow:hidden">
-      <div class="hero-blob hero-blob-3" style="bottom:auto;top:-100px;opacity:0.2"></div>
-      <div style="max-width:600px;margin:0 auto;position:relative;z-index:1">
-        <h2 class="reveal" style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;margin-bottom:16px;font-family:var(--site-heading-font)">
-          ${esc(cta.headline || `Ready to get started with ${site.name}?`)}
-        </h2>
-        <p class="reveal reveal-delay-1" style="color:var(--faint);margin-bottom:40px;line-height:1.6">
-          ${esc(cta.subheadline || site.tagline)}
-        </p>
-        <div class="reveal reveal-delay-2">
-          <a href="#products" class="cta-btn"><span>${esc(cta.button_text || "Get Started Now")}</span></a>
-        </div>
-      </div>
-    </section>
-  `;
-
-  return html;
-}
-
-function buildMinimalContent(site: SiteData): string {
-  const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#7B39FC";
-  const accent = colors.accent || "#A855F7";
-  const hero = site.site_content?.hero || {};
-  const about = site.site_content?.about || {};
-  const products = site.site_content?.products || [];
-  const testimonials = site.site_content?.testimonials || [];
-  const cta = site.site_content?.cta || {};
-
-  let html = "";
-
-  // Hero
-  html += `
-    <section style="padding:120px 20px 80px;max-width:720px;margin:0 auto;position:relative">
-      <div class="reveal" style="margin-bottom:20px">
-        <span style="display:inline-block;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.15em;color:${primary};margin-bottom:24px">
-          ${site.type === "services" ? "Professional Services" : "Digital Products"}
-        </span>
-      </div>
-      <h1 class="reveal reveal-delay-1" style="font-size:clamp(3rem,8vw,5rem);font-weight:800;line-height:1.0;margin-bottom:28px;font-family:var(--site-heading-font);letter-spacing:-0.02em">
-        ${esc(hero.headline || site.name)}
-      </h1>
-      <p class="reveal reveal-delay-2" style="font-size:clamp(1.1rem,2.5vw,1.35rem);color:var(--muted);line-height:1.8;margin-bottom:48px;max-width:560px">
-        ${esc(hero.subheadline || site.tagline)}
-      </p>
-      <div class="reveal reveal-delay-3" style="display:flex;gap:16px;flex-wrap:wrap">
-        <a href="#products" class="cta-btn"><span>${esc(cta.button_text || "Work With Me")}</span></a>
-        <a href="#about" class="cta-btn-outline">Learn More</a>
-      </div>
-    </section>
-    <hr class="section-divider" />
-  `;
-
-  // About
-  if (about.text) {
-    const paragraphs = about.text.split("\n").map((p: string) => `<p style="margin-bottom:20px">${esc(p)}</p>`).join("");
-    let missionBlock = "";
-    if (about.mission) {
-      missionBlock = `
-        <div class="reveal reveal-delay-2" style="margin-top:32px;padding:24px 28px;border-left:3px solid ${primary};background:${primary}08;border-radius:0 12px 12px 0">
-          <p style="color:${primary};font-weight:600;font-style:italic;line-height:1.6">${esc(about.mission)}</p>
-        </div>
-      `;
-    }
-    html += `
-      <section id="about" style="padding:80px 20px;max-width:720px;margin:0 auto">
-        <div class="reveal">
-          <h2 style="font-size:clamp(1.5rem,3.5vw,2.25rem);font-weight:700;margin-bottom:24px;font-family:var(--site-heading-font)">
-            ${esc(about.title || `About ${site.name}`)}
-          </h2>
-        </div>
-        <div class="reveal reveal-delay-1" style="color:var(--muted);line-height:2;font-size:1.05rem">
-          ${paragraphs}
-        </div>
-        ${missionBlock}
-      </section>
-      <hr class="section-divider" />
-    `;
-  }
-
-  // Products
-  if (products.length > 0) {
-    const productRows = products.map((p, i) => `
-      <div class="reveal reveal-delay-${Math.min(i + 1, 5)}" style="padding:28px 0;${i < products.length - 1 ? "border-bottom:1px solid var(--border);" : ""}display:grid;grid-template-columns:1fr auto;gap:20px;align-items:start">
-        <div>
-          <h3 style="font-size:1.2rem;font-weight:600;margin-bottom:8px;font-family:var(--site-heading-font)">${esc(p.name)}</h3>
-          <p style="color:var(--muted);line-height:1.7;font-size:14px">${esc(p.desc)}</p>
-        </div>
-        <span class="stat-number" style="font-size:1.25rem;white-space:nowrap">${esc(p.price)}</span>
-      </div>
-    `).join("");
-
-    html += `
-      <section id="products" style="padding:80px 20px;max-width:720px;margin:0 auto">
-        <h2 class="reveal" style="font-size:clamp(1.5rem,3.5vw,2.25rem);font-weight:700;margin-bottom:40px;font-family:var(--site-heading-font)">
-          How I Can Help
-        </h2>
-        <div style="display:flex;flex-direction:column;gap:0">${productRows}</div>
-      </section>
-    `;
-  }
-
-  // Testimonials
-  if (testimonials.length > 0) {
-    const testimonialCards = testimonials.map((t, i) => `
-      <div class="reveal testimonial-card reveal-delay-${Math.min(i + 1, 5)}">
-        <p style="color:var(--muted);font-size:15px;line-height:1.8;margin-bottom:16px;padding-left:32px;font-style:italic">
-          ${esc(t.text)}
-        </p>
-        <div style="display:flex;align-items:center;gap:12px;padding-left:32px">
-          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,${primary}33,${accent}33);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">
-            ${esc(t.name[0])}
-          </div>
-          <div>
-            <p style="font-weight:600;font-size:14px">${esc(t.name)}</p>
-            <p style="color:var(--subtle);font-size:12px">${esc(t.role)}</p>
-          </div>
-        </div>
-      </div>
-    `).join("");
-
-    html += `
-      <hr class="section-divider" />
-      <section style="padding:80px 20px;max-width:720px;margin:0 auto">
-        <h2 class="reveal" style="font-size:clamp(1.5rem,3.5vw,2.25rem);font-weight:700;margin-bottom:40px;font-family:var(--site-heading-font)">
-          What Clients Say
-        </h2>
-        <div style="display:flex;flex-direction:column;gap:24px">${testimonialCards}</div>
-      </section>
-    `;
-  }
-
-  // CTA
-  html += `
-    <hr class="section-divider" />
-    <section id="contact" style="padding:100px 20px;max-width:720px;margin:0 auto;text-align:center">
-      <h2 class="reveal" style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;margin-bottom:20px;font-family:var(--site-heading-font)">
-        ${esc(cta.headline || "Let\u2019s work together")}
-      </h2>
-      <p class="reveal reveal-delay-1" style="color:var(--muted);margin-bottom:40px;font-size:16px;line-height:1.6">
-        ${esc(cta.subheadline || site.tagline)}
-      </p>
-      <div class="reveal reveal-delay-2">
-        <a href="#contact" class="cta-btn"><span>${esc(cta.button_text || "Get In Touch")}</span></a>
-      </div>
-    </section>
-  `;
-
-  return html;
-}
-
-function buildCreatorContent(site: SiteData): string {
-  const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#7B39FC";
-  const accent = colors.accent || "#A855F7";
-  const secondary = colors.secondary || "#1e1b4b";
-  const hero = site.site_content?.hero || {};
-  const products = site.site_content?.products || [];
-  const testimonials = site.site_content?.testimonials || [];
-  const cta = site.site_content?.cta || {};
+  const processData = site.site_content?.process || {};
+  const stats = site.site_content?.stats || [];
   const faq = site.site_content?.faq || [];
-  const featured = products[0];
-  const restProducts = products.slice(1);
+  const cta = site.site_content?.cta || {};
+  const socialProof = site.site_content?.social_proof || {};
+  const products = site.site_content?.products || [];
+  const images = site.site_content?.images || {};
 
   let html = "";
 
-  // Hero
+  // ── Hero ──
   html += `
-    <section style="padding:100px 20px 80px;text-align:center;position:relative;overflow:hidden">
-      <div class="hero-blob hero-blob-1"></div>
-      <div class="hero-blob hero-blob-2"></div>
-      <div style="max-width:760px;margin:0 auto;position:relative;z-index:1">
-        <div class="reveal">
-          <span style="display:inline-block;padding:8px 20px;border-radius:100px;background:${primary}15;border:1px solid ${primary}25;font-size:13px;font-weight:600;color:${primary};margin-bottom:28px">
-            ${site.type === "services" ? "Premium Services" : "Digital Products"}
-          </span>
-        </div>
-        <h1 class="reveal reveal-delay-1 gradient-text" style="font-size:clamp(2.5rem,6vw,4rem);font-weight:800;line-height:1.05;margin-bottom:20px;font-family:var(--site-heading-font)">
-          ${esc(hero.headline || site.name)}
-        </h1>
-        <p class="reveal reveal-delay-2" style="font-size:clamp(1rem,2.5vw,1.15rem);color:var(--muted);line-height:1.7;margin-bottom:40px;max-width:560px;margin:0 auto 40px">
-          ${esc(hero.subheadline || site.tagline)}
-        </p>
-        <div class="reveal reveal-delay-3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-          <a href="#products" class="cta-btn"><span>${esc(cta.button_text || "Browse Products")}</span></a>
-        </div>
-      </div>
-    </section>
-  `;
+      <section style="min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 40px;position:relative;overflow:hidden">
+        <!-- Background glow -->
+        <div style="position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:80%;max-width:700px;height:500px;background:radial-gradient(ellipse,${primary}15 0%,transparent 70%);filter:blur(60px);pointer-events:none"></div>
+        <div style="position:relative;max-width:720px;margin:0 auto">`;
 
-  // Featured product
-  if (featured) {
-    let featuresGrid = "";
-    if (featured.features) {
-      const featureItems = featured.features.map((f: string) =>
-        `<div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)"><span style="color:${primary};font-weight:700">&#10003;</span> ${esc(f)}</div>`
-      ).join("");
-      featuresGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px">${featureItems}</div>`;
-    }
+  if (hero.badge) {
     html += `
-      <section id="products" class="section">
-        <div style="max-width:800px;margin:0 auto;padding:0 20px">
-          <div class="reveal glow-card" style="padding:36px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-              <span style="padding:6px 16px;border-radius:100px;background:linear-gradient(135deg,${primary},${accent});font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:0.08em">
-                Featured
-              </span>
-              <span class="stat-number" style="font-size:1.5rem">${esc(featured.price)}</span>
-            </div>
-            <h2 style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;margin-bottom:14px;font-family:var(--site-heading-font)">
-              ${esc(featured.name)}
-            </h2>
-            <p style="color:var(--muted);line-height:1.7;margin-bottom:24px;font-size:15px">${esc(featured.desc)}</p>
-            ${featuresGrid}
-            <a href="#products" class="cta-btn" style="padding:14px 36px;font-size:15px"><span>Get Started</span></a>
-          </div>
-        </div>
-      </section>
-    `;
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1px solid rgba(${tb},0.1);background:rgba(${tb},0.04);font-size:13px;font-weight:500;color:rgba(${tb},0.6);margin-bottom:24px">
+            <span class="glow-dot"></span>
+            ${esc(hero.badge)}
+          </div>`;
+  } else {
+    html += `
+          <p style="font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${primary};margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px">
+            <span class="glow-dot"></span>
+            ${site.type === "services" ? "Professional Services" : "Digital Products"}
+          </p>`;
   }
 
-  // Rest products
-  if (restProducts.length > 0) {
-    const productCards = restProducts.map((p, i) => `
-      <div class="reveal glass-card reveal-delay-${Math.min(i + 1, 5)}">
-        <h3 style="margin-bottom:8px">${esc(p.name)}</h3>
-        <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px">${esc(p.desc)}</p>
-        <span class="stat-number" style="font-size:1.125rem">${esc(p.price)}</span>
-      </div>
-    `).join("");
-
-    html += `
-      <section class="section">
-        <div class="section-inner">
-          <h2 class="reveal section-title section-title-center">More ${site.type === "services" ? "Services" : "Products"}</h2>
-          <div class="grid-cards">${productCards}</div>
-        </div>
-      </section>
-    `;
-  }
-
-  // Testimonials
-  if (testimonials.length > 0) {
-    const testimonialCards = testimonials.map((t, i) => {
-      const stars = Array.from({ length: 5 }).map(() =>
-        `<span style="color:${primary};font-size:15px">&#9733;</span>`
-      ).join("");
-      return `
-        <div class="reveal testimonial-card reveal-delay-${Math.min(i + 1, 5)}" style="text-align:left">
-          <div style="margin-bottom:16px;padding-left:32px">${stars}</div>
-          <p style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px;padding-left:32px;font-style:italic">
-            ${esc(t.text)}
+  html += `
+          <h1 style="font-size:clamp(2.5rem,6vw,4.25rem);font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">
+            ${esc(hero.headline || site.name)}
+          </h1>
+          <p style="font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(${tb},0.55);line-height:1.7;margin-bottom:40px;max-width:560px;margin:0 auto 40px">
+            ${esc(hero.subheadline || site.tagline)}
           </p>
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,${primary},${accent});display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700">
-              ${esc(t.name[0])}
-            </div>
-            <div>
-              <p style="font-weight:600;font-size:14px">${esc(t.name)}</p>
-              <p style="color:var(--subtle);font-size:12px">${esc(t.role)}</p>
-            </div>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <a href="${isServices ? "/contact" : "/" + (isServices ? "services" : "products")}" class="cta-btn">
+              ${esc(cta.button_text || (isServices ? "Book a Strategy Call" : "View Products"))}
+              <span style="font-size:18px">&rarr;</span>
+            </a>
+            <a href="/about" class="btn-secondary">Learn More</a>
           </div>
         </div>
-      `;
-    }).join("");
 
+        <!-- Hero Visual -->
+        <div style="position:relative;max-width:900px;width:100%;margin:56px auto 0;padding:0 24px">`;
+
+  if (images.hero) {
     html += `
-      <section class="section" style="text-align:center">
-        <div class="section-inner">
-          <h2 class="reveal section-title section-title-center">What Customers Say</h2>
-          <div class="grid-cards">${testimonialCards}</div>
-        </div>
-      </section>
-    `;
+          <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08">
+            <img src="${esc(images.hero)}" alt="${esc(site.name)}" style="width:100%;height:auto;display:block" />
+          </div>`;
+  } else {
+    html += `
+          <div style="height:340px;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}18,${accent}12,rgba(${tb},0.03));box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08;display:flex;align-items:center;justify-content:center">
+            <div style="font-size:clamp(3rem,8vw,6rem);font-weight:800;background:linear-gradient(135deg,${primary}44,${accent}33);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+              ${esc(site.name.charAt(0))}
+            </div>
+          </div>`;
   }
 
-  // FAQ
-  if (faq.length > 0) {
-    const faqItems = faq.map((item, i) => `
-      <div class="reveal faq-item reveal-delay-${Math.min(i + 1, 5)}">
-        <h3 style="font-size:15px;font-weight:600;margin-bottom:10px;font-family:var(--site-heading-font)">${esc(item.question)}</h3>
-        <p style="color:var(--muted);font-size:14px;line-height:1.7">${esc(item.answer)}</p>
-      </div>
-    `).join("");
-
-    html += `
-      <section class="section">
-        <div style="max-width:680px;margin:0 auto;padding:0 20px">
-          <h2 class="reveal section-title section-title-center">Frequently Asked Questions</h2>
-          <div style="display:flex;flex-direction:column;gap:16px">${faqItems}</div>
-        </div>
-      </section>
-    `;
-  }
-
-  // CTA
   html += `
-    <section class="section" style="text-align:center;position:relative;overflow:hidden">
-      <div class="hero-blob hero-blob-3" style="bottom:auto;top:-50%;left:20%"></div>
-      <div style="max-width:600px;margin:0 auto;position:relative;z-index:1">
-        <h2 class="reveal gradient-text" style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:800;margin-bottom:20px;font-family:var(--site-heading-font)">
-          ${esc(cta.headline || "Ready to get started?")}
-        </h2>
-        <p class="reveal reveal-delay-1" style="color:var(--faint);margin-bottom:40px">
-          ${esc(cta.subheadline || site.tagline)}
-        </p>
-        <div class="reveal reveal-delay-2">
-          <a href="#products" class="cta-btn"><span>${esc(cta.button_text || "Get Started Now")}</span></a>
         </div>
-      </div>
-    </section>
-  `;
+      </section>`;
+
+  // ── Social Proof / Trusted By ──
+  if (socialProof.logos && socialProof.logos.length > 0) {
+    const logoSpans = socialProof.logos
+      .map(
+        (name: string) =>
+          `<span style="font-size:16px;font-weight:700;letter-spacing:-0.02em;color:rgba(${tb},0.2)">${esc(name)}</span>`
+      )
+      .join("\n                ");
+
+    html += `
+      <section style="padding:40px 24px;border-top:1px solid rgba(${tb},0.05)">
+        <div class="container" style="text-align:center">
+          <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(${tb},0.3);margin-bottom:24px">
+            Trusted by leading companies
+          </p>
+          <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px 48px">
+            ${logoSpans}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // ── Stats Bar ──
+  if (stats.length > 0) {
+    const statItems = stats
+      .map(
+        (s: { value: string; label: string }) => `
+              <div style="text-align:center">
+                <p class="gradient-text" style="font-size:36px;font-weight:800;line-height:1;margin-bottom:4px">
+                  ${esc(s.value)}
+                </p>
+                <p style="color:rgba(${tb},0.4);font-size:13px;font-weight:500">${esc(s.label)}</p>
+              </div>`
+      )
+      .join("");
+
+    html += `
+      <section style="border-top:1px solid rgba(${tb},0.05);border-bottom:1px solid rgba(${tb},0.05);padding:40px 24px">
+        <div class="container" style="display:flex;justify-content:center;flex-wrap:wrap;gap:40px 64px">
+          ${statItems}
+        </div>
+      </section>`;
+  }
+
+  // ── Features / Why Us ──
+  if (features.length > 0) {
+    const featureEmojis = ["\u2728", "\u26A1", "\uD83D\uDE80", "\uD83C\uDFAF", "\uD83D\uDCA1", "\uD83D\uDD0D"];
+    const featureCards = features
+      .map(
+        (f: { title: string; desc: string }, i: number) => `
+              <div class="card">
+                <div style="width:40px;height:40px;border-radius:10px;background:${primary}12;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:18px">
+                  ${featureEmojis[i % 6]}
+                </div>
+                <h3 style="font-weight:600;font-size:17px;margin-bottom:8px">${esc(f.title)}</h3>
+                <p style="color:rgba(${tb},0.5);font-size:14px;line-height:1.7">${esc(f.desc)}</p>
+              </div>`
+      )
+      .join("");
+
+    html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:56px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              Why Choose Us
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              Built different.
+            </h2>
+          </div>
+          <div class="grid-3">
+            ${featureCards}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // ── Video / Showcase Section ──
+  html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:48px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              See It In Action
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              ${isServices ? "How we deliver results" : "Watch how it works"}
+            </h2>
+          </div>`;
+
+  if (site.video_url) {
+    html += `
+          <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
+            <iframe
+              src="${esc(site.video_url)}"
+              style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>`;
+  } else {
+    html += `
+          <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}08,${accent}06);padding:80px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
+            <!-- Play button placeholder -->
+            <div style="width:72px;height:72px;border-radius:50%;background:${primary};display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 8px 32px ${primary}44;cursor:pointer">
+              <div style="width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:22px solid ${ctaText};margin-left:4px"></div>
+            </div>
+            <p style="font-size:18px;font-weight:600;margin-bottom:8px">
+              ${isServices ? "See our process in action" : "Product walkthrough"}
+            </p>
+            <p style="color:rgba(${tb},0.4);font-size:14px">
+              Video coming soon
+            </p>
+          </div>`;
+  }
+
+  html += `
+        </div>
+      </section>`;
+
+  // ── Featured Products/Services Preview ──
+  if (products.length > 0) {
+    const productCards = products
+      .slice(0, 3)
+      .map((p: any, i: number) => {
+        const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
+        // Compute gradient hex for card visual header
+        const primaryHex = (15 + i * 8).toString(16).padStart(2, "0");
+        const accentHex = (10 + i * 6).toString(16).padStart(2, "0");
+
+        let imageSection: string;
+        if (images.products && images.products[i]) {
+          imageSection = `<img src="${esc(images.products[i])}" alt="${esc(p.name)}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0" />`;
+        } else {
+          const emojis = ["\uD83C\uDFAF", "\uD83D\uDE80", "\uD83D\uDCA1"];
+          imageSection = `<span style="font-size:48px;opacity:0.4">${emojis[i % 3]}</span>`;
+        }
+
+        const popularBadge =
+          i === 0 && products.length > 1
+            ? `<span style="position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:4px 10px;border-radius:6px;background:${primary};color:${ctaText}">Most Popular</span>`
+            : "";
+
+        const taglineHtml =
+          !isServices && p.tagline
+            ? `<p style="color:rgba(${tb},0.5);font-size:13px;font-style:italic;margin-bottom:8px">${esc(p.tagline)}</p>`
+            : "";
+
+        const audienceHtml =
+          !isServices && p.audience
+            ? `<p style="color:rgba(${tb},0.45);font-size:12px;margin-bottom:12px">\uD83D\uDC64 ${esc(p.audience)}</p>`
+            : "";
+
+        return `
+              <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.08);transition:all 0.3s ease-out;display:flex;flex-direction:column">
+                <!-- Card visual header -->
+                <div style="height:180px;position:relative;overflow:hidden;background:linear-gradient(135deg,${primary}${primaryHex},${accent}${accentHex});display:flex;align-items:center;justify-content:center">
+                  ${imageSection}
+                  ${popularBadge}
+                </div>
+                <!-- Card body -->
+                <div style="padding:24px 24px 28px;flex:1;display:flex;flex-direction:column">
+                  <h3 style="font-weight:700;font-size:18px;margin-bottom:4px">${esc(p.name)}</h3>
+                  ${taglineHtml}
+                  <p class="gradient-text" style="font-weight:800;font-size:24px;margin-bottom:${isServices ? "12" : "8"}px">
+                    ${esc(p.price)}
+                  </p>
+                  ${audienceHtml}
+                  <p style="color:rgba(${tb},0.5);font-size:13px;line-height:1.7;flex:1;margin-bottom:20px">
+                    ${esc(p.desc)}
+                  </p>
+                  <a href="${isServices ? "/contact" : "/products/" + slug}" class="cta-btn" style="width:100%;padding:12px;font-size:14px">
+                    ${isServices ? "Get Started" : "Learn More \u2192"}
+                  </a>
+                </div>
+              </div>`;
+      })
+      .join("");
+
+    const viewAllBtn =
+      products.length > 3
+        ? `
+            <div style="text-align:center;margin-top:32px">
+              <a href="${isServices ? "/services" : "/products"}" class="btn-secondary" style="padding:12px 28px">
+                View All ${isServices ? "Services" : "Products"} &rarr;
+              </a>
+            </div>`
+        : "";
+
+    html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:48px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              ${isServices ? "Our Services" : "Featured Products"}
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              ${isServices ? "Choose your path" : "What we offer"}
+            </h2>
+          </div>
+          <div class="grid-3">
+            ${productCards}
+          </div>
+          ${viewAllBtn}
+        </div>
+      </section>`;
+  }
+
+  // ── Testimonials ──
+  if (testimonials.length > 0) {
+    const testimonialCards = testimonials
+      .map(
+        (t: any, i: number) => {
+          const ratingHtml = t.rating
+            ? `<div style="margin-bottom:12px;color:#facc15;font-size:14px;letter-spacing:2px">${"\u2605".repeat(t.rating)}${"\u2606".repeat(5 - t.rating)}</div>`
+            : "";
+
+          return `
+              <div class="card" style="display:flex;flex-direction:column">
+                ${ratingHtml}
+                <p style="color:rgba(${tb},0.6);font-size:14px;line-height:1.7;flex:1;margin-bottom:20px">
+                  &ldquo;${esc(t.text)}&rdquo;
+                </p>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,${primary}44,${accent}44);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">
+                    ${esc(t.name?.charAt(0) || "")}
+                  </div>
+                  <div>
+                    <p style="font-weight:600;font-size:14px">${esc(t.name)}</p>
+                    <p style="color:rgba(${tb},0.4);font-size:12px">${esc(t.role)}</p>
+                  </div>
+                </div>
+              </div>`;
+        }
+      )
+      .join("");
+
+    html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:56px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              Testimonials
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              What people are saying
+            </h2>
+          </div>
+          <div class="grid-3">
+            ${testimonialCards}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // ── Process / How It Works ──
+  const processSteps = processData.steps || [];
+  if (processSteps.length > 0) {
+    const stepItems = processSteps
+      .map(
+        (s: any, i: number) => `
+              <div style="display:flex;gap:24px;padding:32px 0;${i < processSteps.length - 1 ? "border-bottom:1px solid rgba(" + tb + ",0.06)" : ""}">
+                <div style="width:48px;height:48px;min-width:48px;border-radius:14px;background:${primary}12;border:1px solid ${primary}22;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:${primary}">
+                  ${esc(s.step)}
+                </div>
+                <div>
+                  <h3 style="font-weight:700;font-size:18px;margin-bottom:6px">${esc(s.title)}</h3>
+                  <p style="color:rgba(${tb},0.5);font-size:14px;line-height:1.7">${esc(s.desc)}</p>
+                </div>
+              </div>`
+      )
+      .join("");
+
+    html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:56px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              How It Works
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              ${esc(processData.title || "Simple. Effective. Done.")}
+            </h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0;max-width:700px;margin:0 auto">
+            ${stepItems}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // ── FAQ ──
+  if (faq.length > 0) {
+    const faqItems = faq
+      .map(
+        (f: { question: string; answer: string }) => `
+              <div style="padding:24px 28px;border-radius:14px;border:1px solid rgba(${tb},0.06);background:rgba(${tb},0.02)">
+                <h3 style="font-weight:600;font-size:16px;margin-bottom:10px">${esc(f.question)}</h3>
+                <p style="color:rgba(${tb},0.5);font-size:14px;line-height:1.7">${esc(f.answer)}</p>
+              </div>`
+      )
+      .join("");
+
+    html += `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div style="max-width:700px;margin:0 auto;padding:0 24px">
+          <div style="text-align:center;margin-bottom:48px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              FAQ
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              Common questions
+            </h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            ${faqItems}
+          </div>
+        </div>
+      </section>`;
+  }
+
+  // ── CTA Section ──
+  html += `
+      <section style="padding:80px 24px;border-top:1px solid rgba(${tb},0.05);text-align:center;position:relative;overflow:hidden">
+        <div style="position:absolute;bottom:-50%;left:50%;transform:translateX(-50%);width:90%;max-width:800px;height:400px;background:radial-gradient(ellipse,${primary}10 0%,transparent 70%);filter:blur(80px);pointer-events:none"></div>
+        <div style="position:relative;max-width:550px;margin:0 auto">
+          <h2 style="font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:16px">
+            ${esc(cta.headline || "Ready to get started?")}
+          </h2>
+          <p style="color:rgba(${tb},0.5);font-size:16px;line-height:1.7;margin-bottom:32px">
+            ${esc(cta.subheadline || site.tagline)}
+          </p>
+          <a href="${isServices ? "/contact" : "/" + (isServices ? "services" : "products")}" class="cta-btn">
+            ${esc(cta.button_text || (isServices ? "Book a Strategy Call" : "Get Started"))}
+            <span style="font-size:18px">&rarr;</span>
+          </a>
+        </div>
+      </section>`;
 
   return html;
 }
@@ -1163,113 +706,34 @@ function buildCreatorContent(site: SiteData): string {
 // ─── Calendly Section ────────────────────────────────────────────────
 function buildCalendly(site: SiteData): string {
   if (!site.calendly_url) return "";
-  const colors = site.brand?.colors || {};
-  const primary = colors.primary || "#7B39FC";
-  const bg = colors.background || "#0c0a09";
-  const textColor = colors.text || "#e4e4e7";
+  const { primary, bg, textColor, tb } = computeTheme(site);
   return `
-    <section class="section reveal" style="text-align:center">
+    <section style="padding:80px 24px;text-align:center">
       <div style="max-width:700px;margin:0 auto">
-        <h2 class="section-title" style="text-align:center;margin-bottom:8px">Book a Meeting</h2>
-        <p style="color:var(--faint);margin-bottom:32px;font-size:15px">Schedule a time that works for you</p>
-        <div style="border-radius:16px;overflow:hidden;border:1px solid var(--border)">
+        <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+          Schedule
+        </p>
+        <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:8px">Book a Meeting</h2>
+        <p style="color:rgba(${tb},0.5);margin-bottom:32px;font-size:15px">Schedule a time that works for you</p>
+        <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.06)">
           <iframe
-            src="${site.calendly_url}?hide_gdpr_banner=1&background_color=${bg.replace("#", "")}&text_color=${textColor.replace("#", "")}&primary_color=${primary.replace("#", "")}"
+            src="${esc(site.calendly_url)}?hide_gdpr_banner=1&amp;background_color=${bg.replace("#", "")}&amp;text_color=${textColor.replace("#", "")}&amp;primary_color=${primary.replace("#", "")}"
             style="width:100%;height:630px;border:none"
             title="Schedule a meeting"
           ></iframe>
         </div>
       </div>
-    </section>
-  `;
-}
-
-// ─── Script (mobile menu + scroll reveal + counters) ─────────────────
-function buildScript(): string {
-  return `
-    <script>
-      (function() {
-        var toggle = document.querySelector('.site-nav-toggle');
-        var menu = document.getElementById('mobile-menu');
-        var close = document.querySelector('.site-mobile-close');
-        if (toggle && menu) {
-          toggle.addEventListener('click', function() { menu.classList.add('open'); });
-          close.addEventListener('click', function() { menu.classList.remove('open'); });
-          menu.querySelectorAll('a').forEach(function(a) {
-            a.addEventListener('click', function() { menu.classList.remove('open'); });
-          });
-        }
-
-        var reveals = document.querySelectorAll('.reveal');
-        if (reveals.length > 0 && 'IntersectionObserver' in window) {
-          var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-              }
-            });
-          }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-          reveals.forEach(function(el) { observer.observe(el); });
-        } else {
-          reveals.forEach(function(el) { el.classList.add('visible'); });
-        }
-
-        var counters = document.querySelectorAll('[data-count]');
-        if (counters.length > 0 && 'IntersectionObserver' in window) {
-          var cObserver = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
-              if (entry.isIntersecting) {
-                var el = entry.target;
-                var target = el.getAttribute('data-count');
-                var suffix = el.getAttribute('data-suffix') || '';
-                var prefix = el.getAttribute('data-prefix') || '';
-                var num = parseInt(target);
-                if (isNaN(num)) { el.textContent = prefix + target + suffix; cObserver.unobserve(el); return; }
-                var duration = 1500;
-                var startTime = null;
-                function step(ts) {
-                  if (!startTime) startTime = ts;
-                  var progress = Math.min((ts - startTime) / duration, 1);
-                  var ease = 1 - Math.pow(1 - progress, 3);
-                  el.textContent = prefix + Math.floor(ease * num) + suffix;
-                  if (progress < 1) requestAnimationFrame(step);
-                  else el.textContent = prefix + target + suffix;
-                }
-                requestAnimationFrame(step);
-                cObserver.unobserve(el);
-              }
-            });
-          }, { threshold: 0.5 });
-          counters.forEach(function(el) { cObserver.observe(el); });
-        }
-      })();
-    </script>
-  `;
+    </section>`;
 }
 
 // ─── Full HTML Document ──────────────────────────────────────────────
 function buildFullHTML(site: SiteData): string {
-  const fonts = site.brand?.fonts || {};
-  const headingFont = fonts.heading || "";
-  const bodyFont = fonts.body || "Inter";
+  const { headingFont, bodyFont } = computeTheme(site);
 
-  const fontLink = headingFont
-    ? `<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;600;700;800&family=${encodeURIComponent(bodyFont)}:wght@400;500;600&display=swap" rel="stylesheet" />`
-    : `<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(bodyFont)}:wght@400;500;600&display=swap" rel="stylesheet" />`;
+  const fontLink = `<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;500;600;700;800&amp;family=${encodeURIComponent(bodyFont)}:wght@400;500;600&amp;display=swap" rel="stylesheet" />`;
 
-  const layout = (site.layout as string) || "default";
-  let content: string;
-  if (layout === "minimal") {
-    content = buildMinimalContent(site);
-  } else if (layout === "creator") {
-    content = buildCreatorContent(site);
-  } else {
-    content = buildDefaultContent(site);
-  }
-
-  const seoTitle = site.site_content?.cta?.headline || site.name;
-  const seoDesc = site.site_content?.hero?.subheadline || site.tagline;
+  const seoTitle = site.site_content?.seo?.title || site.name;
+  const seoDesc = site.site_content?.seo?.description || site.tagline;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1283,10 +747,9 @@ function buildFullHTML(site: SiteData): string {
 </head>
 <body>
   ${buildNav(site)}
-  ${content}
+  ${buildPageContent(site)}
   ${buildCalendly(site)}
   ${buildFooter(site)}
-  ${buildScript()}
 </body>
 </html>`;
 }

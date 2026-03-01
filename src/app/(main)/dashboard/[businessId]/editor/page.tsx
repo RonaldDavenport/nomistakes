@@ -651,9 +651,15 @@ export default function EditorPage() {
       if (res.ok) {
         const html = await res.text();
         setPreviewHtml(html);
+        // iframeLoading will be cleared by the iframe's onLoad event
+      } else {
+        console.error("[editor] site-preview failed:", res.status);
+        setIframeLoading(false);
       }
-    } catch { /* ignore */ }
-    setIframeLoading(false);
+    } catch (err) {
+      console.error("[editor] site-preview error:", err);
+      setIframeLoading(false);
+    }
   }, [businessId]);
 
   // Initialize from business
@@ -1228,12 +1234,18 @@ export default function EditorPage() {
                     <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
                   </div>
                 )}
-                <iframe
-                  ref={iframeRef}
-                  srcDoc={previewHtml}
-                  className="w-full h-full bg-white"
-                  onLoad={() => setIframeLoading(false)}
-                />
+                {previewHtml ? (
+                  <iframe
+                    ref={iframeRef}
+                    srcDoc={previewHtml}
+                    className="w-full h-full bg-white"
+                    onLoad={() => setIframeLoading(false)}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" style={{ background: T.bgAlt }}>
+                    <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
