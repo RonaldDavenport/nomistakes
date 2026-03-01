@@ -3,6 +3,8 @@ import { createServerClient } from "@/lib/supabase";
 import { createProject, deploy, isConfigured } from "@/lib/vercel";
 import { generateSiteFiles } from "@/lib/site-template";
 
+export const maxDuration = 60;
+
 // POST /api/deploy — Deploy a business site to Vercel as a separate project
 export async function POST(req: Request) {
   try {

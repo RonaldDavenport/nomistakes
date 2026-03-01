@@ -61,20 +61,22 @@ export async function deploy(
   files: { file: string; data: string }[],
   envVars?: Record<string, string>
 ): Promise<DeployResult> {
-  // Set env vars on the project if provided
+  // Set env vars on the project if provided (parallel for speed)
   if (envVars && Object.keys(envVars).length > 0) {
-    for (const [key, value] of Object.entries(envVars)) {
-      await fetch(`${VERCEL_API}/v10/projects/${projectName}/env${teamParam()}`, {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify({
-          key,
-          value,
-          type: "encrypted",
-          target: ["production", "preview"],
-        }),
-      });
-    }
+    await Promise.all(
+      Object.entries(envVars).map(([key, value]) =>
+        fetch(`${VERCEL_API}/v10/projects/${projectName}/env${teamParam()}`, {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            key,
+            value,
+            type: "encrypted",
+            target: ["production", "preview"],
+          }),
+        })
+      )
+    );
   }
 
   const res = await fetch(`${VERCEL_API}/v13/deployments${teamParam()}`, {
