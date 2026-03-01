@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 
 export interface Business {
@@ -34,16 +34,22 @@ interface BusinessContextValue {
   business: Business | null;
   allBusinesses: Business[];
   plan: string;
+  credits: number;
+  userId: string | null;
   loading: boolean;
   refreshBusiness: () => Promise<void>;
+  refreshCredits: () => Promise<void>;
 }
 
 const BusinessContext = createContext<BusinessContextValue>({
   business: null,
   allBusinesses: [],
   plan: "free",
+  credits: 0,
+  userId: null,
   loading: true,
   refreshBusiness: async () => {},
+  refreshCredits: async () => {},
 });
 
 export function useBusinessContext() {
@@ -60,7 +66,21 @@ export function BusinessProvider({
   const [business, setBusiness] = useState<Business | null>(null);
   const [allBusinesses, setAllBusinesses] = useState<Business[]>([]);
   const [plan, setPlan] = useState("free");
+  const [credits, setCredits] = useState(0);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchCredits = useCallback(async (uid: string, bizId: string) => {
+    try {
+      const res = await fetch(`/api/credits?userId=${uid}&businessId=${bizId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCredits(data.balance || 0);
+      }
+    } catch {
+      // Credits fetch is non-critical
+    }
+  }, []);
 
   async function load() {
     const {
@@ -70,6 +90,8 @@ export function BusinessProvider({
       window.location.href = "/auth/login";
       return;
     }
+
+    setUserId(user.id);
 
     // Fetch plan from profile
     const { data: profile } = await supabase
@@ -101,6 +123,9 @@ export function BusinessProvider({
       .order("created_at", { ascending: false });
     setAllBusinesses((allBiz as Business[]) || []);
 
+    // Fetch credit balance
+    await fetchCredits(user.id, businessId);
+
     setLoading(false);
   }
 
@@ -114,8 +139,14 @@ export function BusinessProvider({
     await load();
   }
 
+  async function refreshCredits() {
+    if (userId) {
+      await fetchCredits(userId, businessId);
+    }
+  }
+
   return (
-    <BusinessContext.Provider value={{ business, allBusinesses, plan, loading, refreshBusiness }}>
+    <BusinessContext.Provider value={{ business, allBusinesses, plan, credits, userId, loading, refreshBusiness, refreshCredits }}>
       {children}
     </BusinessContext.Provider>
   );

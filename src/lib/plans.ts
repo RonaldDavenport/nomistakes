@@ -1,9 +1,10 @@
-// Plan tier definitions, feature gates, and limits
+// Plan tier definitions, feature gates, limits, and credit allocations
 
 export interface PlanDefinition {
   id: string;
   name: string;
   price: number; // cents
+  monthlyCredits: number;
   limits: {
     businesses: number;
     chatMessagesPerDay: number;
@@ -39,6 +40,10 @@ const STARTER_FEATURES = [
   "referral_templates",
   "case_studies",
   "blog_generator",
+  "credit_system",
+  "competitor_monitoring",
+  "seo_automation",
+  "weekly_reports",
 ];
 
 const GROWTH_FEATURES = [
@@ -59,6 +64,7 @@ const GROWTH_FEATURES = [
   "evergreen_funnels",
   "advanced_analytics",
   "priority_support",
+  "push_notifications",
 ];
 
 const PRO_FEATURES = [
@@ -74,6 +80,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     id: "free",
     name: "Free",
     price: 0,
+    monthlyCredits: 0,
     limits: {
       businesses: 1,
       chatMessagesPerDay: 10,
@@ -86,6 +93,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     id: "starter",
     name: "Starter",
     price: 1999,
+    monthlyCredits: 50,
     limits: {
       businesses: 3,
       chatMessagesPerDay: 50,
@@ -98,6 +106,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     id: "growth",
     name: "Growth",
     price: 4999,
+    monthlyCredits: 200,
     limits: {
       businesses: 10,
       chatMessagesPerDay: 200,
@@ -110,6 +119,7 @@ export const PLANS: Record<string, PlanDefinition> = {
     id: "pro",
     name: "Pro",
     price: 24999,
+    monthlyCredits: 500,
     limits: {
       businesses: Infinity,
       chatMessagesPerDay: Infinity,
