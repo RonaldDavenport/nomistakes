@@ -139,7 +139,18 @@ export default function ReportsPage() {
         </div>
       )}
 
-      <PaywallGate requiredPlan="starter">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "Weekly AI Reports",
+          description: "Automated business progress reports with trends, highlights, and priorities.",
+          bullets: [
+            "Weekly progress tracking",
+            "Highlights & action items",
+            "Priority recommendations",
+          ],
+        }}
+      >
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />

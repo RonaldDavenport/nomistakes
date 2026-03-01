@@ -118,6 +118,7 @@ function Check() {
    ═══════════════════════════════════════ */
 export default function Home() {
   const [featureTab, setFeatureTab] = useState("sites");
+  const [dashTab, setDashTab] = useState("overview");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -245,36 +246,57 @@ export default function Home() {
               You bring the idea. We build the business.
             </h2>
             <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 520, margin: "0 auto" }}>
-              Join 2,000+ entrepreneurs who stopped planning and started launching.
+              Your AI-powered command center. Manage your site, content, and growth — all in one place.
             </p>
           </div>
+          {/* Tab bar */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
+            {[
+              { id: "overview", label: "Dashboard" },
+              { id: "editor", label: "Site Editor" },
+              { id: "chat", label: "AI Coach" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setDashTab(tab.id)}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: 10,
+                  border: `1px solid ${dashTab === tab.id ? "rgba(123,57,252,0.4)" : T.border}`,
+                  background: dashTab === tab.id ? "rgba(123,57,252,0.12)" : T.glass,
+                  color: dashTab === tab.id ? T.purpleLight : T.text3,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: T.h,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {/* Browser frame */}
           <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl, boxShadow: "0 24px 80px rgba(123,57,252,0.08)" }}>
             <div style={{ display: "flex", gap: 5, padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF5F57" }} />
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FEBC2E" }} />
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#28C840" }} />
               <span style={{ flex: 1, marginLeft: 12, height: 20, borderRadius: 6, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 10, color: T.text3 }}>nomistakes.ai/dashboard</span>
+                <span style={{ fontSize: 10, color: T.text3 }}>
+                  nomistakes.ai/dashboard{dashTab === "editor" ? "/editor" : dashTab === "chat" ? "/chat" : ""}
+                </span>
               </span>
             </div>
-            <div style={{ position: "relative", height: 400 }}>
-              <img src="/landing/dashboard-viz.jpg" alt="NoMistakes Dashboard" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(6,6,26,0.4), transparent 30%)" }} />
-              {/* Floating overlay stats */}
-              <div style={{ position: "absolute", bottom: 20, left: 20, right: 20, display: "flex", gap: 12 }}>
-                <Glass style={{ flex: 1, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 9, color: T.text3, marginBottom: 4 }}>Site Visitors</p>
-                  <p style={{ fontFamily: T.mono, fontSize: 20, fontWeight: 700, color: T.text }}>128</p>
-                </Glass>
-                <Glass style={{ flex: 1, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 9, color: T.text3, marginBottom: 4 }}>Revenue</p>
-                  <p style={{ fontFamily: T.mono, fontSize: 20, fontWeight: 700, color: T.gold }}>$247</p>
-                </Glass>
-                <Glass style={{ flex: 1, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 9, color: T.text3, marginBottom: 4 }}>AI Coach</p>
-                  <p style={{ fontSize: 11, color: T.purpleLight, fontWeight: 500 }}>Day 8 &middot; Active</p>
-                </Glass>
-              </div>
+            <div style={{ position: "relative" }}>
+              <img
+                src={`/landing/dash-${dashTab}.png`}
+                alt={`NoMistakes ${dashTab === "overview" ? "Dashboard" : dashTab === "editor" ? "Site Editor" : "AI Coach"}`}
+                loading="lazy"
+                style={{ width: "100%", height: "auto", display: "block", minHeight: 300 }}
+              />
+              {/* Bottom fade */}
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, background: `linear-gradient(to top, ${T.bgEl}, transparent)` }} />
             </div>
           </div>
         </div>

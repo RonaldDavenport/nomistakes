@@ -170,7 +170,18 @@ export default function SeoPage() {
         </div>
       </div>
 
-      <PaywallGate requiredPlan="starter">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "AI SEO Audits",
+          description: "Get a full SEO health score with actionable fixes and keyword opportunities.",
+          bullets: [
+            "Site health score 0-100",
+            "Keyword opportunity finder",
+            "Actionable fix suggestions",
+          ],
+        }}
+      >
         {/* Error Messages */}
         {error === "insufficient_credits" && (
           <div

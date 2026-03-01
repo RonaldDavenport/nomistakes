@@ -508,7 +508,18 @@ export default function AdsPage() {
         </p>
       </div>
 
-      <PaywallGate requiredPlan="growth">
+      <PaywallGate
+        requiredPlan="growth"
+        teaser={{
+          headline: "AI Ad Campaigns & UGC Videos",
+          description: "Create scroll-stopping ads and UGC-style videos that convert across every platform.",
+          bullets: [
+            "AI-generated ad copy for any platform",
+            "UGC-style videos in minutes",
+            "Optimized for Meta, TikTok & Google",
+          ],
+        }}
+      >
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {(["ads", "ugc"] as const).map((tab) => (

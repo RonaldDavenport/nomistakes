@@ -183,7 +183,18 @@ export default function EmailsPage() {
         </div>
       </div>
 
-      <PaywallGate requiredPlan="starter">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "AI Email Sequences",
+          description: "Generate complete email flows — welcome, nurture, win-back — ready to send.",
+          bullets: [
+            "Welcome & onboarding flows",
+            "Nurture & win-back sequences",
+            "Full HTML emails, ready to send",
+          ],
+        }}
+      >
         {/* Error Messages */}
         {error === "insufficient_credits" && (
           <div

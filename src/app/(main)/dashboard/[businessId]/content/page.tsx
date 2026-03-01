@@ -228,7 +228,18 @@ export default function ContentPage() {
 
       {/* AI Generation Panel */}
       {showGenPanel && (
-        <PaywallGate requiredPlan="starter">
+        <PaywallGate
+          requiredPlan="starter"
+          teaser={{
+            headline: "AI Blog Generator",
+            description: "Publish SEO-optimized blog posts to your site with one click.",
+            bullets: [
+              "Full blog posts in seconds",
+              "SEO-optimized automatically",
+              "Publish directly to your site",
+            ],
+          }}
+        >
           <div className="mb-6 rounded-xl overflow-hidden" style={{ ...glassCard }}>
             <div className="px-5 py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
               <div className="flex items-center justify-between">

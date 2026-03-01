@@ -183,7 +183,18 @@ export default function CompetitorsPage() {
         </div>
       </div>
 
-      <PaywallGate requiredPlan="starter">
+      <PaywallGate
+        requiredPlan="starter"
+        teaser={{
+          headline: "Competitive Intelligence",
+          description: "Analyze any competitor's positioning, pricing, and strategy in seconds.",
+          bullets: [
+            "Strengths & weaknesses breakdown",
+            "Pricing & positioning analysis",
+            "Actionable recommendations",
+          ],
+        }}
+      >
         {/* Error Messages */}
         {error === "insufficient_credits" && (
           <div
