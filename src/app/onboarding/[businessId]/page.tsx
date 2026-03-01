@@ -305,6 +305,7 @@ export default function OnboardingPage() {
               colors={previewColors}
               layout={selectedLayout as "default" | "minimal" | "creator"}
               slug={slugValue || business.slug}
+              deployedUrl={business.deployed_url || business.live_url}
               siteContent={business.site_content}
             />
           </div>
@@ -958,6 +959,7 @@ export default function OnboardingPage() {
                   colors={previewColors}
                   layout={selectedLayout as "default" | "minimal" | "creator"}
                   slug={slugValue || business.slug}
+                  deployedUrl={business.deployed_url || business.live_url}
                   siteContent={business.site_content}
                 />
               </div>

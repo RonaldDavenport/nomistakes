@@ -1991,7 +1991,7 @@ export default async function BlogPage() {
           color: "rgba(${tb},0.5)", fontSize: 16,
           marginBottom: 48, lineHeight: 1.6,
         }}>
-          Insights and updates from {esc(config.name)}
+          Insights and updates from ${esc(config.name)}
         </p>
 
         {posts.length === 0 ? (

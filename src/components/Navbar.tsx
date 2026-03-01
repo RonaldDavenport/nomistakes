@@ -8,6 +8,7 @@ import { T, CTA_GRAD } from "@/lib/design-tokens";
 export default function Navbar() {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
+  const isAppFlow = pathname?.startsWith("/wizard") || pathname?.startsWith("/onboarding") || pathname?.startsWith("/auth");
   const [loggedIn, setLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -31,17 +32,19 @@ export default function Navbar() {
           <span style={{ color: T.text }}>No</span>
           <span style={{ color: T.purple }}>Mistakes</span>
         </Link>
-        <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
-          <Link href="/#how-it-works" className="hover:text-white transition">
-            How It Works
-          </Link>
-          <Link href="/#features" className="hover:text-white transition">
-            Features
-          </Link>
-          <Link href="/#pricing" className="hover:text-white transition">
-            Pricing
-          </Link>
-        </div>
+        {!isAppFlow && (
+          <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">
+            <Link href="/#how-it-works" className="hover:text-white transition">
+              How It Works
+            </Link>
+            <Link href="/#features" className="hover:text-white transition">
+              Features
+            </Link>
+            <Link href="/#pricing" className="hover:text-white transition">
+              Pricing
+            </Link>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           {loggedIn ? (
             <div className="flex items-center gap-3">
@@ -95,16 +98,20 @@ export default function Navbar() {
       {mobileOpen && (
         <div style={{ background: T.bgEl }} className="md:hidden border-t border-white/5 backdrop-blur-xl animate-fadeIn">
           <div className="px-6 py-4 space-y-1">
-            <Link href="/#how-it-works" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
-              How It Works
-            </Link>
-            <Link href="/#features" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
-              Features
-            </Link>
-            <Link href="/#pricing" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
-              Pricing
-            </Link>
-            <div className="pt-3 border-t border-white/5 space-y-3">
+            {!isAppFlow && (
+              <>
+                <Link href="/#how-it-works" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
+                  How It Works
+                </Link>
+                <Link href="/#features" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
+                  Features
+                </Link>
+                <Link href="/#pricing" className="block py-3 text-sm text-zinc-400 hover:text-white transition">
+                  Pricing
+                </Link>
+              </>
+            )}
+            <div className={`${isAppFlow ? "" : "pt-3 border-t border-white/5 "}space-y-3`}>
               {loggedIn ? (
                 <>
                   <Link href="/dashboard" style={{ background: CTA_GRAD }} className="block text-center px-5 py-3 rounded-full text-sm font-semibold text-white">

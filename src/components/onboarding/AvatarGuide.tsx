@@ -52,10 +52,18 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
 
     // Play video if available
     if (script.videoUrl && videoRef.current) {
-      videoRef.current.src = script.videoUrl;
-      videoRef.current.muted = isMuted;
-      videoRef.current.play().catch(() => {
-        // Autoplay blocked — continue with text only
+      const video = videoRef.current;
+      video.src = script.videoUrl;
+      video.muted = isMuted;
+      video.play().catch(() => {
+        // Autoplay blocked (no prior user gesture) — retry on first interaction
+        const retry = () => {
+          video.play().catch(() => {});
+          document.removeEventListener("click", retry);
+          document.removeEventListener("touchstart", retry);
+        };
+        document.addEventListener("click", retry);
+        document.addEventListener("touchstart", retry);
       });
     } else {
       // No video — just show text for a duration, then stop "playing"
