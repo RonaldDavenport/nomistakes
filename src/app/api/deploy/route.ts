@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
-import { createProject, deploy, isConfigured } from "@/lib/vercel";
+import { deploy, isConfigured } from "@/lib/vercel";
 import { generateSiteFiles } from "@/lib/site-template";
 
 export const maxDuration = 60;
@@ -39,9 +39,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 
-    // Create Vercel project
-    const project = await createProject(business.name, business.slug);
-
     // Determine platform app URL for admin bar links
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
       || (process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}` : "");
@@ -61,8 +58,8 @@ export async function POST(req: Request) {
       appUrl,
     });
 
-    // Deploy to Vercel
-    const result = await deploy(project.name, files, {
+    // Deploy to Vercel (handles project creation + env vars + deploy)
+    const result = await deploy(business.slug, files, {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
       NEXT_PUBLIC_BUSINESS_ID: business.id,
@@ -84,7 +81,6 @@ export async function POST(req: Request) {
       projectId: result.projectId,
       deploymentId: result.deploymentId,
       url: result.url,
-      projectName: project.name,
     });
   } catch (err) {
     console.error("[deploy] Error:", err);

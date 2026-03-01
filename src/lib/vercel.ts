@@ -1,19 +1,23 @@
 // Vercel API integration for deploying generated business sites
 // Docs: https://vercel.com/docs/rest-api
 
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID;
 const VERCEL_API = "https://api.vercel.com";
+
+// Read at call-time so env vars are always fresh
+function getToken() {
+  return process.env.VERCEL_TOKEN || "";
+}
 
 function headers() {
   return {
-    Authorization: `Bearer ${VERCEL_TOKEN}`,
+    Authorization: `Bearer ${getToken()}`,
     "Content-Type": "application/json",
   };
 }
 
 function teamParam() {
-  return VERCEL_TEAM_ID ? `?teamId=${VERCEL_TEAM_ID}` : "";
+  const teamId = process.env.VERCEL_TEAM_ID;
+  return teamId ? `?teamId=${teamId}` : "";
 }
 
 export interface DeployResult {
@@ -23,10 +27,20 @@ export interface DeployResult {
   readyState: string;
 }
 
-// Create a new Vercel project for a business
-export async function createProject(name: string, slug: string): Promise<{ id: string; name: string }> {
+// Ensure project exists — create if needed, return name
+async function ensureProject(slug: string): Promise<string> {
   const projectName = `nm-${slug}`;
 
+  // Try to get existing project first (faster than create-then-catch)
+  const checkRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}${teamParam()}`, {
+    headers: headers(),
+  });
+
+  if (checkRes.ok) {
+    return projectName; // Already exists
+  }
+
+  // Create new project
   const res = await fetch(`${VERCEL_API}/v10/projects${teamParam()}`, {
     method: "POST",
     headers: headers(),
@@ -40,45 +54,64 @@ export async function createProject(name: string, slug: string): Promise<{ id: s
 
   if (!res.ok) {
     const err = await res.json();
-    // Project might already exist — Vercel returns "conflict" or "project_already_exists"
     if (err.error?.code === "project_already_exists" || err.error?.code === "conflict") {
-      const existingRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}${teamParam()}`, {
-        headers: headers(),
-      });
-      const existing = await existingRes.json();
-      return { id: existing.id, name: existing.name };
+      return projectName;
     }
     throw new Error(`Failed to create project: ${JSON.stringify(err)}`);
   }
 
-  const project = await res.json();
-  return { id: project.id, name: project.name };
+  return projectName;
 }
 
-// Deploy files to a Vercel project using the v13 deployments API
+// Set env vars on a project (only for new projects — skips if already set)
+async function ensureEnvVars(projectName: string, envVars: Record<string, string>): Promise<void> {
+  // Check which env vars already exist
+  const listRes = await fetch(`${VERCEL_API}/v9/projects/${projectName}/env${teamParam()}`, {
+    headers: headers(),
+  });
+
+  const existingKeys = new Set<string>();
+  if (listRes.ok) {
+    const data = await listRes.json();
+    for (const env of data.envs || []) {
+      existingKeys.add(env.key);
+    }
+  }
+
+  // Only set vars that don't exist yet
+  const missing = Object.entries(envVars).filter(([key]) => !existingKeys.has(key));
+  if (missing.length === 0) return;
+
+  await Promise.all(
+    missing.map(([key, value]) =>
+      fetch(`${VERCEL_API}/v10/projects/${projectName}/env${teamParam()}`, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({
+          key,
+          value,
+          type: "encrypted",
+          target: ["production", "preview"],
+        }),
+      })
+    )
+  );
+}
+
+// Deploy files to a Vercel project
 export async function deploy(
-  projectName: string,
+  slug: string,
   files: { file: string; data: string }[],
   envVars?: Record<string, string>
 ): Promise<DeployResult> {
-  // Set env vars on the project if provided (parallel for speed)
+  // Step 1: Ensure project exists + set env vars in parallel
+  const projectName = await ensureProject(slug);
+
   if (envVars && Object.keys(envVars).length > 0) {
-    await Promise.all(
-      Object.entries(envVars).map(([key, value]) =>
-        fetch(`${VERCEL_API}/v10/projects/${projectName}/env${teamParam()}`, {
-          method: "POST",
-          headers: headers(),
-          body: JSON.stringify({
-            key,
-            value,
-            type: "encrypted",
-            target: ["production", "preview"],
-          }),
-        })
-      )
-    );
+    await ensureEnvVars(projectName, envVars);
   }
 
+  // Step 2: Deploy
   const res = await fetch(`${VERCEL_API}/v13/deployments${teamParam()}`, {
     method: "POST",
     headers: headers(),
@@ -105,7 +138,6 @@ export async function deploy(
   }
 
   const deployment = await res.json();
-  // Use the stable project URL, not the deployment-specific hash URL
   const projectUrl = `https://${projectName}.vercel.app`;
   return {
     projectId: deployment.projectId,
@@ -116,7 +148,8 @@ export async function deploy(
 }
 
 // Add a custom domain to a Vercel project
-export async function addDomain(projectName: string, domain: string): Promise<{ configured: boolean }> {
+export async function addDomain(slug: string, domain: string): Promise<{ configured: boolean }> {
+  const projectName = `nm-${slug}`;
   const res = await fetch(`${VERCEL_API}/v10/projects/${projectName}/domains${teamParam()}`, {
     method: "POST",
     headers: headers(),
@@ -154,5 +187,5 @@ export async function getDomainConfig(domain: string): Promise<{
 
 // Check if Vercel API is configured
 export function isConfigured(): boolean {
-  return !!VERCEL_TOKEN;
+  return !!process.env.VERCEL_TOKEN;
 }
