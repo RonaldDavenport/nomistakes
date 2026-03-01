@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase";
 import { generateConcepts, generateBrand, generateSiteContent, generateBusinessPlan, generateNames } from "@/lib/claude";
 import { generateBusinessImages } from "@/lib/images";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // POST /api/generate — handles all generation types
 export async function POST(req: Request) {
