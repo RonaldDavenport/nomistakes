@@ -15,7 +15,6 @@ interface SitePreviewProps {
   };
   layout: "default" | "minimal" | "creator";
   slug: string;
-  deployedUrl?: string;
   siteContent?: {
     hero?: { headline?: string; subheadline?: string; badge?: string };
     features?: { title: string; desc: string }[];
@@ -34,147 +33,9 @@ export default function SitePreview({
   colors,
   layout,
   slug,
-  deployedUrl,
   siteContent,
 }: SitePreviewProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // If the site is deployed, show the live site in an iframe
-  if (deployedUrl) {
-    const liveUrl = deployedUrl.startsWith("http") ? deployedUrl : `https://${deployedUrl}`;
-    return (
-      <>
-        {/* Desktop live preview */}
-        <div className="hidden lg:block animate-scaleIn">
-          <div
-            style={{
-              borderRadius: 16,
-              border: "1px solid rgba(255,255,255,0.08)",
-              overflow: "hidden",
-              background: "#0A0A0F",
-            }}
-          >
-            {/* Browser chrome */}
-            <div
-              style={{
-                padding: "10px 14px",
-                background: "#111118",
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <div style={{ display: "flex", gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
-              </div>
-              <a
-                href={liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flex: 1,
-                  background: "rgba(255,255,255,0.06)",
-                  borderRadius: 6,
-                  padding: "4px 10px",
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.4)",
-                  fontFamily: "monospace",
-                  textDecoration: "none",
-                }}
-              >
-                {deployedUrl}
-              </a>
-            </div>
-
-            {/* Live iframe */}
-            <div style={{ height: 580, overflow: "hidden", position: "relative" }}>
-              <iframe
-                src={liveUrl}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  border: "none",
-                  background: colors.background,
-                }}
-                title={`${businessName} live preview`}
-              />
-            </div>
-          </div>
-
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: "rgba(255,255,255,0.25)",
-              marginTop: 8,
-            }}
-          >
-            Live site &middot;{" "}
-            <a href={liveUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#A855F7", textDecoration: "none" }}>
-              Open in new tab
-            </a>
-          </p>
-        </div>
-
-        {/* Mobile toggle */}
-        <div className="lg:hidden">
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            style={{
-              width: "100%",
-              padding: "12px 16px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "#0A0A0F",
-              color: "#A855F7",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
-            {mobileOpen ? "Hide Preview" : "Preview Your Site"}
-            <span style={{ fontSize: 10, transform: mobileOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-              &#9660;
-            </span>
-          </button>
-
-          {mobileOpen && (
-            <div
-              className="animate-scaleIn"
-              style={{
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.08)",
-                overflow: "hidden",
-                marginBottom: 16,
-                background: "#0A0A0F",
-              }}
-            >
-              <div style={{ height: 380, overflow: "hidden" }}>
-                <iframe
-                  src={liveUrl}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "none",
-                    background: colors.background,
-                  }}
-                  title={`${businessName} live preview`}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </>
-    );
-  }
 
   const p = colors.primary;
   const ac = colors.accent;
