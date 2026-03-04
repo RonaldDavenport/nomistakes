@@ -1,57 +1,57 @@
 export const SKILLS = [
-  { id: "writing", label: "Writing", icon: "\u270D\uFE0F" },
-  { id: "design", label: "Design", icon: "\uD83C\uDFA8" },
-  { id: "talking", label: "Talking to People", icon: "\uD83D\uDDE3\uFE0F" },
-  { id: "organizing", label: "Organizing", icon: "\uD83D\uDCCB" },
-  { id: "cooking", label: "Cooking", icon: "\uD83C\uDF73" },
-  { id: "fitness", label: "Fitness", icon: "\uD83D\uDCAA" },
-  { id: "tech", label: "Tech / Coding", icon: "\uD83D\uDCBB" },
-  { id: "crafts", label: "Crafts / DIY", icon: "\uD83D\uDEE0\uFE0F" },
-  { id: "teaching", label: "Teaching", icon: "\uD83D\uDCDA" },
-  { id: "sales", label: "Sales", icon: "\uD83E\uDD1D" },
-  { id: "photography", label: "Photography", icon: "\uD83D\uDCF8" },
-  { id: "music", label: "Music", icon: "\uD83C\uDFB5" },
-  { id: "social_media", label: "Social Media", icon: "\uD83D\uDCF1" },
-  { id: "finance", label: "Finance", icon: "\uD83D\uDCCA" },
-  { id: "fashion", label: "Fashion", icon: "\uD83D\uDC57" },
-  { id: "gaming", label: "Gaming", icon: "\uD83C\uDFAE" },
-  { id: "pets", label: "Pets / Animals", icon: "\uD83D\uDC3E" },
-  { id: "travel", label: "Travel", icon: "\u2708\uFE0F" },
+  { id: "writing", label: "Writing" },
+  { id: "design", label: "Design" },
+  { id: "talking", label: "Talking to People" },
+  { id: "organizing", label: "Organizing" },
+  { id: "cooking", label: "Cooking" },
+  { id: "fitness", label: "Fitness" },
+  { id: "tech", label: "Tech / Coding" },
+  { id: "crafts", label: "Crafts / DIY" },
+  { id: "teaching", label: "Teaching" },
+  { id: "sales", label: "Sales" },
+  { id: "photography", label: "Photography" },
+  { id: "music", label: "Music" },
+  { id: "social_media", label: "Social Media" },
+  { id: "finance", label: "Finance" },
+  { id: "fashion", label: "Fashion" },
+  { id: "gaming", label: "Gaming" },
+  { id: "pets", label: "Pets / Animals" },
+  { id: "travel", label: "Travel" },
 ];
 
 export const TIME_OPTIONS = [
-  { id: "minimal", label: "A few hours/week", desc: "Passive income focus", icon: "\u23F0", hours: "2-5 hrs/week" },
-  { id: "side", label: "Side hustle", desc: "Evenings & weekends", icon: "\uD83C\uDF19", hours: "5-15 hrs/week" },
-  { id: "part", label: "Part-time", desc: "Serious commitment", icon: "\uD83D\uDCC5", hours: "15-30 hrs/week" },
-  { id: "full", label: "Full-time", desc: "All in", icon: "\uD83D\uDE80", hours: "40+ hrs/week" },
+  { id: "minimal", label: "A few hours/week", desc: "Passive income focus", hours: "2-5 hrs/week" },
+  { id: "side", label: "Side hustle", desc: "Evenings & weekends", hours: "5-15 hrs/week" },
+  { id: "part", label: "Part-time", desc: "Serious commitment", hours: "15-30 hrs/week" },
+  { id: "full", label: "Full-time", desc: "All in", hours: "40+ hrs/week" },
 ];
 
 export const BUDGET_OPTIONS = [
-  { id: "zero", label: "$0", desc: "Start completely free", icon: "\uD83C\uDD93" },
-  { id: "low", label: "$1 – $100", desc: "Minimal investment", icon: "\uD83D\uDCB5" },
-  { id: "mid", label: "$100 – $1,000", desc: "Room to invest", icon: "\uD83D\uDCB0" },
-  { id: "high", label: "$1,000+", desc: "Ready to scale fast", icon: "\uD83C\uDFE6" },
+  { id: "zero", label: "$0", desc: "Start completely free" },
+  { id: "low", label: "$1 – $100", desc: "Minimal investment" },
+  { id: "mid", label: "$100 – $1,000", desc: "Room to invest" },
+  { id: "high", label: "$1,000+", desc: "Ready to move fast" },
 ];
 
 export const TYPE_OPTIONS = [
-  { id: "services", label: "Service Business", desc: "Freelance, consulting, coaching, agency", icon: "\uD83C\uDFAF" },
-  { id: "digital", label: "Digital Products", desc: "Courses, templates, ebooks, memberships", icon: "\uD83D\uDC8E" },
-  { id: "both", label: "Services + Digital", desc: "Combine services with digital products", icon: "\uD83D\uDD25" },
-  { id: "any", label: "Surprise Me", desc: "Let AI pick the best fit", icon: "\u2728" },
+  { id: "services", label: "Service Business", desc: "Freelance, consulting, coaching, agency" },
+  { id: "digital", label: "Digital Products", desc: "Courses, templates, ebooks, memberships" },
+  { id: "both", label: "Services + Digital", desc: "Combine services with digital products" },
+  { id: "any", label: "Not sure yet", desc: "We'll recommend the best fit" },
 ];
 
-export const SUBTYPE_OPTIONS: Record<string, { id: string; label: string; icon: string }[]> = {
+export const SUBTYPE_OPTIONS: Record<string, { id: string; label: string }[]> = {
   services: [
-    { id: "freelance", label: "Freelance", icon: "\u270D\uFE0F" },
-    { id: "consulting", label: "Consulting", icon: "\uD83D\uDCCA" },
-    { id: "coaching", label: "Coaching", icon: "\uD83C\uDFAF" },
-    { id: "agency", label: "Agency", icon: "\uD83C\uDFE2" },
+    { id: "freelance", label: "Freelance" },
+    { id: "consulting", label: "Consulting" },
+    { id: "coaching", label: "Coaching" },
+    { id: "agency", label: "Agency" },
   ],
   digital: [
-    { id: "courses", label: "Courses", icon: "\uD83C\uDF93" },
-    { id: "templates", label: "Templates", icon: "\uD83D\uDCC4" },
-    { id: "ebooks", label: "Ebooks", icon: "\uD83D\uDCD6" },
-    { id: "memberships", label: "Memberships", icon: "\uD83D\uDD11" },
+    { id: "courses", label: "Courses" },
+    { id: "templates", label: "Templates" },
+    { id: "ebooks", label: "Ebooks" },
+    { id: "memberships", label: "Memberships" },
   ],
 };
 

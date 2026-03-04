@@ -277,13 +277,13 @@ export default function WizardPage() {
   }
 
   const buildSteps = [
-    { at: 5, label: "Picking the perfect name..." },
-    { at: 15, label: "Designing your brand identity..." },
-    { at: 30, label: "Crafting your website copy..." },
-    { at: 50, label: "Building your storefront page by page..." },
-    { at: 65, label: "Setting up checkout so you can get paid..." },
-    { at: 78, label: "Optimizing for search engines..." },
-    { at: 92, label: "Almost there -- deploying to your live URL..." },
+    { at: 5, label: "Setting up your business profile..." },
+    { at: 15, label: "Designing your brand and website..." },
+    { at: 30, label: "Building your booking and proposal system..." },
+    { at: 50, label: "Configuring your CRM and client workspace..." },
+    { at: 65, label: "Setting up invoicing and payments..." },
+    { at: 78, label: "Generating your marketing content..." },
+    { at: 92, label: "Deploying your site to a live URL..." },
   ];
 
   const currentBuildStep = buildSteps.filter((s) => buildProgress >= s.at).pop();
@@ -406,10 +406,8 @@ export default function WizardPage() {
                           fontWeight: 500,
                           fontFamily: T.h,
                           backdropFilter: "blur(8px)",
-                          boxShadow: active ? "0 0 16px rgba(123,57,252,0.15)" : "none",
                         }}
                       >
-                        <span style={{ marginRight: 6 }}>{s.icon}</span>
                         {s.label}
                       </button>
                     );
@@ -463,7 +461,6 @@ export default function WizardPage() {
                       onClick={() => handleTypeSelect(t.id)}
                       style={optionStyle(selectedType === t.id)}
                     >
-                      <span style={{ fontSize: "1.3rem" }}>{t.icon}</span>
                       <div>
                         <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
                         <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc}</p>
@@ -511,7 +508,6 @@ export default function WizardPage() {
                               cursor: "pointer",
                             }}
                           >
-                            <span style={{ fontSize: "1.1rem" }}>{s.icon}</span>
                             <div>
                               <span style={{ color: T.text, fontWeight: 500, display: "block", fontSize: "0.85rem", fontFamily: T.h }}>{s.label}</span>
                               <span style={{ color: T.text3, fontSize: "0.7rem" }}>{SUBTYPE_DESCS[s.id] || ""}</span>
@@ -549,7 +545,6 @@ export default function WizardPage() {
                       onClick={() => handleBudgetSelect(b.id)}
                       style={optionStyle(selectedBudget === b.id)}
                     >
-                      <span style={{ fontSize: "1.3rem" }}>{b.icon}</span>
                       <div>
                         <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{b.label}</p>
                         <p style={{ color: T.text3, fontSize: "0.8rem" }}>{b.desc}</p>
@@ -584,7 +579,6 @@ export default function WizardPage() {
                       onClick={() => handleTimeSelect(t.id)}
                       style={optionStyle(selectedTime === t.id)}
                     >
-                      <span style={{ fontSize: "1.3rem" }}>{t.icon}</span>
                       <div>
                         <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
                         <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc} &middot; {t.hours}</p>
@@ -653,10 +647,10 @@ export default function WizardPage() {
                       ...headingStyle,
                       textAlign: "center",
                     }}>
-                      Your top three ideas
+                      Here&apos;s what fits you
                     </h2>
                     <p style={{ color: T.text2, fontSize: "1rem" }}>
-                      Pick one to start building. Right now.
+                      Pick one. We&apos;ll set up the whole business.
                     </p>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -747,7 +741,11 @@ export default function WizardPage() {
               padding: "0 24px",
             }}>
               <div style={{ textAlign: "center", maxWidth: 480 }}>
-                <div style={{ fontSize: "2.5rem", marginBottom: 28 }}>&#127881;</div>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
                 <h2 style={{
                   ...headingStyle,
                   textAlign: "center",
