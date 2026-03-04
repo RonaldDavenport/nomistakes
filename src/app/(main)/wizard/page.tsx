@@ -1,7 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from "react";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,6 +33,14 @@ const BUILD_STEPS = [
 ];
 
 export default function WizardPage() {
+  return (
+    <Suspense>
+      <WizardContent />
+    </Suspense>
+  );
+}
+
+function WizardContent() {
   const router = useRouter();
   const params = useSearchParams();
   const isExisting = params.get("existing") === "true";
