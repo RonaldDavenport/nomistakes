@@ -177,9 +177,9 @@ const Hero = () => (
           margin: "0 auto 36px",
         }}
       >
-        Build your website. Book clients. Send proposals. Get paid. Grow with
-        marketing — all from one platform. Powered by AI. Built for people who
-        are great at what they do.
+        Most service pros are paying for 4-6 tools that don't talk to each
+        other. Kovra handles your website, booking, CRM, proposals, invoices,
+        and marketing from one place.
       </p>
 
       <p style={{ fontFamily: font, fontSize: 13.5, color: C.textDim, marginBottom: 14 }}>I want to...</p>
@@ -412,7 +412,7 @@ const FourPillars = () => {
       color: C.gold,
       dimColor: C.goldDim,
       title: "Launch a professional business in minutes.",
-      desc: "Answer a few questions about your skill. Kovra\u2019s AI generates your website, sets up your booking system, and creates your business infrastructure \u2014 all customized to your industry.",
+      desc: "Answer some questions about what you do. Kovra builds your site, booking page, and client infrastructure \u2014 customized to your work, not a generic template.",
       features: [
         { name: "AI Website Builder", detail: "Professional site generated from your answers. Custom domain ready." },
         { name: "Business Setup Wizard", detail: "Guided onboarding that builds your business model, pricing, and positioning." },
@@ -425,7 +425,7 @@ const FourPillars = () => {
       color: C.green,
       dimColor: C.greenDim,
       title: "Services, products, memberships. One checkout.",
-      desc: "Book discovery calls, send AI-generated proposals, invoice clients, sell digital products, and run membership subscriptions \u2014 all with Stripe-powered payments built in.",
+      desc: "From the first discovery call to the paid invoice, the whole sales process runs inside Kovra. Stripe handles the money. You handle the work.",
       features: [
         { name: "Discovery Calls", detail: "Free consultation bookings with calendar sync and automated reminders." },
         { name: "Smart Proposals", detail: "AI generates branded proposals from your call notes. One-click accept & pay." },
@@ -439,7 +439,7 @@ const FourPillars = () => {
       color: C.blue,
       dimColor: C.blueDim,
       title: "Every client, every interaction. One timeline.",
-      desc: "Track clients from first website visit to repeat customer. Automate follow-ups, manage support tickets, and run email sequences that nurture leads while you sleep.",
+      desc: "Every client interaction is logged, from their first site visit through the full relationship. Follow-ups go out automatically. You see everything in one place.",
       features: [
         { name: "Built-in CRM", detail: "Contact lifecycle tracking from visitor \u2192 lead \u2192 customer \u2192 advocate." },
         { name: "Email Sequences", detail: "Automated nurture flows, follow-ups, broadcasts, and drip campaigns." },
@@ -452,7 +452,7 @@ const FourPillars = () => {
       color: C.purple,
       dimColor: C.purpleDim,
       title: "Marketing that runs itself.",
-      desc: "AI writes your blog posts, optimizes your SEO, generates ad copy, monitors competitors, and delivers weekly reports on what\u2019s working \u2014 so you can focus on delivering great work.",
+      desc: "Kovra writes blog posts, runs your SEO, generates ad copy, and tracks what competitors are doing. Every week you get a plain-English report on what to focus on next.",
       features: [
         { name: "Blog Engine", detail: "AI-generated posts optimized for your niche. Publish with one click." },
         { name: "SEO Automation", detail: "Auto-generated meta tags, sitemaps, structured data. Rank without thinking." },
@@ -641,10 +641,10 @@ const HowItWorks = () => (
       </h2>
 
       {[
-        { s: "01", t: "Tell us about your skill", d: "Coaching, design, consulting, fitness, photography — whatever you\u2019re great at. Our AI builds your entire business model around it." },
-        { s: "02", t: "Launch your business", d: "Website, booking system, CRM, proposals, invoicing — everything generates in minutes, connected and customized to your industry." },
-        { s: "03", t: "Get your first client", d: "Share your site. Leads book a free discovery call. You meet, Kovra generates the proposal. They accept and pay. That\u2019s it." },
-        { s: "04", t: "Scale with AI", d: "Blog posts write themselves. SEO runs automatically. Ad copy generates on demand. Weekly reports tell you exactly what to do next." },
+        { s: "01", t: "Tell us what you do", d: "Coaching, design, consulting, photography \u2014 whatever it is. Kovra builds your business model, pricing, and positioning around your specific work." },
+        { s: "02", t: "Launch your business", d: "Your website, booking page, CRM, proposal templates, and invoices all generate in the same setup session. Everything connected, nothing to stitch together." },
+        { s: "03", t: "Get your first client", d: "Share your link. The lead books a call. You meet, Kovra writes the proposal. They accept and pay. Done." },
+        { s: "04", t: "Grow on autopilot", d: "Blog posts generate in your niche. SEO runs in the background. Ad copy is on demand. Every week Kovra tells you what\u2019s working and what to prioritize." },
       ].map((item, i) => (
         <div
           key={i}
@@ -685,10 +685,10 @@ const DualLane = () => (
             label: "Starting from scratch",
             title: "You have a skill. You need a business.",
             points: [
-              "AI builds your site, brand, and pricing strategy",
-              "Guided setup \u2014 no business experience needed",
-              "Built-in coaching that teaches you as you grow",
-              "Everything connected from day one",
+              "Kovra builds your site, brand, and pricing from scratch",
+              "Step-by-step setup, no business background required",
+              "Built-in coaching as you go",
+              "Everything connected on day one",
             ],
             color: C.gold,
             dim: C.goldDim,
@@ -699,8 +699,8 @@ const DualLane = () => (
             points: [
               "Replace 6-8 tools with a single workspace",
               "Import existing clients and data",
-              "Professional proposals and invoicing from day one",
-              "Marketing automation that scales with you",
+              "Proposals and invoices that look better than what you\u2019re sending now",
+              "Marketing automation that keeps up as you grow",
             ],
             color: C.green,
             dim: C.greenDim,
@@ -760,7 +760,7 @@ const Pricing = () => {
       name: "Free",
       price: "$0",
       period: "",
-      desc: "Try Kovra with basic features. Upgrade when you\u2019re ready.",
+      desc: "Start free. No credit card needed.",
       features: ["AI-generated website", "Up to 10 clients", "3 proposals/month", "Basic invoicing", "Kovra subdomain", "Community support"],
       cta: "Get started",
       featured: false,
@@ -769,7 +769,7 @@ const Pricing = () => {
       name: "Starter",
       price: "$49",
       period: "/mo",
-      desc: "Everything you need to look professional and land clients.",
+      desc: "The tools to look legit and actually book clients.",
       features: ["Everything in Free", "Up to 100 clients", "Unlimited proposals", "Custom domain", "Email sequences", "Blog engine", "Priority support"],
       cta: "Get started",
       featured: false,
@@ -778,7 +778,7 @@ const Pricing = () => {
       name: "Growth",
       price: "$99",
       period: "/mo",
-      desc: "The full toolkit for growing service businesses.",
+      desc: "No limits. The whole platform.",
       features: ["Everything in Starter", "Unlimited clients", "Full CRM + lifecycle tracking", "Digital products & memberships", "SEO automation", "AI ad copy generator", "Competitor monitoring", "Weekly AI reports"],
       cta: "Get started",
       featured: true,
@@ -787,7 +787,7 @@ const Pricing = () => {
       name: "Scale",
       price: "$199",
       period: "/mo",
-      desc: "For established businesses scaling operations.",
+      desc: "For businesses past the early stages.",
       features: ["Everything in Growth", "AI business coach", "Advanced analytics", "White-label proposals", "Member portal", "API access", "Dedicated account manager"],
       cta: "Contact sales",
       featured: false,
@@ -897,7 +897,7 @@ const FinalCTA = () => (
         Kovra handles everything else.
       </h2>
       <p style={{ fontFamily: font, fontSize: 15.5, color: C.textSec, margin: "0 0 32px", lineHeight: 1.6 }}>
-        Join thousands of service professionals who stopped juggling tools and started growing their business.
+        Most people who switch to Kovra were paying for 4-7 separate tools that barely talked to each other. This is simpler.
       </p>
       <Link
         href="/wizard"

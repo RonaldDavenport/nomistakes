@@ -40,9 +40,13 @@ export default function LoginPage() {
     <div style={{ background: T.bg }} className="min-h-screen flex items-center justify-center px-6">
       <div style={{ background: T.glass, border: `1px solid ${T.border}`, borderRadius: 16, backdropFilter: "blur(12px)", padding: "32px 28px" }} className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold tracking-tight inline-block mb-6">
-            <span style={{ color: T.text }}>No</span>
-            <span style={{ color: T.purple }}>Mistakes</span>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 24, textDecoration: "none" }}>
+            <svg width="24" height="27" viewBox="0 0 80 88" fill="none">
+              <path d="M40 4C40 4 14 16 14 38C14 54 26 62 32 65.5C34.5 67 36 69 36 72V80C36 82.5 37.5 84 40 84C42.5 84 44 82.5 44 80V72C44 69 45.5 67 48 65.5C54 62 66 54 66 38C66 16 40 4 40 4Z" fill="#C8A44E" />
+              <circle cx="33" cy="35" r="3.5" fill="#0A0A0A" />
+              <circle cx="47" cy="35" r="3.5" fill="#0A0A0A" />
+            </svg>
+            <span style={{ color: T.text, fontWeight: 700, fontSize: 20, letterSpacing: "-0.03em" }}>kovra</span>
           </Link>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome back</h1>
           <p style={{ color: T.text3 }} className="text-sm">Sign in to manage your businesses</p>
