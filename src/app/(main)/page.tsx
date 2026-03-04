@@ -151,22 +151,6 @@ const Hero = () => (
       }}
     />
     <div style={{ position: "relative", maxWidth: 900, margin: "0 auto" }}>
-      <div
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          background: C.goldDim,
-          border: `1px solid ${C.goldBorder}`,
-          borderRadius: 100,
-          padding: "5px 14px 5px 10px",
-          marginBottom: 28,
-        }}
-      >
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gold, animation: "pulse 2s infinite" }} />
-        <span style={{ fontFamily: font, fontSize: 12.5, fontWeight: 500, color: C.gold }}>Early access — join the waitlist</span>
-      </div>
-
       <h1
         style={{
           fontFamily: font,
