@@ -1,6 +1,8 @@
 // Generates deployable Next.js app files for a business site
 // All content is fetched dynamically from Supabase — no hardcoded text
 
+import { getTheme, resolveVars, ThemeVars } from "./site-themes";
+
 interface SiteBrand {
   colors?: { primary?: string; secondary?: string; accent?: string; background?: string; text?: string };
   fonts?: { heading?: string; body?: string };
@@ -55,6 +57,11 @@ export function generateSiteFiles(config: BusinessConfig): { file: string; data:
   const tb = isLight ? "0,0,0" : "255,255,255"; // text & border base for rgba()
   const shadowAlpha = isLight ? "0.08" : "0.3";
   const ctaText = isLightColor(primary) ? "#111" : "#fff";
+
+  // ── Theme selection (deterministic from slug) ──
+  const baseVars: ThemeVars = { primary, accent, bg, textColor, tb, ctaText, shadowAlpha, isLight, headingFont, isServices };
+  const siteTheme = getTheme(config.slug);
+  const tv = resolveVars(baseVars, siteTheme);
 
   // ── package.json ──
   files.push({
@@ -321,6 +328,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
   .grid-2 { gap: 24px; }
   .grid-3 { gap: 24px; }
 }
+${siteTheme.themeCSS(tv)}
 `,
   });
 
