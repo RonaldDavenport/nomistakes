@@ -305,8 +305,19 @@ const CHECKLIST_MAP: Record<string, ChecklistTask[]> = {
   memberships: MEMBERSHIPS_TASKS,
 };
 
+// ── CRM TASKS (universal, appended to all subtypes) ──
+
+const CRM_TASKS: ChecklistTask[] = [
+  { id: "crm-add-contacts", phase: 3, phaseTitle: "Outreach Machine", title: "Add your first 10 contacts", description: "Import your existing leads, past clients, or prospects into the CRM. Go to Contacts in your sidebar.", category: "outreach", aiCapability: "manual", requiredPlan: "starter", estimatedMinutes: 15, order: 100 },
+  { id: "crm-setup-availability", phase: 3, phaseTitle: "Outreach Machine", title: "Set up booking availability", description: "Configure your available days, hours, and slot duration in Calls > Settings. Then share your booking link.", category: "outreach", aiCapability: "manual", requiredPlan: "starter", estimatedMinutes: 5, order: 101 },
+  { id: "crm-share-booking", phase: 3, phaseTitle: "Outreach Machine", title: "Share your booking link", description: "Copy your booking link from the Calls page and add it to your email signature, LinkedIn, and website.", category: "outreach", aiCapability: "manual", requiredPlan: "starter", estimatedMinutes: 10, order: 102 },
+  { id: "crm-first-proposal", phase: 4, phaseTitle: "Convert & Close", title: "Send your first AI proposal", description: "After a discovery call, go to the contact detail page and click 'Create Proposal'. AI generates scope, deliverables, and pricing.", category: "sales", aiCapability: "full", requiredPlan: "starter", estimatedMinutes: 15, order: 103 },
+  { id: "crm-review-pipeline", phase: 4, phaseTitle: "Convert & Close", title: "Review your sales pipeline", description: "Check the Pipeline page to see your deals across stages. Track total pipeline value and win rate.", category: "sales", aiCapability: "manual", requiredPlan: "starter", estimatedMinutes: 5, order: 104 },
+];
+
 export function getChecklistForSubtype(subtype: string): ChecklistTask[] {
-  return CHECKLIST_MAP[subtype] || FREELANCE_TASKS;
+  const base = CHECKLIST_MAP[subtype] || FREELANCE_TASKS;
+  return [...base, ...CRM_TASKS];
 }
 
 export function getPhases(tasks: ChecklistTask[]): { phase: number; title: string; tasks: ChecklistTask[] }[] {

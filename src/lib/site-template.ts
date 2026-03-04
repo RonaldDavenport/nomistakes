@@ -35,7 +35,7 @@ interface BusinessConfig {
   supabaseAnonKey: string;
   stripePublishableKey?: string;
   businessId: string;
-  appUrl: string; // NoMistakes platform URL for admin bar links
+  appUrl: string; // Kovra platform URL for admin bar links
 }
 
 export function generateSiteFiles(config: BusinessConfig): { file: string; data: string }[] {
@@ -60,7 +60,7 @@ export function generateSiteFiles(config: BusinessConfig): { file: string; data:
   files.push({
     file: "package.json",
     data: JSON.stringify({
-      name: `nm-${config.slug}`,
+      name: `kv-${config.slug}`,
       version: "1.0.0",
       private: true,
       scripts: { dev: "next dev", build: "next build", start: "next start" },
@@ -515,8 +515,8 @@ export default function AdminBar({ businessName }: { businessName: string }) {
     <>
       <style>{\`
         @media (max-width: 639px) {
-          .nm-admin-label { display: none !important; }
-          .nm-admin-link { padding: 6px !important; }
+          .kv-admin-label { display: none !important; }
+          .kv-admin-link { padding: 6px !important; }
         }
       \`}</style>
       <div style={{
@@ -530,40 +530,40 @@ export default function AdminBar({ businessName }: { businessName: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
           <a href={dashUrl} style={{
-            background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-            color: "#fff", fontWeight: 700, fontSize: 11,
+            background: "linear-gradient(135deg, #C8A44E, #D4B366)",
+            color: "#0A0A0A", fontWeight: 700, fontSize: 11,
             padding: "3px 8px", borderRadius: 4, textDecoration: "none",
             letterSpacing: 0.5, flexShrink: 0,
-          }}>NM</a>
+          }}>KV</a>
           <span style={{ color: "#a1a1aa", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>
             {businessName}
           </span>
           <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
-          <a href={dashUrl + "/editor"} className="nm-admin-link" style={linkStyle}>
+          <a href={dashUrl + "/editor"} className="kv-admin-link" style={linkStyle}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
-              <span className="nm-admin-label">Edit Site</span>
+              <span className="kv-admin-label">Edit Site</span>
             </span>
           </a>
-          <a href={dashUrl} className="nm-admin-link" style={linkStyle}>
+          <a href={dashUrl} className="kv-admin-link" style={linkStyle}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
                 <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
               </svg>
-              <span className="nm-admin-label">Dashboard</span>
+              <span className="kv-admin-label">Dashboard</span>
             </span>
           </a>
-          <a href={dashUrl + "/settings"} className="nm-admin-link" style={linkStyle}>
+          <a href={dashUrl + "/settings"} className="kv-admin-link" style={linkStyle}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
               </svg>
-              <span className="nm-admin-label">Settings</span>
+              <span className="kv-admin-label">Settings</span>
             </span>
           </a>
         </div>
@@ -581,7 +581,7 @@ export default function AdminBar({ businessName }: { businessName: string }) {
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
               <circle cx="12" cy="12" r="3" />
             </svg>
-            <span className="nm-admin-label">View as Visitor</span>
+            <span className="kv-admin-label">View as Visitor</span>
           </span>
         </button>
       </div>

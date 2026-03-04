@@ -1,5 +1,5 @@
 {
-  "name": "nomistakes",
+  "name": "kovra",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -26,6 +26,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "remotion": "^4.0.429",
+    "resend": "^6.9.3",
     "stripe": "^20.4.0",
     "tailwindcss": "^4.2.1"
   },

@@ -1,22 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50:  #f5f0ff;
-  --color-brand-100: #ede5ff;
-  --color-brand-200: #dccbff;
-  --color-brand-300: #c4a3ff;
-  --color-brand-400: #a855f7;
-  --color-brand-500: #7B39FC;
-  --color-brand-600: #6d28d9;
-  --color-brand-700: #5b21b6;
-  --color-brand-800: #4c1d95;
-  --color-brand-900: #3b0f7a;
-  --color-dark: #000000;
-  --color-surface: #0A0A0F;
-  --color-surface-light: #111118;
-  --color-card: #0A0A0F;
+  --color-brand-50:  #fdf8ef;
+  --color-brand-100: #f9edd5;
+  --color-brand-200: #f0d6a0;
+  --color-brand-300: #e4bc6a;
+  --color-brand-400: #d4b366;
+  --color-brand-500: #C8A44E;
+  --color-brand-600: #b08a3a;
+  --color-brand-700: #8e6d2e;
+  --color-brand-800: #6e5424;
+  --color-brand-900: #523e1a;
+  --color-dark: #09090B;
+  --color-surface: #111113;
+  --color-surface-light: #18181B;
+  --color-surface-hover: #1F1F23;
+  --color-card: #111113;
+  --color-border: #27272A;
+  --color-border-light: #3F3F46;
   --font-serif: "DM Serif Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
 }
 
 html {
@@ -25,26 +28,28 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background: #000000;
+  background: #09090B;
   color: #FAFAFA;
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #7B39FC, #A855F7);
+  background: linear-gradient(135deg, #C8A44E, #D4B65E);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #7B39FC, #A855F7);
-  color: #FFFFFF;
+  background: #C8A44E;
+  color: #09090B;
+  font-weight: 600;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 .btn-primary:hover {
-  filter: brightness(1.1);
+  background: #D4B65E;
   transform: translateY(-1px);
-  box-shadow: 0 8px 30px rgba(123, 57, 252, 0.3);
+  box-shadow: 0 8px 24px rgba(200, 164, 78, 0.25);
 }
 .btn-primary:disabled {
   opacity: 0.4;
@@ -54,12 +59,13 @@ body {
 }
 
 .btn-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid #27272A;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 .btn-secondary:hover {
-  border-color: rgba(123, 57, 252, 0.4);
-  background: rgba(123, 57, 252, 0.06);
+  border-color: #C8A44E;
+  background: rgba(200, 164, 78, 0.08);
 }
 
 @keyframes fadeIn {
@@ -102,6 +108,16 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 .animate-fadeIn { animation: fadeIn 0.4s ease forwards; }
 .animate-slideIn { animation: slideIn 0.4s ease forwards; }
 .animate-pulseRing { animation: pulseRing 1.5s ease-out infinite; }
@@ -109,6 +125,8 @@ body {
 .animate-scaleIn { animation: scaleIn 0.3s ease forwards; }
 .animate-slideUp { animation: slideUp 0.5s ease forwards; }
 .animate-reveal { animation: reveal 0.4s ease forwards; }
+.animate-shimmer { animation: shimmer 1.5s ease infinite; background-size: 200% 100%; }
+.animate-pulseDot { animation: pulseDot 2s ease infinite; }
 
 @keyframes autoScroll {
   0% { transform: translateX(0); }

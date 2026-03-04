@@ -11,9 +11,9 @@ export default function PrivacyPage() {
           <p className="text-zinc-500 text-sm mb-12">Last updated: February 2026</p>
 
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            No Mistakes (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is committed to
+            Kovra (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) is committed to
             protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and
-            safeguard your information when you use the No Mistakes platform (&ldquo;the
+            safeguard your information when you use the Kovra platform (&ldquo;the
             Service&rdquo;).
           </p>
 

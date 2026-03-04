@@ -1,4 +1,4 @@
-// Affiliate Marketing System for No Mistakes
+// Affiliate Marketing System for Kovra
 // Two-sided: Platform earns from recommending tools to users,
 // and generated business sites earn from embedded affiliate products
 

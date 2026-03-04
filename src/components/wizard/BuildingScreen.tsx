@@ -329,7 +329,7 @@ export default function BuildingScreen({
           fontWeight: 500,
           fontFamily: T.h,
         }}>
-          Sites built with NoMistakes
+          Sites built with Kovra
         </p>
 
         <div style={{

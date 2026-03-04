@@ -23,6 +23,9 @@ export const CREDIT_COSTS: Record<string, number> = {
   logo_regen: 5,
   seo_audit: 5,
   push_campaign: 1,
+  proposal_generation: 10,
+  email_send: 1,
+  email_template_generate: 3,
 };
 
 // Monthly credit allocations per plan

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/discovery-calls/reminders",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

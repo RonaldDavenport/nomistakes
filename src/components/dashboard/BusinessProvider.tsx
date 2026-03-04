@@ -28,6 +28,7 @@ export interface Business {
   checklist_initialized: boolean;
   coach_name: string | null;
   layout: string;
+  availability_settings: Record<string, unknown> | null;
 }
 
 interface BusinessContextValue {

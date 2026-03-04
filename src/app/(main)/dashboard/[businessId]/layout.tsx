@@ -9,116 +9,182 @@ import { getPlan } from "@/lib/plans";
 import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
 
+/* ── Nav Groups ── */
+
+const NAV_GROUPS = (businessId: string) => [
+  {
+    items: [
+      { href: `/dashboard/${businessId}`, label: "Dashboard", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" },
+    ],
+  },
+  {
+    label: "SELL",
+    items: [
+      { href: `/dashboard/${businessId}/contacts`, label: "Clients", icon: "M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" },
+      { href: `/dashboard/${businessId}/pipeline`, label: "Proposals", icon: "M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" },
+      { href: `/dashboard/${businessId}/invoices`, label: "Invoices", icon: "M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" },
+      { href: `/dashboard/${businessId}/products`, label: "Products", icon: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" },
+      { href: `/dashboard/${businessId}/calls`, label: "Calendar", icon: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" },
+    ],
+  },
+  {
+    label: "MANAGE",
+    items: [
+      { href: `/dashboard/${businessId}/emails`, label: "Email", icon: "M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" },
+      { href: `/dashboard/${businessId}/chat`, label: "AI Coach", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
+    ],
+  },
+  {
+    label: "GROW",
+    items: [
+      { href: `/dashboard/${businessId}/editor`, label: "Website", icon: "M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" },
+      { href: `/dashboard/${businessId}/content`, label: "Blog", icon: "M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" },
+      { href: `/dashboard/${businessId}/ads`, label: "Marketing", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" },
+      { href: `/dashboard/${businessId}/analytics`, label: "Analytics", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+    ],
+  },
+];
+
 function SidebarNav({ businessId }: { businessId: string }) {
   const pathname = usePathname();
   const { plan: planId, credits, loading } = useBusinessContext();
   const plan = getPlan(planId);
-
-  const NAV_ITEMS = [
-    { href: `/dashboard/${businessId}`, label: "Overview", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" },
-    { href: `/dashboard/${businessId}/chat`, label: "AI Coach", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
-    { href: `/dashboard/${businessId}/editor`, label: "Site Editor", icon: "M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" },
-    { href: `/dashboard/${businessId}/content`, label: "Content", icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" },
-    { href: `/dashboard/${businessId}/ads`, label: "Ads", icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" },
-    { href: `/dashboard/${businessId}/seo`, label: "SEO", icon: "M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" },
-    { href: `/dashboard/${businessId}/emails`, label: "Emails", icon: "M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" },
-    { href: `/dashboard/${businessId}/competitors`, label: "Intel", icon: "M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" },
-    { href: `/dashboard/${businessId}/reports`, label: "Reports", icon: "M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" },
-    { href: `/dashboard/${businessId}/analytics`, label: "Analytics", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
-    { href: `/dashboard/${businessId}/tools`, label: "Tools", icon: "M11.42 15.17l-5.658-5.658a1 1 0 010-1.414l.354-.354a1 1 0 011.414 0l4.95 4.95 4.95-4.95a1 1 0 011.414 0l.354.354a1 1 0 010 1.414l-5.658 5.658a2 2 0 01-2.828 0z" },
-    { href: `/dashboard/${businessId}/settings`, label: "Settings", icon: "M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" },
-  ];
+  const groups = NAV_GROUPS(businessId);
 
   if (loading) return null;
 
   return (
     <>
-      <div className="p-4" style={{ borderBottom: `1px solid ${T.border}` }}>
+      <div style={{ padding: 16, borderBottom: `1px solid ${T.border}` }}>
         <BusinessSwitcher />
       </div>
-      <nav className="flex-1 p-4 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
-              style={
-                active
-                  ? {
-                      background: "rgba(123,57,252,0.1)",
-                      color: T.purpleLight,
-                      borderLeft: `3px solid ${T.purple}`,
+
+      {/* Search placeholder */}
+      <div style={{ padding: "12px 16px 4px" }}>
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "8px 12px", borderRadius: 8,
+            background: "rgba(255,255,255,0.03)",
+            border: `1px solid ${T.border}`,
+            cursor: "pointer",
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.text3} strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <span style={{ fontSize: 13, color: T.text3, flex: 1 }}>Search...</span>
+          <span style={{
+            fontSize: 10, color: T.text3, padding: "2px 6px",
+            borderRadius: 4, background: "rgba(255,255,255,0.05)",
+            border: `1px solid ${T.border}`, fontFamily: T.mono,
+          }}>
+            ⌘K
+          </span>
+        </div>
+      </div>
+
+      {/* Nav groups */}
+      <nav style={{ flex: 1, padding: "8px 16px", overflowY: "auto" }}>
+        {groups.map((group, gi) => (
+          <div key={gi} style={{ marginBottom: 4 }}>
+            {group.label && (
+              <p style={{
+                fontSize: 10, fontWeight: 600, color: T.text3,
+                textTransform: "uppercase", letterSpacing: "0.08em",
+                padding: "12px 12px 4px",
+              }}>
+                {group.label}
+              </p>
+            )}
+            {group.items.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 12px", borderRadius: 8,
+                    fontSize: 13, fontWeight: active ? 600 : 400,
+                    textDecoration: "none", marginBottom: 1,
+                    transition: "all 0.15s",
+                    background: active ? T.goldDim : "transparent",
+                    color: active ? T.gold : T.text3,
+                    borderLeft: active ? `2px solid ${T.gold}` : "2px solid transparent",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.color = T.text2;
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
                     }
-                  : {
-                      color: T.text3,
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      (e.currentTarget as HTMLElement).style.color = T.text3;
+                      (e.currentTarget as HTMLElement).style.background = "transparent";
                     }
-              }
-              onMouseEnter={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.color = T.text2;
-                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLElement).style.color = T.text3;
-                  (e.currentTarget as HTMLElement).style.background = "transparent";
-                }
-              }}
-            >
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-              </svg>
-              {item.label}
-            </Link>
-          );
-        })}
+                  }}
+                >
+                  <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ flexShrink: 0 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                  </svg>
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
+
       {/* Credits display */}
       {plan.id !== "free" && (
-        <div className="px-4 pb-2">
+        <div style={{ padding: "0 16px 8px" }}>
           <div
-            className="flex items-center justify-between px-4 py-2.5 rounded-lg"
-            style={{ background: "rgba(123,57,252,0.06)", border: `1px solid rgba(123,57,252,0.12)` }}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 12px", borderRadius: 8,
+              background: T.goldDim, border: `1px solid rgba(200,164,78,0.12)`,
+            }}
           >
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" style={{ color: T.purpleLight }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <span className="text-xs font-medium" style={{ color: T.text2 }}>{credits} credits</span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: T.text2 }}>{credits} credits</span>
             </div>
             <Link
               href={`/dashboard/${businessId}/settings?tab=credits`}
-              className="text-[10px] font-medium transition"
-              style={{ color: T.purpleLight }}
+              style={{ fontSize: 10, fontWeight: 500, color: T.gold, textDecoration: "none" }}
             >
               Buy more
             </Link>
           </div>
         </div>
       )}
-      <div className="p-4" style={{ borderTop: `1px solid ${T.border}` }}>
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+
+      {/* User profile card */}
+      <div style={{ padding: 16, borderTop: `1px solid ${T.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-              style={{ background: CTA_GRAD }}
+              style={{
+                width: 32, height: 32, borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: CTA_GRAD, color: "#09090B",
+                fontSize: 12, fontWeight: 700,
+              }}
             >
               R
             </div>
             <div>
-              <p className="text-sm font-medium" style={{ color: T.text }}>{plan.name} Plan</p>
-              <p className="text-xs" style={{ color: T.text3 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{plan.name} Plan</p>
+              <p style={{ fontSize: 11, color: T.text3 }}>
                 {plan.price === 0 ? "Free" : `$${(plan.price / 100).toFixed(2)}/mo`}
               </p>
               <Link
                 href="/dashboard/account"
-                className="text-xs transition"
-                style={{ color: T.text3 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.text2; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.text3; }}
+                style={{ fontSize: 11, color: T.text3, textDecoration: "none" }}
               >
                 Account Settings
               </Link>
@@ -137,10 +203,10 @@ function SidebarNav({ businessId }: { businessId: string }) {
                 const { url } = await res.json();
                 if (url) window.location.href = url;
               }}
-              className="text-xs font-medium transition-colors"
-              style={{ color: T.purpleLight }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.purple; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.purpleLight; }}
+              style={{
+                fontSize: 11, fontWeight: 600, color: T.gold,
+                background: "none", border: "none", cursor: "pointer",
+              }}
             >
               Upgrade
             </button>
@@ -165,12 +231,15 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
     <BusinessProvider businessId={businessId}>
       {/* Hide parent dashboard header — business layout has its own sidebar with logo */}
       <style>{`[data-dashboard-header] { display: none !important; }`}</style>
-      <div className="flex min-h-screen">
+      <div style={{ display: "flex", minHeight: "100vh" }}>
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 z-40 lg:hidden"
-            style={{ background: "rgba(0,0,0,0.6)" }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 40,
+              background: "rgba(0,0,0,0.6)",
+            }}
+            className="lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -178,32 +247,38 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
         {/* Sidebar */}
         <aside
           className={`
-            fixed inset-y-0 left-0 z-50 w-64 flex flex-col shrink-0
+            fixed inset-y-0 left-0 z-50 flex flex-col shrink-0
             transform transition-transform duration-200 ease-out
             lg:relative lg:translate-x-0
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           `}
           style={{
+            width: 256,
             background: T.bgEl,
             borderRight: `1px solid ${T.border}`,
-            backdropFilter: "blur(20px)",
           }}
         >
           <div
-            className="p-6 flex items-center justify-between"
-            style={{ borderBottom: `1px solid ${T.border}` }}
+            style={{
+              padding: "20px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              borderBottom: `1px solid ${T.border}`,
+            }}
           >
-            <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-              <span style={{ color: T.text }}>No</span>
-              <span style={{ color: T.purple }}>Mistakes</span>
+            <Link href="/dashboard" style={{ fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", textDecoration: "none" }}>
+              kovra
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg"
-              style={{ color: T.text3 }}
+              className="lg:hidden"
+              style={{
+                width: 32, height: 32, display: "flex", alignItems: "center",
+                justifyContent: "center", borderRadius: 8, background: "none",
+                border: "none", color: T.text3, cursor: "pointer",
+              }}
               aria-label="Close sidebar"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -212,29 +287,34 @@ export default function BusinessLayout({ children }: { children: React.ReactNode
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto min-w-0" style={{ background: T.bg }}>
+        <main style={{ flex: 1, overflowY: "auto", minWidth: 0, background: T.bg }}>
           {/* Mobile top bar */}
           <div
-            className="sticky top-0 z-30 lg:hidden px-4 h-14 flex items-center gap-3"
+            className="flex items-center lg:hidden"
             style={{
+              position: "sticky", top: 0, zIndex: 30,
+              padding: "0 16px", height: 56,
+              gap: 12,
               borderBottom: `1px solid ${T.border}`,
-              background: "rgba(0,0,0,0.85)",
+              background: "rgba(9,9,11,0.85)",
               backdropFilter: "blur(20px)",
             }}
           >
             <button
               onClick={() => setSidebarOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-lg"
-              style={{ color: T.text2 }}
+              style={{
+                width: 40, height: 40, display: "flex", alignItems: "center",
+                justifyContent: "center", borderRadius: 8, background: "none",
+                border: "none", color: T.text2, cursor: "pointer",
+              }}
               aria-label="Open sidebar"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
               </svg>
             </button>
-            <Link href="/dashboard" className="text-lg font-bold tracking-tight">
-              <span style={{ color: T.text }}>No</span>
-              <span style={{ color: T.purple }}>Mistakes</span>
+            <Link href="/dashboard" style={{ fontSize: 18, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", textDecoration: "none" }}>
+              kovra
             </Link>
           </div>
           {children}

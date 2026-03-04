@@ -1,888 +1,704 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useBusinessContext } from "@/components/dashboard/BusinessProvider";
-import { WelcomeTour } from "@/components/dashboard/WelcomeTour";
-import { PaywallGate } from "@/components/dashboard/PaywallGate";
-import { meetsRequiredPlan } from "@/lib/plans";
-import { T, CTA_GRAD, glassCard } from "@/lib/design-tokens";
-import type { ChecklistTask } from "@/lib/checklist-data";
+import { T, CTA_GRAD } from "@/lib/design-tokens";
+import { getChecklistForSubtype } from "@/lib/checklist-data";
 
-interface TaskWithStatus extends ChecklistTask {
-  status: string;
-  completedAt: string | null;
-  metadata: Record<string, unknown>;
-}
+/* ── Cobra Mark ── */
 
-interface PhaseGroup {
-  phase: number;
-  title: string;
-  tasks: TaskWithStatus[];
-}
-
-/* -- helpers -- */
-
-function groupByPhase(items: TaskWithStatus[]): PhaseGroup[] {
-  const map = new Map<number, PhaseGroup>();
-  for (const task of items) {
-    if (!map.has(task.phase)) {
-      map.set(task.phase, { phase: task.phase, title: task.phaseTitle, tasks: [] });
-    }
-    map.get(task.phase)!.tasks.push(task);
-  }
-  return Array.from(map.values()).sort((a, b) => a.phase - b.phase);
-}
-
-function deriveCurrentPhase(phases: PhaseGroup[]): number {
-  const first = phases.find((p) =>
-    p.tasks.some((t) => t.status !== "completed" && t.status !== "skipped")
-  );
-  return first ? first.phase : -1; // -1 means all done
-}
-
-function phaseTimeLeft(tasks: TaskWithStatus[]): number {
-  return tasks
-    .filter((t) => t.status !== "completed" && t.status !== "skipped")
-    .reduce((sum, t) => sum + t.estimatedMinutes, 0);
-}
-
-function aiCoachHint(task: TaskWithStatus): string | null {
-  if (task.aiCapability === "full") return "Your AI Coach can generate this for you. Click below to get started.";
-  if (task.aiCapability === "draft") return "Your AI Coach can draft this. You review and refine.";
-  if (task.aiCapability === "strategy") return "Ask your AI Coach for a tailored strategy on this.";
-  return null;
-}
-
-// Derive a useful action URL from task context
-function getTaskActionUrl(
-  task: TaskWithStatus,
-  businessId: string,
-  business: { deployed_url?: string; custom_domain?: string; slug?: string }
-): { label: string; href: string; external?: boolean } | null {
-  const id = task.id;
-
-  // "Review your live site" -> go to the site
-  if (id.includes("review-site")) {
-    const url = business.custom_domain
-      ? `https://${business.custom_domain}?nm_admin=true`
-      : business.deployed_url ? `${business.deployed_url}?nm_admin=true` : null;
-    if (!url) return null;
-    return { label: "Open your site", href: url, external: true };
-  }
-
-  // "Review business plan" -> settings
-  if (id.includes("review-plan") || id.includes("review-business")) {
-    return { label: "Open settings", href: `/dashboard/${businessId}/settings` };
-  }
-
-  // Stripe / payments -> settings (integrations)
-  if (id.includes("stripe") || id.includes("verify-integrations") || id.includes("connect-payment")) {
-    return { label: "Go to settings", href: `/dashboard/${businessId}/settings` };
-  }
-
-  // Email setup -> Google Workspace
-  if (id.includes("setup-email") || id.includes("professional-email")) {
-    return { label: "Google Workspace", href: "https://workspace.google.com/", external: true };
-  }
-
-  // Freelance platforms
-  if (id.includes("platform-profiles")) {
-    return { label: "Open Upwork", href: "https://www.upwork.com/freelancers/", external: true };
-  }
-
-  // LinkedIn tasks
-  if (id.includes("linkedin")) {
-    return { label: "Open LinkedIn", href: "https://www.linkedin.com/", external: true };
-  }
-
-  // AI-capable tasks -> chat with pre-filled context
-  if (task.aiCapability === "full" || task.aiCapability === "draft") {
-    return { label: "Generate with AI Coach", href: `/dashboard/${businessId}/chat` };
-  }
-  if (task.aiCapability === "strategy") {
-    return { label: "Ask AI Coach", href: `/dashboard/${businessId}/chat` };
-  }
-
-  return null;
-}
-
-/* -- PhaseStepper -- */
-
-function PhaseStepper({
-  phases,
-  currentPhase,
-  reviewPhase,
-  onReview,
-}: {
-  phases: PhaseGroup[];
-  currentPhase: number;
-  reviewPhase: number | null;
-  onReview: (phase: number | null) => void;
-}) {
+function CobraMark({ size = 16 }: { size?: number }) {
   return (
-    <div className="flex items-center justify-center gap-0 mb-8 overflow-x-auto px-2">
-      {phases.map((p, i) => {
-        const isDone = p.tasks.every((t) => t.status === "completed" || t.status === "skipped");
-        const isCurrent = p.phase === currentPhase;
-        const isReviewing = p.phase === reviewPhase;
-
-        return (
-          <div key={p.phase} className="flex items-center">
-            {/* Dot */}
-            <button
-              onClick={() => isDone ? onReview(isReviewing ? null : p.phase) : undefined}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all"
-              style={
-                isDone
-                  ? {
-                      background: "rgba(34,197,94,0.15)",
-                      color: T.green,
-                      border: `2px solid rgba(34,197,94,0.30)`,
-                      cursor: "pointer",
-                    }
-                  : isCurrent
-                    ? {
-                        background: "rgba(123,57,252,0.15)",
-                        color: T.purpleLight,
-                        border: `2px solid rgba(123,57,252,0.50)`,
-                        boxShadow: `0 0 0 4px rgba(123,57,252,0.10)`,
-                      }
-                    : {
-                        background: "rgba(255,255,255,0.05)",
-                        color: T.text3,
-                        border: "2px solid rgba(255,255,255,0.10)",
-                        cursor: "default",
-                      }
-              }
-              title={isDone ? `Review: ${p.title}` : p.title}
-            >
-              {isDone ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              ) : (
-                p.phase
-              )}
-            </button>
-            {/* Connector line */}
-            {i < phases.length - 1 && (
-              <div
-                className="h-0.5"
-                style={{
-                  width: "clamp(32px, 6vw, 48px)",
-                  background: isDone ? "rgba(34,197,94,0.30)" : "rgba(255,255,255,0.05)",
-                }}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ flexShrink: 0 }}>
+      <path
+        d="M16 2C10 2 6 6 4 10c-1 2-1.5 4.5-1 7 .5 2 1.5 3.5 3 4.5 1 .7 2.2 1 3.5.8C11 22 12 21 12.5 19.5c.3-1 .2-2-.2-3-.5-1-1.3-1.8-2.3-2.2-.5-.2-.5-.8 0-1C12 12 14 11 16 11s4 1 6 2.3c.5.3.5.8 0 1-1 .4-1.8 1.2-2.3 2.2-.4 1-.5 2-.2 3 .5 1.5 1.5 2.5 3 2.8 1.3.2 2.5-.1 3.5-.8 1.5-1 2.5-2.5 3-4.5.5-2.5 0-5-1-7C26 6 22 2 16 2z"
+        fill={T.gold}
+      />
+      <circle cx="11.5" cy="15" r="1.2" fill={T.bg} />
+      <circle cx="20.5" cy="15" r="1.2" fill={T.bg} />
+    </svg>
   );
 }
 
-/* -- PhaseHero -- */
+/* ── Thin rule ── */
 
-function PhaseHero({ phase, tasks }: { phase: PhaseGroup; tasks: TaskWithStatus[] }) {
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  const total = tasks.length;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const minsLeft = phaseTimeLeft(tasks);
+function Rule() {
+  return <div style={{ height: 1, background: T.border, margin: "32px 0" }} />;
+}
+
+/* ── Phase detection ── */
+
+type DashPhase = "setup" | "get_clients" | "active";
+
+function detectPhase(business: {
+  onboarding_completed: boolean;
+  stripe_account_id: string | null;
+  deployed_url: string;
+  live_url: string;
+}, contactCount: number, invoiceCount: number): DashPhase {
+  const hasStripe = !!business.stripe_account_id;
+  const hasSite = !!(business.deployed_url || business.live_url);
+
+  // Active: has contacts and at least one invoice (they're doing business)
+  if (contactCount >= 1 && invoiceCount >= 1) return "active";
+
+  // Get Clients: site is live + stripe connected, but no real clients yet
+  if (hasSite && hasStripe) return "get_clients";
+
+  // Setup: still setting up fundamentals
+  return "setup";
+}
+
+/* ══════════════════════════════════════════
+   SETUP PHASE — checklist + quick actions
+   ══════════════════════════════════════════ */
+
+function SetupDashboard({ businessId, business }: { businessId: string; business: Record<string, unknown> }) {
+  const subtype = (business.subtype as string) || "freelance";
+  const tasks = getChecklistForSubtype(subtype);
+  const phase1 = tasks.filter((t) => t.phase === 1);
+
+  const checks = {
+    site: !!(business.deployed_url || business.live_url),
+    stripe: !!business.stripe_account_id,
+    booking: !!(business.availability_settings && Object.keys(business.availability_settings as object).length > 0),
+  };
+
+  const completedSteps = [checks.site, checks.stripe, checks.booking].filter(Boolean).length;
+  const totalSteps = 3 + phase1.length;
+  const pct = Math.round((completedSteps / totalSteps) * 100);
 
   return (
-    <div className="mb-8">
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: T.purpleLight }}>
-            Phase {phase.phase}
-          </p>
-          <h1 className="text-2xl sm:text-3xl" style={{ fontFamily: T.h, fontWeight: 600, color: T.text }}>{phase.title}</h1>
+    <>
+      <div style={{ marginBottom: 4 }}>
+        <p style={{ fontSize: 13, color: T.text3, marginBottom: 2 }}>
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>
+          Let&apos;s get you set up
+        </h1>
+        <p style={{ fontSize: 13, color: T.text2, marginTop: 6 }}>
+          Complete these steps to start getting clients.
+        </p>
+      </div>
+
+      <Rule />
+
+      {/* Progress */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{completedSteps} of {totalSteps} complete</span>
+          <span style={{ fontSize: 13, color: T.text3 }}>{pct}%</span>
         </div>
-        <div className="text-right shrink-0">
-          <p className="text-sm" style={{ color: T.text2 }}>
-            {completed}/{total} tasks
-          </p>
-          {minsLeft > 0 && (
-            <p className="text-xs" style={{ color: T.text3 }}>~{minsLeft} min left</p>
+        <div style={{ height: 4, background: T.border, borderRadius: 2 }}>
+          <div style={{ height: 4, background: T.gold, borderRadius: 2, width: `${pct}%`, transition: "width 0.3s" }} />
+        </div>
+      </div>
+
+      {/* Core setup steps */}
+      {[
+        {
+          done: checks.site,
+          title: "Review your live site",
+          desc: "Check your copy, services, and pricing. Make it yours.",
+          href: `/dashboard/${businessId}/editor`,
+          action: "Open editor",
+        },
+        {
+          done: checks.stripe,
+          title: "Connect payments",
+          desc: "Link Stripe so clients can pay you directly.",
+          href: `/dashboard/${businessId}/settings?tab=stripe`,
+          action: "Connect Stripe",
+        },
+        {
+          done: checks.booking,
+          title: "Set up booking availability",
+          desc: "Let clients book discovery calls on your schedule.",
+          href: `/dashboard/${businessId}/calls`,
+          action: "Set up calls",
+        },
+      ].map((step, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 0", borderBottom: `1px solid ${T.border}` }}>
+          <div style={{
+            width: 20, height: 20, borderRadius: 5, flexShrink: 0,
+            border: `1.5px solid ${step.done ? T.gold : T.border}`,
+            background: step.done ? T.goldDim : "transparent",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: T.gold, fontSize: 11,
+          }}>
+            {step.done ? "✓" : ""}
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 14, fontWeight: 500, color: step.done ? T.text3 : T.text, textDecoration: step.done ? "line-through" : "none" }}>{step.title}</span>
+            {!step.done && <p style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{step.desc}</p>}
+          </div>
+          {!step.done && (
+            <Link href={step.href} style={{ fontSize: 12, fontWeight: 600, color: T.gold, textDecoration: "none", whiteSpace: "nowrap" }}>
+              {step.action}
+            </Link>
           )}
         </div>
-      </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: CTA_GRAD }}
-        />
-      </div>
-    </div>
-  );
-}
+      ))}
 
-/* -- TaskList -- */
+      <Rule />
 
-function TaskList({
-  tasks,
-  plan,
-  businessId,
-  business,
-  updatingTask,
-  onComplete,
-  onSkip,
-}: {
-  tasks: TaskWithStatus[];
-  plan: string;
-  businessId: string;
-  business: { deployed_url?: string; custom_domain?: string; slug?: string };
-  updatingTask: string | null;
-  onComplete: (taskId: string) => void;
-  onSkip: (taskId: string) => void;
-}) {
-  // First pending task is the "current" one (expanded)
-  const firstPending = tasks.find(
-    (t) => t.status !== "completed" && t.status !== "skipped"
-  );
-
-  return (
-    <div className="space-y-3">
-      {tasks.map((task) => {
-        const isCompleted = task.status === "completed";
-        const isSkipped = task.status === "skipped";
-        const isLocked = !meetsRequiredPlan(plan, task.requiredPlan);
-        const isUpdating = updatingTask === task.id;
-        const isCurrent = task.id === firstPending?.id;
-        const hint = isCurrent ? aiCoachHint(task) : null;
-        const actionUrl = isCurrent ? getTaskActionUrl(task, businessId, business) : null;
-
-        if (isCompleted || isSkipped) {
-          /* -- Compact completed row -- */
-          return (
-            <div
-              key={task.id}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl"
-              style={{
-                background: "rgba(34,197,94,0.03)",
-                border: "1px solid rgba(34,197,94,0.10)",
-              }}
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: "rgba(34,197,94,0.15)" }}
-              >
-                <svg className="w-3 h-3" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-              <span className="text-sm flex-1" style={{ color: T.text2 }}>{task.title}</span>
-              {isSkipped && (
-                <span className="text-[10px]" style={{ color: T.text3 }}>Skipped</span>
-              )}
-              <button
-                onClick={() => onComplete(task.id)}
-                className="text-[10px] transition-colors"
-                style={{ color: T.text3 }}
-              >
-                Undo
-              </button>
-            </div>
-          );
-        }
-
-        if (isCurrent) {
-          /* -- Expanded current task -- */
-          return (
-            <div
-              key={task.id}
-              className="rounded-xl overflow-hidden"
-              style={{
-                border: `1px solid rgba(123,57,252,0.20)`,
-                background: "rgba(123,57,252,0.04)",
-              }}
-            >
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-base font-semibold" style={{ color: T.text, fontFamily: T.h }}>{task.title}</h3>
-                      {task.aiCapability !== "manual" && (
-                        <span
-                          className="px-2 py-0.5 rounded text-[10px] font-medium"
-                          style={
-                            task.aiCapability === "full"
-                              ? { background: "rgba(123,57,252,0.10)", color: T.purpleLight }
-                              : task.aiCapability === "draft"
-                                ? { background: "rgba(168,85,247,0.10)", color: T.purpleLight }
-                                : { background: "rgba(245,158,11,0.10)", color: T.gold }
-                          }
-                        >
-                          {task.aiCapability === "full" ? "AI Generate" : task.aiCapability === "draft" ? "AI Draft" : "AI Strategy"}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm leading-relaxed" style={{ color: T.text2 }}>{task.description}</p>
-                  </div>
-                  <span className="text-xs shrink-0" style={{ color: T.text3 }}>~{task.estimatedMinutes}m</span>
-                </div>
-
-                {/* AI Coach hint */}
-                {hint && (
-                  <div
-                    className="mt-4 p-3 rounded-lg flex items-start gap-3"
-                    style={{
-                      background: "rgba(123,57,252,0.06)",
-                      border: "1px solid rgba(123,57,252,0.10)",
-                    }}
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                      style={{ background: "rgba(123,57,252,0.15)" }}
-                    >
-                      <svg className="w-3.5 h-3.5" style={{ color: T.purpleLight }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs leading-relaxed" style={{ color: T.text2 }}>{hint}</p>
-                      <Link
-                        href={`/dashboard/${businessId}/chat`}
-                        className="inline-block mt-2 text-xs font-medium transition-colors"
-                        style={{ color: T.purpleLight }}
-                      >
-                        Open AI Coach &rarr;
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action link */}
-                {actionUrl && (
-                  <div className="mt-4">
-                    {actionUrl.external ? (
-                      <a
-                        href={actionUrl.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-                        style={{
-                          background: "rgba(255,255,255,0.05)",
-                          border: `1px solid ${T.border}`,
-                          color: T.text,
-                        }}
-                      >
-                        {actionUrl.label}
-                        <svg className="w-3.5 h-3.5" style={{ color: T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
-                      </a>
-                    ) : (
-                      <Link
-                        href={actionUrl.href}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-                        style={{
-                          background: "rgba(255,255,255,0.05)",
-                          border: `1px solid ${T.border}`,
-                          color: T.text,
-                        }}
-                      >
-                        {actionUrl.label}
-                        <svg className="w-3.5 h-3.5" style={{ color: T.text3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                        </svg>
-                      </Link>
-                    )}
-                  </div>
-                )}
-
-                {/* Complete / Skip */}
-                <div className="mt-3 flex items-center gap-3">
-                  <button
-                    onClick={() => onComplete(task.id)}
-                    disabled={isUpdating}
-                    className="px-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
-                    style={{ background: CTA_GRAD, color: "#fff" }}
-                  >
-                    {isUpdating ? "Saving..." : "Mark Complete"}
-                  </button>
-                  <button
-                    onClick={() => onSkip(task.id)}
-                    disabled={isUpdating}
-                    className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-                    style={{ color: T.text3 }}
-                  >
-                    Skip
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        /* -- Compact pending row -- */
-        return (
-          <div
-            key={task.id}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl"
-            style={{
-              border: `1px solid ${T.border}`,
-              background: T.glass,
-              opacity: isLocked ? 0.5 : 1,
-            }}
-          >
-            <div
-              className="w-5 h-5 rounded-full shrink-0"
-              style={{ border: "1px solid rgba(255,255,255,0.15)" }}
-            />
-            <span className="text-sm flex-1" style={{ color: isLocked ? T.text3 : T.text2 }}>
-              {task.title}
+      {/* Phase 1 checklist tasks */}
+      <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 16px" }}>
+        {phase1[0]?.phaseTitle || "Review & Refine"}
+      </h2>
+      {phase1.map((task) => (
+        <div key={task.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.border}` }}>
+          <div style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${T.border}`, flexShrink: 0, marginTop: 1 }} />
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{task.title}</span>
+            <p style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{task.description}</p>
+          </div>
+          {task.aiCapability !== "manual" && (
+            <span style={{ fontSize: 10, color: T.gold, padding: "2px 6px", borderRadius: 4, background: T.goldDim, flexShrink: 0, marginTop: 2 }}>
+              AI {task.aiCapability}
             </span>
-            {isLocked && (
-              <PaywallGate requiredPlan={task.requiredPlan} compact>
-                <span />
-              </PaywallGate>
-            )}
-            {!isLocked && task.aiCapability !== "manual" && (
-              <span
-                className="px-2 py-0.5 rounded text-[10px] font-medium shrink-0"
-                style={
-                  task.aiCapability === "full"
-                    ? { background: "rgba(123,57,252,0.10)", color: T.purpleLight }
-                    : task.aiCapability === "draft"
-                      ? { background: "rgba(168,85,247,0.10)", color: T.purpleLight }
-                      : { background: "rgba(245,158,11,0.10)", color: T.gold }
-                }
-              >
-                {task.aiCapability === "full" ? "AI" : task.aiCapability === "draft" ? "Draft" : "Strategy"}
-              </span>
-            )}
-            <span className="text-[10px] shrink-0 hidden sm:block" style={{ color: T.text3 }}>
-              ~{task.estimatedMinutes}m
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* -- PhaseReview (inline, read-only) -- */
-
-function PhaseReview({ phase, onClose }: { phase: PhaseGroup; onClose: () => void }) {
-  const completed = phase.tasks.filter((t) => t.status === "completed").length;
-
-  return (
-    <div
-      className="mb-8 rounded-xl p-5"
-      style={{
-        border: "1px solid rgba(34,197,94,0.10)",
-        background: "rgba(34,197,94,0.02)",
-      }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(34,197,94,0.15)" }}
-          >
-            <svg className="w-3.5 h-3.5" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: T.text, fontFamily: T.h }}>Phase {phase.phase}: {phase.title}</p>
-            <p className="text-xs" style={{ color: T.text3 }}>{completed}/{phase.tasks.length} completed</p>
-          </div>
+          )}
         </div>
-        <button
-          onClick={onClose}
-          className="text-xs transition-colors"
-          style={{ color: T.text3 }}
-        >
-          Close
-        </button>
+      ))}
+
+      <Rule />
+
+      {/* AI Coach nudge */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <CobraMark size={18} />
+        <p style={{ fontSize: 13, color: T.text2, lineHeight: 1.55, margin: 0 }}>
+          Your site is live — now let&apos;s make it yours. Review your copy, connect payments, and set up booking.{" "}
+          <Link href={`/dashboard/${businessId}/chat`} style={{ color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+            Ask me anything
+          </Link>
+        </p>
       </div>
-      <div className="space-y-1.5">
-        {phase.tasks.map((t) => (
-          <div key={t.id} className="flex items-center gap-2 px-3 py-1.5 text-xs">
-            {t.status === "completed" ? (
-              <svg className="w-3.5 h-3.5 shrink-0" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-            ) : (
-              <span className="w-3.5 h-3.5 text-center shrink-0" style={{ color: T.text3 }}>&mdash;</span>
-            )}
-            <span style={{ color: t.status === "completed" ? T.text2 : T.text3 }}>
-              {t.title}
-            </span>
-          </div>
+    </>
+  );
+}
+
+/* ══════════════════════════════════════════
+   GET CLIENTS PHASE — outreach + lead gen
+   ══════════════════════════════════════════ */
+
+function GetClientsDashboard({ businessId, business }: { businessId: string; business: Record<string, unknown> }) {
+  const subtype = (business.subtype as string) || "freelance";
+  const tasks = getChecklistForSubtype(subtype);
+  const phase2 = tasks.filter((t) => t.phase === 2);
+  const phase3 = tasks.filter((t) => t.phase === 3);
+
+  const quickActions = [
+    { label: "Share booking link", desc: "Send clients your scheduling page", href: `/dashboard/${businessId}/calls`, icon: "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" },
+    { label: "Write a blog post", desc: "SEO content drives organic traffic", href: `/dashboard/${businessId}/content`, icon: "M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" },
+    { label: "Create an ad", desc: "Get in front of your audience", href: `/dashboard/${businessId}/ads`, icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" },
+    { label: "Add a contact", desc: "Start building your client list", href: `/dashboard/${businessId}/contacts`, icon: "M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" },
+  ];
+
+  return (
+    <>
+      <div style={{ marginBottom: 4 }}>
+        <p style={{ fontSize: 13, color: T.text3, marginBottom: 2 }}>
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>
+          Time to get clients
+        </h1>
+        <p style={{ fontSize: 13, color: T.text2, marginTop: 6 }}>
+          Your business is set up. Now let&apos;s fill your pipeline.
+        </p>
+      </div>
+
+      <Rule />
+
+      {/* Quick actions */}
+      <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 16px" }}>Quick actions</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 0 }}>
+        {quickActions.map((a) => (
+          <Link
+            key={a.label}
+            href={a.href}
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "14px 16px", borderRadius: 8,
+              border: `1px solid ${T.border}`, textDecoration: "none",
+              transition: "border-color 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = T.gold; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = T.border; }}
+          >
+            <svg width="18" height="18" fill="none" stroke={T.gold} viewBox="0 0 24 24" strokeWidth={1.5} style={{ flexShrink: 0 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={a.icon} />
+            </svg>
+            <div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.text, display: "block" }}>{a.label}</span>
+              <span style={{ fontSize: 11, color: T.text3 }}>{a.desc}</span>
+            </div>
+          </Link>
         ))}
       </div>
-    </div>
-  );
-}
 
-/* -- PhaseTransition -- */
+      <Rule />
 
-function PhaseTransition({
-  phase,
-  nextPhase,
-  onContinue,
-}: {
-  phase: PhaseGroup;
-  nextPhase: PhaseGroup | null;
-  onContinue: () => void;
-}) {
-  const completed = phase.tasks.filter((t) => t.status === "completed").length;
-  const skipped = phase.tasks.filter((t) => t.status === "skipped").length;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.80)", backdropFilter: "blur(8px)" }}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl p-8 text-center"
-        style={{
-          background: T.bgEl,
-          border: `1px solid ${T.border}`,
-        }}
-      >
-        <div
-          className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(34,197,94,0.10)" }}
-        >
-          <svg className="w-8 h-8" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h2 className="text-xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Phase {phase.phase} Complete!</h2>
-        <p className="text-sm mb-1" style={{ color: T.text2 }}>{phase.title}</p>
-        <p className="text-xs mb-6" style={{ color: T.text3 }}>
-          {completed} completed{skipped > 0 ? `, ${skipped} skipped` : ""}
-        </p>
-
-        {nextPhase ? (
-          <>
-            <p className="text-xs mb-1" style={{ color: T.text3 }}>Up next</p>
-            <p className="text-sm font-semibold mb-6" style={{ color: T.text, fontFamily: T.h }}>
-              Phase {nextPhase.phase}: {nextPhase.title}
-            </p>
-            <button
-              onClick={onContinue}
-              className="w-full px-6 py-3 rounded-xl text-sm font-semibold"
-              style={{ background: CTA_GRAD, color: "#fff" }}
-            >
-              Continue to Phase {nextPhase.phase}
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={onContinue}
-            className="w-full px-6 py-3 rounded-xl text-sm font-semibold"
-            style={{ background: CTA_GRAD, color: "#fff" }}
-          >
-            View Results
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* -- CompletionView -- */
-
-function CompletionView({
-  phases,
-  tasks,
-  businessId,
-  businessName,
-  onReviewPhase,
-}: {
-  phases: PhaseGroup[];
-  tasks: TaskWithStatus[];
-  businessId: string;
-  businessName: string;
-  onReviewPhase: (phase: number) => void;
-}) {
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  const skipped = tasks.filter((t) => t.status === "skipped").length;
-  const totalMinutes = tasks.reduce((s, t) => s + t.estimatedMinutes, 0);
-
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto">
-      <div className="text-center mb-8">
-        <div
-          className="w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center"
-          style={{ background: "linear-gradient(135deg, rgba(123,57,252,0.2), rgba(34,197,94,0.2))" }}
-        >
-          <svg className="w-10 h-10" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-          </svg>
-        </div>
-        <h1 className="text-2xl sm:text-3xl mb-2" style={{ fontFamily: T.h, fontWeight: 600, color: T.text }}>
-          Launch Checklist Complete
-        </h1>
-        <p className="text-sm" style={{ color: T.text2 }}>
-          {businessName} is set up for success.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        <div className="p-4 rounded-xl text-center" style={{ ...glassCard }}>
-          <p className="text-2xl font-bold" style={{ color: T.green }}>{completed}</p>
-          <p className="text-xs mt-1" style={{ color: T.text3 }}>Completed</p>
-        </div>
-        <div className="p-4 rounded-xl text-center" style={{ ...glassCard }}>
-          <p className="text-2xl font-bold" style={{ color: T.text }}>{phases.length}</p>
-          <p className="text-xs mt-1" style={{ color: T.text3 }}>Phases</p>
-        </div>
-        <div className="p-4 rounded-xl text-center" style={{ ...glassCard }}>
-          <p className="text-2xl font-bold" style={{ color: T.text }}>~{totalMinutes}m</p>
-          <p className="text-xs mt-1" style={{ color: T.text3 }}>Invested</p>
-        </div>
-      </div>
-
-      {skipped > 0 && (
-        <p className="text-xs text-center mb-6" style={{ color: T.text3 }}>
-          {skipped} task{skipped > 1 ? "s" : ""} skipped &mdash; you can revisit them anytime.
-        </p>
+      {/* Build proof tasks */}
+      {phase2.length > 0 && (
+        <>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 16px" }}>
+            {phase2[0].phaseTitle}
+          </h2>
+          {phase2.map((task) => (
+            <div key={task.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${T.border}`, flexShrink: 0, marginTop: 1 }} />
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{task.title}</span>
+                <p style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{task.description}</p>
+              </div>
+              {task.aiCapability !== "manual" && (
+                <span style={{ fontSize: 10, color: T.gold, padding: "2px 6px", borderRadius: 4, background: T.goldDim, flexShrink: 0, marginTop: 2 }}>
+                  AI {task.aiCapability}
+                </span>
+              )}
+            </div>
+          ))}
+          <Rule />
+        </>
       )}
 
-      <div className="rounded-xl p-5 mb-6" style={{ ...glassCard }}>
-        <h3 className="text-sm mb-3" style={{ fontFamily: T.h, fontWeight: 600, color: T.text }}>What to do now</h3>
-        <ul className="space-y-2 text-sm" style={{ color: T.text2 }}>
-          <li className="flex items-start gap-2">
-            <span className="mt-0.5" style={{ color: T.purpleLight }}>&#8227;</span>
-            Use your AI Coach to create content, draft emails, and strategize next moves.
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-0.5" style={{ color: T.purpleLight }}>&#8227;</span>
-            Check out the recommended tools to accelerate your growth.
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-0.5" style={{ color: T.purpleLight }}>&#8227;</span>
-            Revisit any phase below to redo or refine tasks.
-          </li>
-        </ul>
-      </div>
-
-      <div className="space-y-2 mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: T.text3 }}>Review phases</p>
-        {phases.map((p) => (
-          <button
-            key={p.phase}
-            onClick={() => onReviewPhase(p.phase)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-            style={{
-              border: `1px solid ${T.border}`,
-              background: T.glass,
-            }}
-          >
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: "rgba(34,197,94,0.15)" }}
-            >
-              <svg className="w-3 h-3" style={{ color: T.green }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
+      {/* Outreach tasks */}
+      {phase3.length > 0 && (
+        <>
+          <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 16px" }}>
+            {phase3[0].phaseTitle}
+          </h2>
+          {phase3.slice(0, 4).map((task) => (
+            <div key={task.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 0", borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${T.border}`, flexShrink: 0, marginTop: 1 }} />
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{task.title}</span>
+                <p style={{ fontSize: 12, color: T.text3, marginTop: 2 }}>{task.description}</p>
+              </div>
+              {task.aiCapability !== "manual" && (
+                <span style={{ fontSize: 10, color: T.gold, padding: "2px 6px", borderRadius: 4, background: T.goldDim, flexShrink: 0, marginTop: 2 }}>
+                  AI {task.aiCapability}
+                </span>
+              )}
             </div>
-            <span className="text-sm flex-1" style={{ color: T.text }}>Phase {p.phase}: {p.title}</span>
-            <span className="text-xs" style={{ color: T.text3 }}>{p.tasks.filter((t) => t.status === "completed").length}/{p.tasks.length}</span>
-          </button>
-        ))}
-      </div>
+          ))}
+          {phase3.length > 4 && (
+            <Link
+              href={`/dashboard/${businessId}/checklist`}
+              style={{ display: "block", fontSize: 12, color: T.gold, textDecoration: "none", fontWeight: 500, padding: "12px 0" }}
+            >
+              View all {phase3.length} outreach tasks
+            </Link>
+          )}
+          <Rule />
+        </>
+      )}
 
-      <div className="flex gap-3">
-        <Link
-          href={`/dashboard/${businessId}/chat`}
-          className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-center"
-          style={{ background: CTA_GRAD, color: "#fff" }}
-        >
-          Talk to AI Coach
-        </Link>
-        <Link
-          href={`/dashboard/${businessId}/tools`}
-          className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-center"
-          style={{
-            background: T.glass,
-            border: `1px solid ${T.border}`,
-            color: T.text2,
-          }}
-        >
-          Browse Tools
-        </Link>
+      {/* AI Coach nudge */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <CobraMark size={18} />
+        <p style={{ fontSize: 13, color: T.text2, lineHeight: 1.55, margin: 0 }}>
+          Your site is live and payments are connected. Now focus on getting visible — write a blog post, share your booking link, or create your first ad.{" "}
+          <Link href={`/dashboard/${businessId}/chat`} style={{ color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+            Need a strategy?
+          </Link>
+        </p>
       </div>
-    </div>
+    </>
   );
 }
 
-/* ================================================================
-   MAIN PAGE
-   ================================================================ */
+/* ══════════════════════════════════════════
+   ACTIVE PHASE — full operational dashboard
+   ══════════════════════════════════════════ */
+
+interface DashStats {
+  revenue: number;
+  clientCount: number;
+  proposalCount: number;
+  invoicesDue: number;
+  pipelineValue: number;
+  invoicesDueAmount: number;
+}
+
+interface DashActivity {
+  color: string;
+  title: string;
+  desc: string;
+  amount?: string;
+  time: string;
+}
+
+interface DashProposal {
+  id: string;
+  title: string;
+  contact_name: string;
+  total_cents: number;
+  status: string;
+}
+
+interface DashUpcoming {
+  title: string;
+  time: string;
+}
+
+function ActiveDashboard({
+  businessId,
+  stats,
+  activities,
+  recentProposals,
+  upcomingCalls,
+}: {
+  businessId: string;
+  stats: DashStats;
+  activities: DashActivity[];
+  recentProposals: DashProposal[];
+  upcomingCalls: DashUpcoming[];
+}) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  /* Revenue chart — placeholder data for now */
+  const months = ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb"];
+  const revenue = [6200, 8100, 7400, 9800, 11200, stats.revenue || 12480];
+  const maxRev = Math.max(...revenue) * 1.12;
+  const chartH = 150;
+
+  const STATUS_COLORS: Record<string, string> = {
+    accepted: T.green, viewed: T.blue, sent: T.gold, draft: T.text3,
+  };
+
+  function fmt(cents: number) {
+    return `$${(cents / 100).toFixed(2).replace(/\.00$/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  }
+
+  return (
+    <>
+      {/* ── Header ── */}
+      <div style={{ marginBottom: 4 }}>
+        <p style={{ fontSize: 13, color: T.text3, marginBottom: 2 }}>
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+        </p>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>
+          {greeting}
+        </h1>
+      </div>
+
+      <Rule />
+
+      {/* ── Stats ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40, marginBottom: 0 }}>
+        {[
+          { label: "Revenue", value: fmt(stats.revenue), sub: "this month" },
+          { label: "Clients", value: String(stats.clientCount), sub: "total" },
+          { label: "Proposals", value: String(stats.proposalCount), sub: stats.pipelineValue > 0 ? fmt(stats.pipelineValue) + " pipeline" : "open" },
+          { label: "Invoices", value: String(stats.invoicesDue), sub: stats.invoicesDueAmount > 0 ? fmt(stats.invoicesDueAmount) + " due" : "all paid" },
+        ].map((s) => (
+          <div key={s.label}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+              {s.label}
+            </p>
+            <p style={{ fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 8, fontVariantNumeric: "tabular-nums" }}>
+              {s.value}
+            </p>
+            <span style={{ fontSize: 12, color: T.text3 }}>{s.sub}</span>
+          </div>
+        ))}
+      </div>
+
+      <Rule />
+
+      {/* ── Revenue ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: 0 }}>Revenue</h2>
+        <span style={{ fontSize: 12, color: T.text3 }}>Last 6 months</span>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: chartH }}>
+        {revenue.map((v, i) => {
+          const barH = (v / maxRev) * chartH;
+          const isLast = i === revenue.length - 1;
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: isLast ? T.gold : T.text3, fontVariantNumeric: "tabular-nums" }}>
+                ${(v / 1000).toFixed(1)}k
+              </span>
+              <div style={{
+                width: "100%", height: barH,
+                background: isLast ? T.gold : "rgba(255,255,255,0.06)",
+                borderRadius: "5px 5px 2px 2px", transition: "height 0.5s ease",
+              }} />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", marginTop: 10 }}>
+        {months.map((m, i) => (
+          <span key={i} style={{ flex: 1, textAlign: "center", fontSize: 11, color: T.text3 }}>{m}</span>
+        ))}
+      </div>
+
+      <Rule />
+
+      {/* ── Upcoming ── */}
+      {upcomingCalls.length > 0 && (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: 0 }}>Upcoming</h2>
+            <Link href={`/dashboard/${businessId}/calls`} style={{ fontSize: 12, color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+              Calendar
+            </Link>
+          </div>
+          {upcomingCalls.map((e, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: i < upcomingCalls.length - 1 ? `1px solid ${T.border}` : "none" }}>
+              <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{e.title}</span>
+              <span style={{ fontSize: 12, color: T.text3, flexShrink: 0, marginLeft: 16, whiteSpace: "nowrap" }}>{e.time}</span>
+            </div>
+          ))}
+          <Rule />
+        </>
+      )}
+
+      {/* ── Activity ── */}
+      {activities.length > 0 && (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: 0 }}>Recent activity</h2>
+            <Link href={`/dashboard/${businessId}/analytics`} style={{ fontSize: 12, color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+              View all
+            </Link>
+          </div>
+          {activities.map((a, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: i < activities.length - 1 ? `1px solid ${T.border}` : "none" }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: a.color, marginTop: 6, flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{a.title}</span>
+                <p style={{ fontSize: 12, color: T.text2, margin: "1px 0 0" }}>{a.desc}</p>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                {a.amount && (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: a.amount.startsWith("+") ? T.green : T.text, fontVariantNumeric: "tabular-nums" }}>
+                    {a.amount}
+                  </span>
+                )}
+                <p style={{ fontSize: 11, color: T.text3, margin: a.amount ? "1px 0 0" : 0 }}>{a.time}</p>
+              </div>
+            </div>
+          ))}
+          <Rule />
+        </>
+      )}
+
+      {/* ── Proposals ── */}
+      {recentProposals.length > 0 && (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: 0 }}>Proposals</h2>
+            <Link href={`/dashboard/${businessId}/pipeline`} style={{ fontSize: 12, color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+              View all
+            </Link>
+          </div>
+          {recentProposals.map((p, i) => (
+            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < recentProposals.length - 1 ? `1px solid ${T.border}` : "none" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{p.contact_name}</span>
+                <span style={{ fontSize: 12, color: T.text3, marginLeft: 8 }}>{p.title}</span>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
+                {fmt(p.total_cents)}
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: STATUS_COLORS[p.status] || T.text3, flexShrink: 0, minWidth: 56, textAlign: "right", textTransform: "capitalize" }}>
+                {p.status}
+              </span>
+            </div>
+          ))}
+          <Rule />
+        </>
+      )}
+
+      {/* ── AI Coach ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+        <CobraMark size={18} />
+        <p style={{ fontSize: 13, color: T.text2, lineHeight: 1.55, margin: 0 }}>
+          {stats.invoicesDue > 0
+            ? `You have ${stats.invoicesDue} outstanding invoice${stats.invoicesDue > 1 ? "s" : ""}. `
+            : "All invoices are paid up. "}
+          <Link href={`/dashboard/${businessId}/chat`} style={{ color: T.gold, textDecoration: "none", fontWeight: 500 }}>
+            Ask me anything
+          </Link>
+        </p>
+      </div>
+    </>
+  );
+}
+
+/* ════════════════════════════════════════
+   MAIN DASHBOARD — phase router
+   ════════════════════════════════════════ */
 
 export default function BusinessHome() {
   const params = useParams();
   const businessId = params.businessId as string;
-  const { business, plan, loading } = useBusinessContext();
+  const { business, loading } = useBusinessContext();
+  const [loaded, setLoaded] = useState(false);
+  const [phase, setPhase] = useState<DashPhase>("setup");
+  const [dashData, setDashData] = useState<{
+    contactCount: number;
+    invoiceCount: number;
+    stats: DashStats;
+    activities: DashActivity[];
+    recentProposals: DashProposal[];
+    upcomingCalls: DashUpcoming[];
+  } | null>(null);
 
-  const [tasks, setTasks] = useState<TaskWithStatus[]>([]);
-  const [fetchingTasks, setFetchingTasks] = useState(true);
-  const [updatingTask, setUpdatingTask] = useState<string | null>(null);
-  const [reviewPhase, setReviewPhase] = useState<number | null>(null);
-  const [showTransition, setShowTransition] = useState(false);
-  const [transitionPhase, setTransitionPhase] = useState<number | null>(null);
+  const fetchDashData = useCallback(async () => {
+    try {
+      const [contactsRes, invoicesRes, proposalsRes, callsRes, activityRes] = await Promise.all([
+        fetch(`/api/contacts?businessId=${businessId}&limit=1`),
+        fetch(`/api/invoices?businessId=${businessId}`),
+        fetch(`/api/proposals?businessId=${businessId}`),
+        fetch(`/api/discovery-calls?businessId=${businessId}&status=scheduled`),
+        fetch(`/api/contacts/activity?businessId=${businessId}&limit=5`),
+      ]);
+
+      const [contactsData, invoicesData, proposalsData, callsData, activityData] = await Promise.all([
+        contactsRes.ok ? contactsRes.json() : { contacts: [] },
+        invoicesRes.ok ? invoicesRes.json() : { invoices: [] },
+        proposalsRes.ok ? proposalsRes.json() : { proposals: [] },
+        callsRes.ok ? callsRes.json() : { calls: [] },
+        activityRes.ok ? activityRes.json() : { activities: [] },
+      ]);
+
+      const contacts = contactsData.contacts || [];
+      const invoices = invoicesData.invoices || [];
+      const proposals = proposalsData.proposals || [];
+      const calls = callsData.calls || [];
+      const recentActivity = activityData.activities || [];
+
+      const paidInvoices = invoices.filter((i: { status: string; total_cents: number }) => i.status === "paid");
+      const unpaidInvoices = invoices.filter((i: { status: string }) => ["sent", "viewed", "overdue"].includes(i.status));
+      const openProposals = proposals.filter((p: { status: string }) => ["sent", "viewed"].includes(p.status));
+      const revenueThisMonth = paidInvoices.reduce((s: number, i: { total_cents: number }) => s + i.total_cents, 0);
+      const pipelineValue = openProposals.reduce((s: number, p: { pricing?: { total_cents?: number } }) => s + (p.pricing?.total_cents || 0), 0);
+      const invoicesDueAmount = unpaidInvoices.reduce((s: number, i: { total_cents: number }) => s + i.total_cents, 0);
+
+      const activityColors: Record<string, string> = {
+        email_sent: T.blue, call_booked: T.green, proposal_sent: T.gold,
+        payment_received: T.green, note_added: T.text3, stage_changed: T.orange,
+        proposal_viewed: T.blue, proposal_accepted: T.green,
+      };
+
+      const mappedActivities: DashActivity[] = recentActivity.slice(0, 5).map((a: { type: string; title: string; description: string; created_at: string }) => ({
+        color: activityColors[a.type] || T.text3,
+        title: a.title,
+        desc: a.description || "",
+        time: timeAgo(a.created_at),
+      }));
+
+      const mappedProposals: DashProposal[] = proposals.slice(0, 5).map((p: { id: string; title: string; contacts?: { name: string } | null; pricing?: { total_cents?: number }; status: string }) => ({
+        id: p.id,
+        title: p.title,
+        contact_name: p.contacts?.name || "Unknown",
+        total_cents: p.pricing?.total_cents || 0,
+        status: p.status,
+      }));
+
+      const mappedCalls: DashUpcoming[] = calls.slice(0, 3).map((c: { name: string; scheduled_at: string }) => ({
+        title: `Discovery call — ${c.name}`,
+        time: new Date(c.scheduled_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }),
+      }));
+
+      setDashData({
+        contactCount: contacts.length,
+        invoiceCount: invoices.length,
+        stats: {
+          revenue: revenueThisMonth,
+          clientCount: contacts.length,
+          proposalCount: openProposals.length,
+          invoicesDue: unpaidInvoices.length,
+          pipelineValue,
+          invoicesDueAmount,
+        },
+        activities: mappedActivities,
+        recentProposals: mappedProposals,
+        upcomingCalls: mappedCalls,
+      });
+    } catch {
+      // If APIs fail (no tables yet, etc.), default to setup
+      setDashData({
+        contactCount: 0, invoiceCount: 0,
+        stats: { revenue: 0, clientCount: 0, proposalCount: 0, invoicesDue: 0, pipelineValue: 0, invoicesDueAmount: 0 },
+        activities: [], recentProposals: [], upcomingCalls: [],
+      });
+    }
+  }, [businessId]);
+
+  useEffect(() => { setLoaded(true); }, []);
+  useEffect(() => { fetchDashData(); }, [fetchDashData]);
 
   useEffect(() => {
-    if (!business) return;
-    fetchChecklist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [business?.id]);
-
-  async function fetchChecklist() {
-    if (!business) return;
-    const res = await fetch(`/api/checklist?businessId=${business.id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setTasks(data.tasks);
+    if (business && dashData) {
+      setPhase(detectPhase(
+        business as { onboarding_completed: boolean; stripe_account_id: string | null; deployed_url: string; live_url: string },
+        dashData.contactCount,
+        dashData.invoiceCount,
+      ));
     }
-    setFetchingTasks(false);
-  }
+  }, [business, dashData]);
 
-  async function updateTaskStatus(taskId: string, status: string) {
-    if (!business) return;
-    setUpdatingTask(taskId);
-
-    // Optimistic update
-    const prevTasks = tasks;
-    const updated = tasks.map((t) =>
-      t.id === taskId
-        ? { ...t, status, completedAt: status === "completed" ? new Date().toISOString() : null }
-        : t
-    );
-    setTasks(updated);
-
-    const res = await fetch("/api/checklist", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ businessId: business.id, taskId, status }),
-    });
-
-    if (!res.ok) {
-      setTasks(prevTasks); // rollback
-    } else {
-      // Check if we just completed a phase
-      const phases = groupByPhase(updated);
-      const taskPhase = updated.find((t) => t.id === taskId)?.phase;
-      if (taskPhase && status === "completed") {
-        const phaseGroup = phases.find((p) => p.phase === taskPhase);
-        if (phaseGroup && phaseGroup.tasks.every((t) => t.status === "completed" || t.status === "skipped")) {
-          setTransitionPhase(taskPhase);
-          setShowTransition(true);
-        }
-      }
-    }
-
-    setUpdatingTask(null);
-  }
-
-  if (loading || !business || fetchingTasks) {
+  if (loading || !business) {
     return (
-      <div className="flex items-center justify-center h-[80vh]">
-        <div
-          className="w-8 h-8 rounded-full animate-spin"
-          style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }}
-        />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "80vh" }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          border: `2px solid ${T.gold}`, borderTopColor: "transparent",
+          animation: "spin 1s linear infinite",
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  const phases = groupByPhase(tasks);
-  const currentPhase = deriveCurrentPhase(phases);
-  const allDone = currentPhase === -1;
-  const currentPhaseGroup = phases.find((p) => p.phase === currentPhase);
-  const transitionPhaseGroup = phases.find((p) => p.phase === transitionPhase);
-  const nextPhaseGroup = transitionPhase
-    ? phases.find((p) => p.phase === transitionPhase + 1) || null
-    : null;
-  const reviewPhaseGroup = reviewPhase ? phases.find((p) => p.phase === reviewPhase) : null;
-
-  /* Phase transition overlay */
-  if (showTransition && transitionPhaseGroup) {
-    return (
-      <PhaseTransition
-        phase={transitionPhaseGroup}
-        nextPhase={nextPhaseGroup}
-        onContinue={() => {
-          setShowTransition(false);
-          setTransitionPhase(null);
-        }}
-      />
-    );
-  }
-
-  /* All done */
-  if (allDone) {
-    if (reviewPhaseGroup) {
-      return (
-        <div className="p-4 sm:p-6 lg:p-8">
-          <button
-            onClick={() => setReviewPhase(null)}
-            className="text-xs mb-4 transition-colors"
-            style={{ color: T.text3 }}
-          >
-            &larr; Back to summary
-          </button>
-          <PhaseReview phase={reviewPhaseGroup} onClose={() => setReviewPhase(null)} />
-        </div>
-      );
-    }
-    return (
-      <CompletionView
-        phases={phases}
-        tasks={tasks}
-        businessId={businessId}
-        businessName={business.name}
-        onReviewPhase={setReviewPhase}
-      />
-    );
-  }
-
-  /* Active phase */
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <WelcomeTour />
-
-      <PhaseStepper
-        phases={phases}
-        currentPhase={currentPhase}
-        reviewPhase={reviewPhase}
-        onReview={setReviewPhase}
-      />
-
-      {/* Review drawer (inline) */}
-      {reviewPhaseGroup && (
-        <PhaseReview phase={reviewPhaseGroup} onClose={() => setReviewPhase(null)} />
+    <div
+      style={{
+        padding: "32px 40px 80px",
+        opacity: loaded ? 1 : 0, transform: loaded ? "none" : "translateY(4px)",
+        transition: "all 0.3s ease",
+      }}
+    >
+      {phase === "setup" && (
+        <SetupDashboard businessId={businessId} business={business as unknown as Record<string, unknown>} />
       )}
-
-      {/* Current phase */}
-      {currentPhaseGroup && (
-        <>
-          <PhaseHero phase={currentPhaseGroup} tasks={currentPhaseGroup.tasks} />
-          <TaskList
-            tasks={currentPhaseGroup.tasks}
-            plan={plan}
-            businessId={businessId}
-            business={business}
-            updatingTask={updatingTask}
-            onComplete={(id) => {
-              const task = tasks.find((t) => t.id === id);
-              if (!task) return;
-              const newStatus = task.status === "completed" ? "pending" : "completed";
-              updateTaskStatus(id, newStatus);
-            }}
-            onSkip={(id) => updateTaskStatus(id, "skipped")}
-          />
-        </>
+      {phase === "get_clients" && (
+        <GetClientsDashboard businessId={businessId} business={business as unknown as Record<string, unknown>} />
+      )}
+      {phase === "active" && dashData && (
+        <ActiveDashboard
+          businessId={businessId}
+          stats={dashData.stats}
+          activities={dashData.activities}
+          recentProposals={dashData.recentProposals}
+          upcomingCalls={dashData.upcomingCalls}
+        />
       )}
     </div>
   );
+}
+
+/* ── Helpers ── */
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }

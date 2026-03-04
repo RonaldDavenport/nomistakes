@@ -22,7 +22,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
 
   // Load mute preference
   useEffect(() => {
-    const saved = localStorage.getItem("nm-avatar-muted");
+    const saved = localStorage.getItem("kv-avatar-muted");
     if (saved === "true") setIsMuted(true);
   }, []);
 
@@ -86,7 +86,7 @@ export default function AvatarGuide({ stepId, businessName }: AvatarGuideProps) 
   function toggleMute() {
     const next = !isMuted;
     setIsMuted(next);
-    localStorage.setItem("nm-avatar-muted", String(next));
+    localStorage.setItem("kv-avatar-muted", String(next));
     if (videoRef.current) videoRef.current.muted = next;
   }
 

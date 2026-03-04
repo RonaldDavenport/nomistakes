@@ -10,6 +10,19 @@ import BuildingScreen from "@/components/wizard/BuildingScreen";
 import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
 import {
+  trackWizardStep,
+  trackWizardSkillToggle,
+  trackWizardTypeSelect,
+  trackWizardSubtypeSelect,
+  trackWizardBudgetSelect,
+  trackWizardTimeSelect,
+  trackWizardConceptsGenerated,
+  trackWizardConceptPicked,
+  trackWizardBuildStarted,
+  trackWizardBuildComplete,
+  trackWizardBack,
+} from "@/lib/analytics";
+import {
   SKILLS,
   TIME_OPTIONS,
   BUDGET_OPTIONS,
@@ -61,16 +74,24 @@ export default function WizardPage() {
   const [pendingBusinessId, setPendingBusinessId] = useState("");
   const [pendingBusinessName, setPendingBusinessName] = useState("");
   const buildStarted = useRef(false);
+  const buildStartTime = useRef<number>(0);
+
+  // Track step changes
+  useEffect(() => {
+    trackWizardStep(step);
+  }, [step]);
 
   const stepInfo = getStepNumber(step);
 
   function toggleSkill(id: string) {
+    trackWizardSkillToggle(id, !selectedSkills.includes(id));
     setSelectedSkills((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : prev.length < 5 ? [...prev, id] : prev
     );
   }
 
   function goBack() {
+    trackWizardBack(step);
     const currentIdx = QUESTION_STEPS.indexOf(step);
     if (currentIdx > 0) {
       setStep(QUESTION_STEPS[currentIdx - 1] as Step);
@@ -79,6 +100,7 @@ export default function WizardPage() {
 
   /* Phase 1: pick a category. Phase 2: pick subtype (if applicable), then advance. */
   function handleTypeSelect(id: string) {
+    trackWizardTypeSelect(id);
     setSelectedType(id);
     setSelectedSubtype("");
     // "both" and "any" have no subtypes — advance immediately
@@ -89,17 +111,20 @@ export default function WizardPage() {
   }
 
   function handleSubtypeSelect(sub: string) {
+    trackWizardSubtypeSelect(sub);
     setSelectedSubtype(sub);
     setSelectedAudience(`${selectedType}__${sub}`);
     setTimeout(() => setStep("budget"), 300);
   }
 
   function handleBudgetSelect(id: string) {
+    trackWizardBudgetSelect(id);
     setSelectedBudget(id);
     setTimeout(() => setStep("time"), 300);
   }
 
   function handleTimeSelect(id: string) {
+    trackWizardTimeSelect(id);
     setSelectedTime(id);
     setTimeout(() => setStep("generating"), 300);
   }
@@ -128,6 +153,7 @@ export default function WizardPage() {
           const data = await res.json();
           if (data.concepts && data.concepts.length > 0) {
             setConcepts(data.concepts);
+            trackWizardConceptsGenerated(data.concepts.length);
             return;
           }
         }
@@ -138,6 +164,7 @@ export default function WizardPage() {
       if (!cancelled) {
         const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype || undefined);
         setConcepts(results);
+        trackWizardConceptsGenerated(results.length);
       }
     }
 
@@ -149,6 +176,8 @@ export default function WizardPage() {
   useEffect(() => {
     if (step !== "building" || !chosenConcept || buildStarted.current) return;
     buildStarted.current = true;
+    buildStartTime.current = Date.now();
+    trackWizardBuildStarted();
     setBuildProgress(0);
     setError("");
 
@@ -205,6 +234,10 @@ export default function WizardPage() {
             }
           }
           setBuildProgress(100);
+          if (bizId) {
+            const buildTimeSec = Math.round((Date.now() - buildStartTime.current) / 1000);
+            trackWizardBuildComplete(bizId, buildTimeSec);
+          }
 
           if (bizId) {
             const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -237,6 +270,7 @@ export default function WizardPage() {
   }, [step, chosenConcept, selectedSkills, selectedTime, selectedBudget, selectedType]);
 
   function pickConcept(c: BusinessConcept) {
+    trackWizardConceptPicked(c.name);
     setChosenConcept(c);
     buildStarted.current = false;
     setStep("building");

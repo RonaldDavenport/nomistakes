@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
+import { trackLogin, trackLoginError } from "@/lib/analytics";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,11 +26,13 @@ export default function LoginPage() {
     });
 
     if (loginError) {
+      trackLoginError("email", loginError.message);
       setError(loginError.message);
       setLoading(false);
       return;
     }
 
+    trackLogin("email");
     router.push("/dashboard");
   }
 

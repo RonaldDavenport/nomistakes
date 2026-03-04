@@ -28,9 +28,8 @@ export default function Navbar() {
   return (
     <nav style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)" }} className="fixed top-0 w-full z-50 border-b border-white/5">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight">
-          <span style={{ color: T.text }}>No</span>
-          <span style={{ color: T.purple }}>Mistakes</span>
+        <Link href="/" className="text-xl font-bold tracking-tight" style={{ color: T.text, letterSpacing: "-0.02em" }}>
+          kovra
         </Link>
         {!isAppFlow && (
           <div className="hidden md:flex items-center gap-8 text-sm text-zinc-400">

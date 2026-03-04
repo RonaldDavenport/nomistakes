@@ -1,4 +1,4 @@
-// Stripe Connect integration for No Mistakes platform
+// Stripe Connect integration for Kovra platform
 // Each generated business gets a Stripe Connected Account
 // We take a platform fee on every transaction
 
@@ -171,7 +171,7 @@ export function isStripeConfigured(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Platform subscription helpers (users subscribing to No Mistakes plans)
+// Platform subscription helpers (users subscribing to Kovra plans)
 // ---------------------------------------------------------------------------
 
 function getPriceIdForPlan(planId: string): string | null {
@@ -183,7 +183,7 @@ function getPriceIdForPlan(planId: string): string | null {
   return map[planId] || null;
 }
 
-// Create a platform subscription checkout (user subscribing to No Mistakes plans)
+// Create a platform subscription checkout (user subscribing to Kovra plans)
 export async function createPlatformCheckout(
   planId: string,
   email: string,

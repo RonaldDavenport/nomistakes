@@ -251,8 +251,8 @@ export default function AccountSettingsPage() {
           </p>
           <p className="text-sm text-zinc-500">
             To delete your account, please contact support at{" "}
-            <a href="mailto:support@nomistakes.ai" className="text-red-400 hover:text-red-300 underline transition">
-              support@nomistakes.ai
+            <a href="mailto:support@kovra.com" className="text-red-400 hover:text-red-300 underline transition">
+              support@kovra.com
             </a>
           </p>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
+import { trackForgotPassword } from "@/lib/analytics";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    trackForgotPassword();
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,

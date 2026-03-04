@@ -19,6 +19,17 @@ import {
 } from "@/lib/onboarding-data";
 import { getTrackedUrl } from "@/lib/affiliates";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
+import {
+  trackOnboardingStep,
+  trackOnboardingStepComplete,
+  trackOnboardingSkip,
+  trackOnboardingNameEdit,
+  trackOnboardingAINames,
+  trackOnboardingLayoutSelect,
+  trackOnboardingColorSelect,
+  trackOnboardingStripeConnect,
+  trackOnboardingComplete,
+} from "@/lib/analytics";
 
 interface Business {
   id: string;
@@ -101,6 +112,14 @@ export default function OnboardingPage() {
     load();
   }, [businessId]);
 
+  // Track step views
+  useEffect(() => {
+    if (!loading && business) {
+      const stepName = ONBOARDING_STEPS[currentStep]?.id ?? `step-${currentStep}`;
+      trackOnboardingStep(currentStep, stepName);
+    }
+  }, [currentStep, loading, business]);
+
   const saveStep = useCallback(async (step: string, data: Record<string, unknown>) => {
     setSaving(true);
     try {
@@ -120,20 +139,26 @@ export default function OnboardingPage() {
   }, [businessId]);
 
   function nextStep() {
+    const stepName = ONBOARDING_STEPS[currentStep]?.id ?? `step-${currentStep}`;
+    trackOnboardingStepComplete(currentStep, stepName);
     if (currentStep < ONBOARDING_STEPS.length - 1) {
       setCurrentStep((s) => s + 1);
     } else {
+      trackOnboardingComplete(businessId);
       router.push(`/dashboard/${businessId}`);
     }
   }
 
   function skipStep() {
+    const stepName = ONBOARDING_STEPS[currentStep]?.id ?? `step-${currentStep}`;
+    trackOnboardingSkip(currentStep, stepName);
     saveStep(ONBOARDING_STEPS[currentStep].id, {});
     nextStep();
   }
 
   async function regenerateNames() {
     if (!business) return;
+    trackOnboardingAINames();
     setGeneratingNames(true);
     try {
       const res = await fetch("/api/generate", {
@@ -158,6 +183,7 @@ export default function OnboardingPage() {
   }
 
   async function connectStripe() {
+    trackOnboardingStripeConnect();
     setStripeConnecting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -357,6 +383,7 @@ export default function OnboardingPage() {
                         onChange={(e) => {
                           setNameValue(e.target.value);
                           setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+                          trackOnboardingNameEdit("manual");
                         }}
                         style={{ ...inputStyle, fontSize: "1.1rem" }}
                         onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
@@ -378,7 +405,7 @@ export default function OnboardingPage() {
                         {altNames.map((alt) => (
                           <button
                             key={alt.slug}
-                            onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); }}
+                            onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); trackOnboardingNameEdit("ai_suggestion"); }}
                             style={cardStyle(nameValue === alt.name)}
                           >
                             <span style={{ color: T.text, fontWeight: 500 }}>{alt.name}</span>
@@ -465,7 +492,7 @@ export default function OnboardingPage() {
                               initial={{ opacity: 0, y: 12 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: i * 0.04 }}
-                              onClick={() => setSelectedColors(preset.colors)}
+                              onClick={() => { setSelectedColors(preset.colors); trackOnboardingColorSelect(preset.id); }}
                               style={cardStyle(isActive)}
                             >
                               <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
@@ -1235,7 +1262,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
                 {featureCheck("10 blog posts/month", true)}
                 {featureCheck("5 AI images per business", true)}
                 {featureCheck("Custom domain", true)}
-                {featureCheck("Remove NoMistakes branding", true)}
+                {featureCheck("Remove Kovra branding", true)}
                 {featureCheck("SEO tools", true)}
                 {featureCheck("Cold email + outreach scripts", true)}
                 {featureCheck("Lead magnets + proposals", true)}

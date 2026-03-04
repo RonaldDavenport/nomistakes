@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const origin =
       req.headers.get("origin") ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      "https://trynomistakes.com";
+      "https://kovra.com";
 
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,

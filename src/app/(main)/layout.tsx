@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { AnalyticsInit } from "@/components/AnalyticsInit";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "No Mistakes — AI Builds and Runs Your Entire Business",
+  title: "Kovra — The Operating System for Service Businesses",
   description:
-    "Answer 4 questions. Get a fully deployed business in 60 seconds. No code. No experience. No mistakes.",
+    "Build, sell, manage, and grow your service business. Website, CRM, proposals, payments — all in one platform.",
   openGraph: {
-    title: "No Mistakes — AI Builds and Runs Your Entire Business",
+    title: "Kovra — The Operating System for Service Businesses",
     description:
-      "Answer 4 questions. Get a fully deployed business in 60 seconds.",
+      "Build, sell, manage, and grow your service business. All-in-one platform.",
     type: "website",
   },
 };
@@ -23,11 +24,14 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AnalyticsInit />
+        {children}
+      </body>
     </html>
   );
 }

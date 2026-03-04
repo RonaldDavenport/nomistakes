@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `${pack.label} — NoMistakes AI Credits`,
+              name: `${pack.label} — Kovra AI Credits`,
               description: `${pack.credits} AI credits for content generation, ads, SEO, and more.`,
             },
             unit_amount: pack.priceCents,

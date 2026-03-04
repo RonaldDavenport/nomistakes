@@ -51,6 +51,111 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
 
+        // Handle proposal payments (one-time payment via connected account or platform)
+        if (session.mode === "payment" && session.metadata?.type === "proposal") {
+          const proposalId = session.metadata.proposalId;
+          const contactId = session.metadata.contactId;
+          const businessId = session.metadata.businessId;
+
+          if (proposalId) {
+            try {
+              const now = new Date().toISOString();
+              const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : "";
+
+              // Update proposal status
+              await supabase
+                .from("proposals")
+                .update({
+                  status: "accepted",
+                  accepted_at: now,
+                  paid_at: now,
+                  payment_intent_id: paymentIntentId,
+                  payment_amount_cents: session.amount_total || 0,
+                  updated_at: now,
+                })
+                .eq("id", proposalId);
+
+              // Upgrade contact to customer
+              if (contactId) {
+                await supabase
+                  .from("contacts")
+                  .update({ lifecycle_stage: "customer", last_contacted_at: now })
+                  .eq("id", contactId);
+
+                // Log activities
+                await supabase.from("contact_activity").insert([
+                  {
+                    contact_id: contactId,
+                    business_id: businessId,
+                    type: "proposal_accepted",
+                    title: "Proposal accepted",
+                    metadata: { proposal_id: proposalId },
+                  },
+                  {
+                    contact_id: contactId,
+                    business_id: businessId,
+                    type: "payment_received",
+                    title: `Payment received: $${((session.amount_total || 0) / 100).toFixed(2)}`,
+                    metadata: { proposal_id: proposalId, payment_intent_id: paymentIntentId },
+                  },
+                  {
+                    contact_id: contactId,
+                    business_id: businessId,
+                    type: "stage_changed",
+                    title: "Stage changed to Customer",
+                    metadata: { from: "unknown", to: "customer" },
+                  },
+                ]);
+              }
+
+              console.log(`checkout.session.completed: proposal ${proposalId} accepted, payment $${((session.amount_total || 0) / 100).toFixed(2)}`);
+            } catch (err) {
+              console.error("checkout.session.completed: proposal payment fulfillment failed:", err);
+            }
+          }
+          break;
+        }
+
+        // Handle invoice payments (one-time payment via connected account or platform)
+        if (session.mode === "payment" && session.metadata?.type === "invoice") {
+          const invoiceId = session.metadata.invoiceId;
+          const contactId = session.metadata.contactId;
+          const businessId = session.metadata.businessId;
+
+          if (invoiceId) {
+            try {
+              const now = new Date().toISOString();
+              const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : "";
+
+              await supabase
+                .from("invoices")
+                .update({
+                  status: "paid",
+                  paid_at: now,
+                  payment_status: "completed",
+                  stripe_payment_intent_id: paymentIntentId,
+                  updated_at: now,
+                })
+                .eq("id", invoiceId);
+
+              if (contactId) {
+                await supabase.from("contact_activity").insert({
+                  contact_id: contactId,
+                  business_id: businessId,
+                  type: "payment_received",
+                  title: `Invoice payment received: $${((session.amount_total || 0) / 100).toFixed(2)}`,
+                  metadata: { invoice_id: invoiceId, payment_intent_id: paymentIntentId },
+                });
+              }
+
+              console.log(`checkout.session.completed: invoice ${invoiceId} paid, $${((session.amount_total || 0) / 100).toFixed(2)}`);
+            } catch (err) {
+              console.error("checkout.session.completed: invoice payment fulfillment failed:", err);
+            }
+          }
+          break;
+        }
+
         // Handle credit pack purchases (one-time payment)
         if (session.mode === "payment" && session.metadata?.type === "credit_pack") {
           const packUserId = session.metadata.userId;

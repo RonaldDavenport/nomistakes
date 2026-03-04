@@ -1,1456 +1,1005 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { T, CTA_GRAD } from "@/lib/design-tokens";
 
-/* ═══════════════════════════════════════
-   DATA
-   ═══════════════════════════════════════ */
-const SHOWCASE_SITES = [
-  { name: "FitCoach Pro", type: "Coaching", time: "47s", img: "/landing/showcase-fitcoach.jpg" },
-  { name: "Pixel & Co.", type: "Freelance", time: "51s", img: "/landing/showcase-pixelco.jpg" },
-  { name: "ResumeEdge", type: "Consulting", time: "44s", img: "/landing/showcase-resumeedge.jpg" },
-  { name: "PlannerVault", type: "Templates", time: "38s", img: "/landing/showcase-plannervault.jpg" },
-  { name: "ShutterClass", type: "Courses", time: "52s", img: "/landing/showcase-shutterclass.jpg" },
-  { name: "SocialPulse", type: "Agency", time: "49s", img: "/landing/showcase-socialpulse.jpg" },
-  { name: "InnerPath", type: "Wellness", time: "41s", img: "/landing/showcase-innerpath.jpg" },
-  { name: "DigitalShelf", type: "E-commerce", time: "55s", img: "/landing/showcase-digitalshelf.jpg" },
-];
+const C = {
+  bg: "#0A0A0A",
+  surface: "#111111",
+  surfaceHover: "#1A1A1A",
+  card: "#141414",
+  border: "#1E1E1E",
+  borderLight: "#2A2A2A",
+  text: "#FAFAFA",
+  textSec: "#A0A0A0",
+  textDim: "#5A5A5A",
+  gold: "#C8A44E",
+  goldLight: "#D4B65E",
+  goldDim: "rgba(200,164,78,0.10)",
+  goldBorder: "rgba(200,164,78,0.2)",
+  green: "#34D399",
+  greenDim: "rgba(52,211,153,0.10)",
+  blue: "#60A5FA",
+  blueDim: "rgba(96,165,250,0.10)",
+  purple: "#A78BFA",
+  purpleDim: "rgba(167,139,250,0.10)",
+  orange: "#FB923C",
+  orangeDim: "rgba(251,146,60,0.10)",
+};
 
-const FEATURE_TABS = [
-  { id: "sites", label: "AI Sites" },
-  { id: "editor", label: "Site Editor" },
-  { id: "videos", label: "Videos & Ads" },
-  { id: "branding", label: "Branding" },
-  { id: "coach", label: "AI Coach" },
-  { id: "content", label: "Content" },
-  { id: "audits", label: "Audits" },
-  { id: "payments", label: "Payments" },
-  { id: "analytics", label: "Analytics" },
-];
+const font = "'DM Sans', sans-serif";
 
-const FAQS = [
-  { q: "How does No Mistakes work?", a: "Answer 4 questions about your skills, time, budget, and business type. AI generates 3 custom business concepts. Pick one, and AI builds your entire business — website, brand, products, checkout — in about 60 seconds." },
-  { q: "Do I need any technical skills?", a: "None. No coding, no design, no business experience. If you can tap a button and type a sentence, you can launch a business." },
-  { q: "What types of businesses can I create?", a: "Coaching, freelance services, e-commerce stores, consulting, online courses, digital templates, ebooks, and memberships. If you have a skill, we can build a business around it." },
-  { q: "What are AI credits and how do they work?", a: "Credits power AI features like blog posts, ad copy, video scripts, and competitor analysis. Free plan includes 50 credits/month. Each action costs 1–5 credits depending on complexity." },
-  { q: "Can I use my own custom domain?", a: "Yes. Connect any domain you own. We handle SSL and DNS guidance. Your site launches on a free subdomain immediately, and you can add a custom domain anytime." },
-  { q: "How is this different from Wix or Shopify?", a: "They give you a blank canvas and say 'good luck.' We give you a finished business. Website, branding, products, copy, checkout — all done by AI in 60 seconds. Plus an AI coach that pushes you to your first customer." },
-  { q: "Can I edit my site after it's generated?", a: "Absolutely. Use the visual editor or just tell the AI what to change in plain English. Swap images, rewrite copy, add pages — all without touching code." },
-  { q: "What if I want to cancel?", a: "Cancel anytime. No contracts, no penalties. Your site stays live on the free plan. We don't hold your business hostage." },
-];
+const CobraMark = ({ size = 28, color = C.gold }: { size?: number; color?: string }) => (
+  <svg width={size} height={size * 1.1} viewBox="0 0 80 88" fill="none">
+    <path
+      d="M40 4C40 4 14 16 14 38C14 54 26 62 32 65.5C34.5 67 36 69 36 72V80C36 82.5 37.5 84 40 84C42.5 84 44 82.5 44 80V72C44 69 45.5 67 48 65.5C54 62 66 54 66 38C66 16 40 4 40 4Z"
+      fill={color}
+    />
+    <circle cx="33" cy="35" r="3.5" fill="#0A0A0A" />
+    <circle cx="47" cy="35" r="3.5" fill="#0A0A0A" />
+  </svg>
+);
 
-/* ═══════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════ */
-function Glass({ children, style, ...p }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div {...p} style={{ background: T.glass, border: `1px solid ${T.border}`, borderRadius: 20, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", ...style }}>
-      {children}
-    </div>
-  );
-}
-
-function MockBrowser({ children, height = 200, grad }: { children?: React.ReactNode; height?: number; grad?: string }) {
-  return (
-    <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl }}>
-      <div style={{ display: "flex", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-      </div>
-      <div style={{ height, background: grad || "linear-gradient(135deg,#08081A,#14082A)", padding: 16, position: "relative" }}>
-        {children || (
-          <>
-            <div style={{ height: 10, width: "45%", borderRadius: 5, background: "rgba(255,255,255,0.06)", marginBottom: 8 }} />
-            <div style={{ height: 7, width: "28%", borderRadius: 4, background: "rgba(123,57,252,0.15)", marginBottom: 16 }} />
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1, height: 50, borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }} />
-              <div style={{ flex: 1, height: 50, borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }} />
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SiteCard({ name, type, time, img }: { name: string; type: string; time: string; img: string }) {
-  return (
-    <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl, cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s" }}
-      onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(123,57,252,0.15)"; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+const Logo = ({ size = "default" }: { size?: string }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: size === "large" ? 12 : 8 }}>
+    <CobraMark size={size === "large" ? 32 : 24} />
+    <span
+      style={{
+        fontFamily: font,
+        fontWeight: 700,
+        fontSize: size === "large" ? 26 : 20,
+        color: C.text,
+        letterSpacing: "-0.03em",
+      }}
     >
-      <div style={{ height: 200, position: "relative", overflow: "hidden" }}>
-        <img src={img} alt={name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      kovra
+    </span>
+  </div>
+);
+
+/* ─── NAV ─── */
+const Nav = () => {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const h = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  return (
+    <nav
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        padding: "0 32px",
+        height: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: scrolled ? "rgba(10,10,10,0.95)" : "transparent",
+        backdropFilter: scrolled ? "blur(24px)" : "none",
+        borderBottom: scrolled ? `1px solid ${C.border}` : "1px solid transparent",
+        transition: "all 0.35s ease",
+      }}
+    >
+      <Logo />
+      <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        {[
+          { label: "Features", href: "#pillars" },
+          { label: "Pricing", href: "#pricing" },
+        ].map((t) => (
+          <a
+            key={t.label}
+            href={t.href}
+            style={{
+              color: C.textDim,
+              textDecoration: "none",
+              fontSize: 13.5,
+              fontFamily: font,
+              fontWeight: 500,
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => { (e.target as HTMLElement).style.color = C.text; }}
+            onMouseLeave={(e) => { (e.target as HTMLElement).style.color = C.textDim; }}
+          >
+            {t.label}
+          </a>
+        ))}
+        <div style={{ width: 1, height: 20, background: C.border, margin: "0 4px" }} />
+        <Link href="/auth/login" style={{ color: C.textSec, textDecoration: "none", fontSize: 13.5, fontFamily: font, fontWeight: 500 }}>
+          Log in
+        </Link>
+        <Link
+          href="/wizard"
+          style={{
+            background: C.gold,
+            color: "#0A0A0A",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 18px",
+            fontSize: 13.5,
+            fontWeight: 600,
+            fontFamily: font,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            textDecoration: "none",
+            display: "inline-block",
+          }}
+        >
+          Get started free
+        </Link>
       </div>
-      <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <p style={{ fontWeight: 600, fontSize: "0.85rem", color: T.text, marginBottom: 2 }}>{name}</p>
-          <span style={{ fontSize: "0.7rem", color: T.purpleLight, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{type}</span>
-        </div>
-        <span style={{ fontSize: "0.7rem", color: T.text3 }}>Built in {time}</span>
+    </nav>
+  );
+};
+
+/* ─── HERO ─── */
+const Hero = () => (
+  <section style={{ position: "relative", padding: "150px 32px 80px", textAlign: "center", overflow: "hidden" }}>
+    <div
+      style={{
+        position: "absolute",
+        top: -300,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: 1100,
+        height: 1100,
+        background: "radial-gradient(ellipse at center, rgba(200,164,78,0.05) 0%, transparent 65%)",
+        pointerEvents: "none",
+      }}
+    />
+    <div style={{ position: "relative", maxWidth: 900, margin: "0 auto" }}>
+      <div
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          background: C.goldDim,
+          border: `1px solid ${C.goldBorder}`,
+          borderRadius: 100,
+          padding: "5px 14px 5px 10px",
+          marginBottom: 28,
+        }}
+      >
+        <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gold, animation: "pulse 2s infinite" }} />
+        <span style={{ fontFamily: font, fontSize: 12.5, fontWeight: 500, color: C.gold }}>Early access — join the waitlist</span>
       </div>
+
+      <h1
+        style={{
+          fontFamily: font,
+          fontSize: "clamp(38px, 5.5vw, 68px)",
+          fontWeight: 700,
+          lineHeight: 1.06,
+          letterSpacing: "-0.04em",
+          color: C.text,
+          margin: "0 0 20px",
+        }}
+      >
+        The operating system for
+        <br />
+        <span style={{ color: C.gold }}>service businesses.</span>
+      </h1>
+
+      <p
+        style={{
+          fontFamily: font,
+          fontSize: 17,
+          lineHeight: 1.65,
+          color: C.textSec,
+          maxWidth: 520,
+          margin: "0 auto 36px",
+        }}
+      >
+        Build your website. Book clients. Send proposals. Get paid. Grow with
+        marketing — all from one platform. Powered by AI. Built for people who
+        are great at what they do.
+      </p>
+
+      <p style={{ fontFamily: font, fontSize: 13.5, color: C.textDim, marginBottom: 14 }}>I want to...</p>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", maxWidth: 580, margin: "0 auto" }}>
+        <Link
+          href="/wizard"
+          style={{
+            flex: 1,
+            minWidth: 250,
+            background: C.goldDim,
+            color: C.text,
+            border: `1px solid ${C.goldBorder}`,
+            borderRadius: 12,
+            padding: "18px 24px",
+            fontSize: 15,
+            fontWeight: 600,
+            fontFamily: font,
+            cursor: "pointer",
+            transition: "all 0.25s",
+            textAlign: "left",
+            position: "relative",
+            overflow: "hidden",
+            textDecoration: "none",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: C.text }}>Start a new business</div>
+              <div style={{ fontSize: 12.5, fontWeight: 400, color: C.textSec }}>I have a skill but no business yet</div>
+            </div>
+            <span style={{ fontSize: 20, color: C.gold }}>→</span>
+          </div>
+        </Link>
+        <Link
+          href="/wizard?existing=true"
+          style={{
+            flex: 1,
+            minWidth: 250,
+            background: C.greenDim,
+            color: C.text,
+            border: `1px solid rgba(52,211,153,0.2)`,
+            borderRadius: 12,
+            padding: "18px 24px",
+            fontSize: 15,
+            fontWeight: 600,
+            fontFamily: font,
+            cursor: "pointer",
+            transition: "all 0.25s",
+            textAlign: "left",
+            position: "relative",
+            overflow: "hidden",
+            textDecoration: "none",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: C.text }}>Move my business</div>
+              <div style={{ fontSize: 12.5, fontWeight: 400, color: C.textSec }}>I already have clients & need better tools</div>
+            </div>
+            <span style={{ fontSize: 20, color: C.green }}>→</span>
+          </div>
+        </Link>
+      </div>
+
+      <p style={{ fontFamily: font, fontSize: 12, color: C.textDim, marginTop: 20 }}>
+        Free plan available · No credit card required · 5% platform fee on transactions
+      </p>
     </div>
-  );
-}
+  </section>
+);
 
-function Stat({ value, label, color }: { value: string; label: string; color?: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <p style={{ fontFamily: T.mono, fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 700, color: color || T.text, letterSpacing: "-1px" }}>{value}</p>
-      <p style={{ fontSize: "0.8rem", color: T.text3, marginTop: 4 }}>{label}</p>
-    </div>
-  );
-}
-
-function Check() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="#22C55E" style={{ flexShrink: 0, marginTop: 2 }}>
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════
-   PAGE
-   ═══════════════════════════════════════ */
-export default function Home() {
-  const [featureTab, setFeatureTab] = useState("sites");
-  const [dashTab, setDashTab] = useState("overview");
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  return (
-    <div style={{ background: T.bg, color: T.text, fontFamily: "'Inter', sans-serif" }}>
-
-      {/* ─── NAV ─── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        background: "rgba(0,0,0,0.7)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${T.border}`,
-      }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href="/" style={{ textDecoration: "none", fontSize: "1.1rem", fontWeight: 800, fontFamily: T.h, color: T.text, letterSpacing: "-0.5px" }}>
-            No Mistakes
-          </Link>
-          <div className="hidden md:flex" style={{ gap: 32, alignItems: "center" }}>
-            {["Features", "Showcase", "Pricing", "FAQ"].map(l => (
-              <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "0.85rem", color: T.text3, textDecoration: "none", transition: "color 0.15s" }}
-                onMouseEnter={e => e.currentTarget.style.color = T.text}
-                onMouseLeave={e => e.currentTarget.style.color = T.text3 as string}
-              >{l}</a>
-            ))}
+/* ─── DASHBOARD MOCKUP ─── */
+const DashboardMockup = () => (
+  <section style={{ padding: "0 32px 60px" }}>
+    <div
+      style={{
+        maxWidth: 960,
+        margin: "0 auto",
+        background: C.surface,
+        border: `1px solid ${C.border}`,
+        borderRadius: 14,
+        overflow: "hidden",
+        boxShadow: "0 60px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 18px", borderBottom: `1px solid ${C.border}` }}>
+        {["#FF5F57", "#FFBD2E", "#28CA41"].map((c) => (
+          <div key={c} style={{ width: 11, height: 11, borderRadius: "50%", background: c }} />
+        ))}
+        <div style={{ flex: 1, textAlign: "center", fontFamily: font, fontSize: 11.5, color: C.textDim }}>app.kovra.com</div>
+      </div>
+      <div style={{ display: "flex", minHeight: 380 }}>
+        {/* Sidebar */}
+        <div style={{ width: 200, borderRight: `1px solid ${C.border}`, padding: "16px 0", flexShrink: 0 }}>
+          <div style={{ padding: "0 14px", marginBottom: 20 }}>
+            <Logo />
           </div>
-          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <Link href="/auth/login" className="hidden sm:block" style={{ fontSize: "0.85rem", color: T.text3, textDecoration: "none" }}>Log In</Link>
-            <Link href="/wizard" style={{
-              fontSize: "0.85rem", fontWeight: 600, color: "#fff",
-              background: CTA_GRAD, padding: "10px 22px", borderRadius: 100, textDecoration: "none",
-            }}>Start Building</Link>
+          {[
+            { n: "Dashboard", active: true },
+            { n: "Clients" },
+            { n: "Proposals" },
+            { n: "Invoices" },
+            { n: "Products" },
+            { n: "Calendar" },
+            { n: "Email" },
+            { n: "Website" },
+            { n: "Marketing" },
+            { n: "Analytics" },
+          ].map((item) => (
+            <div
+              key={item.n}
+              style={{
+                padding: "9px 18px",
+                fontFamily: font,
+                fontSize: 13,
+                fontWeight: item.active ? 600 : 400,
+                color: item.active ? C.text : C.textDim,
+                background: item.active ? C.goldDim : "transparent",
+                borderLeft: item.active ? `2px solid ${C.gold}` : "2px solid transparent",
+              }}
+            >
+              {item.n}
+            </div>
+          ))}
+        </div>
+        {/* Main */}
+        <div style={{ flex: 1, padding: 20, overflow: "hidden" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div>
+              <h3 style={{ fontFamily: font, fontSize: 18, fontWeight: 600, color: C.text, margin: 0 }}>Good afternoon, Maya</h3>
+              <p style={{ fontFamily: font, fontSize: 12.5, color: C.textDim, margin: "3px 0 0" }}>
+                Here&apos;s what&apos;s happening with your business today
+              </p>
+            </div>
+            <button
+              style={{
+                background: C.gold,
+                color: "#0A0A0A",
+                border: "none",
+                borderRadius: 7,
+                padding: "7px 14px",
+                fontSize: 12.5,
+                fontWeight: 600,
+                fontFamily: font,
+              }}
+            >
+              + New client
+            </button>
           </div>
-        </div>
-      </nav>
-
-      {/* ═══════════ SECTION 1: HERO ═══════════ */}
-      <section style={{ minHeight: "100vh", paddingTop: 120, paddingBottom: 60, position: "relative", overflow: "hidden" }}>
-        {/* Hero background image */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <img src="/landing/hero-bg.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.85) 60%, #000000 100%)" }} />
-        </div>
-        <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 800, height: 800, background: "radial-gradient(circle, rgba(123,57,252,0.15), transparent 70%)", pointerEvents: "none", zIndex: 1 }} />
-
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", padding: "0 24px", position: "relative", zIndex: 2 }}>
-          <Glass style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 100, marginBottom: 32, opacity: 0, animation: "fadeIn 0.5s ease 0.1s forwards" }}>
-            <span style={{ color: T.gold }}>&#10022;</span>
-            <span style={{ fontSize: "0.8rem", color: T.text2 }}>Over 2,000 Businesses Launched</span>
-          </Glass>
-
-          <h1 style={{
-            fontFamily: T.h, fontSize: "clamp(40px, 6vw, 72px)", fontWeight: 800,
-            lineHeight: 1.05, letterSpacing: "-2px", marginBottom: 24,
-            opacity: 0, animation: "fadeIn 0.6s ease 0.2s forwards",
-          }}>
-            Your Business. Built by AI.<br />Launched in 60 Seconds.
-          </h1>
-
-          <p style={{ fontSize: "1.15rem", color: T.text2, maxWidth: 540, margin: "0 auto 40px", lineHeight: 1.7, opacity: 0, animation: "fadeIn 0.6s ease 0.35s forwards" }}>
-            Tell us what you&apos;re good at. AI creates your website, brand, products, and checkout. You start selling today.
-          </p>
-
-          <div style={{ opacity: 0, animation: "fadeIn 0.6s ease 0.5s forwards" }}>
-            <Link href="/wizard" style={{
-              display: "inline-block", padding: "18px 44px", borderRadius: 12,
-              background: CTA_GRAD, color: "#fff", fontWeight: 700, fontSize: "1rem",
-              textDecoration: "none", boxShadow: "0 0 60px rgba(123,57,252,0.3)",
-            }}>
-              Start Building &mdash; It&apos;s Free
-            </Link>
-            <p style={{ fontSize: "0.8rem", color: T.text3, marginTop: 16 }}>No credit card required</p>
-          </div>
-        </div>
-
-        {/* Hero image mosaic */}
-        <div style={{ maxWidth: 1200, margin: "64px auto 0", padding: "0 24px", opacity: 0, animation: "fadeIn 0.8s ease 0.7s forwards", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
             {[
-              { l: "BoldStudio", img: "/landing/hero-boldstudio.jpg" },
-              { l: "NomadKit", img: "/landing/hero-nomadkit.jpg" },
-              { l: "CraftHaus", img: "/landing/hero-crafthaus.jpg" },
-              { l: "LaunchPad", img: "/landing/hero-launchpad.jpg" },
-            ].map(item => (
-              <div key={item.l} style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl }}>
-                <div style={{ display: "flex", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                </div>
-                <div style={{ height: 140, position: "relative" }}>
-                  <img src={item.img} alt={item.l} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.6), transparent 40%)" }} />
-                  <div style={{ position: "absolute", bottom: 8, left: 12 }}>
-                    <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>{item.l}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 2: TRUST BAR ═══════════ */}
-      <section style={{ padding: "36px 24px", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-          <p style={{ fontSize: "0.75rem", color: T.text3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 20 }}>
-            Trusted by entrepreneurs. Powered by world-class tools.
-          </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap", alignItems: "center" }}>
-            {[
-              { src: "/landing/logos/stripe.svg", alt: "Stripe", h: 28 },
-              { src: "/landing/logos/openai.svg", alt: "OpenAI", h: 26 },
-              { src: "/landing/logos/vercel.svg", alt: "Vercel", h: 22 },
-              { src: "/landing/logos/supabase.svg", alt: "Supabase", h: 26 },
-            ].map(logo => (
-              <img key={logo.alt} src={logo.src} alt={logo.alt} style={{ height: logo.h, opacity: 0.3, filter: "brightness(0) invert(1)" }} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 3: DASHBOARD PREVIEW ═══════════ */}
-      <section style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              You bring the idea. We build the business.
-            </h2>
-            <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 520, margin: "0 auto" }}>
-              Your AI-powered command center. Manage your site, content, and growth — all in one place.
-            </p>
-          </div>
-          {/* Tab bar */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 24 }}>
-            {[
-              { id: "overview", label: "Dashboard" },
-              { id: "editor", label: "Site Editor" },
-              { id: "chat", label: "AI Coach" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setDashTab(tab.id)}
+              { l: "Revenue (MTD)", v: "$12,480", d: "+18%", c: C.green },
+              { l: "Active clients", v: "34", d: "+3 this week", c: C.green },
+              { l: "Open proposals", v: "7", d: "$28.5K pipeline", c: C.gold },
+              { l: "Pending invoices", v: "4", d: "$6,200 due", c: C.orange },
+            ].map((s) => (
+              <div
+                key={s.l}
                 style={{
-                  padding: "10px 24px",
-                  borderRadius: 10,
-                  border: `1px solid ${dashTab === tab.id ? "rgba(123,57,252,0.4)" : T.border}`,
-                  background: dashTab === tab.id ? "rgba(123,57,252,0.12)" : T.glass,
-                  color: dashTab === tab.id ? T.purpleLight : T.text3,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  fontFamily: T.h,
-                  cursor: "pointer",
-                  transition: "all 0.2s",
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 9,
+                  padding: 14,
                 }}
               >
-                {tab.label}
-              </button>
+                <div style={{ fontFamily: font, fontSize: 10.5, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                  {s.l}
+                </div>
+                <span style={{ fontFamily: font, fontSize: 20, fontWeight: 700, color: C.text }}>{s.v}</span>
+                <span style={{ fontFamily: font, fontSize: 11, fontWeight: 500, color: s.c, marginLeft: 8 }}>{s.d}</span>
+              </div>
             ))}
           </div>
-          {/* Browser frame */}
-          <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl, boxShadow: "0 24px 80px rgba(123,57,252,0.08)" }}>
-            <div style={{ display: "flex", gap: 5, padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.02)" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FF5F57" }} />
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#FEBC2E" }} />
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#28C840" }} />
-              <span style={{ flex: 1, marginLeft: 12, height: 20, borderRadius: 6, background: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 10, color: T.text3 }}>
-                  nomistakes.ai/dashboard{dashTab === "editor" ? "/editor" : dashTab === "chat" ? "/chat" : ""}
-                </span>
-              </span>
-            </div>
-            <div style={{ position: "relative" }}>
-              <img
-                src={`/landing/dash-${dashTab}.png`}
-                alt={`NoMistakes ${dashTab === "overview" ? "Dashboard" : dashTab === "editor" ? "Site Editor" : "AI Coach"}`}
-                loading="lazy"
-                style={{ width: "100%", height: "auto", display: "block", minHeight: 300 }}
-              />
-              {/* Bottom fade */}
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, background: `linear-gradient(to top, ${T.bgEl}, transparent)` }} />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 4: FEATURES (TABS) ═══════════ */}
-      <section id="features" style={{ padding: "100px 24px" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Features</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px" }}>
-              The features you need, the simplicity you want.
-            </h2>
-          </div>
-
-          {/* Tab row */}
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 40 }}>
-            {FEATURE_TABS.map(tab => (
-              <button key={tab.id} onClick={() => setFeatureTab(tab.id)} style={{
-                padding: "10px 22px", borderRadius: 100, border: "none", cursor: "pointer",
-                fontSize: "0.85rem", fontWeight: 600, transition: "all 0.15s",
-                background: featureTab === tab.id ? CTA_GRAD : T.glass,
-                color: featureTab === tab.id ? "#fff" : T.text3,
-              }}>{tab.label}</button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          <div>
-            {featureTab === "sites" && (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-                {[
-                  { label: "Coaching Website", img: "/landing/feature-site-coaching.jpg" },
-                  { label: "Agency Portfolio", img: "/landing/feature-site-agency.jpg" },
-                  { label: "Digital Store", img: "/landing/feature-site-store.jpg" },
-                  { label: "Consulting Site", img: "/landing/feature-site-consulting.jpg" },
-                  { label: "Online Courses", img: "/landing/feature-site-courses.jpg" },
-                  { label: "SaaS Dashboard", img: "/landing/feature-site-saas.jpg" },
-                ].map(site => (
-                  <div key={site.label} style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl }}>
-                    <div style={{ display: "flex", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                    </div>
-                    <div style={{ height: 200, position: "relative" }}>
-                      <img src={site.img} alt={site.label} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.6), transparent 30%)" }} />
-                      <div style={{ position: "absolute", bottom: 8, left: 12 }}><span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{site.label}</span></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {featureTab === "editor" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Editor hero */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 280, background: T.bgEl }}>
-                  {/* Mock editor UI */}
-                  <div style={{ display: "flex", height: "100%" }}>
-                    {/* Sidebar */}
-                    <div style={{ width: 200, borderRight: `1px solid ${T.border}`, padding: 16, display: "flex", flexDirection: "column", gap: 6 }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Sections</p>
-                      {["Hero", "About", "Features", "Products", "Testimonials", "FAQ", "Contact"].map((s, i) => (
-                        <div key={s} style={{ padding: "8px 10px", borderRadius: 8, background: i === 0 ? "rgba(123,57,252,0.1)" : "transparent", border: i === 0 ? "1px solid rgba(123,57,252,0.2)" : "1px solid transparent" }}>
-                          <span style={{ fontSize: 11, color: i === 0 ? T.purpleLight : T.text3, fontWeight: i === 0 ? 600 : 400 }}>{s}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Main area */}
-                    <div style={{ flex: 1, padding: 20 }}>
-                      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-                        <div style={{ flex: 1, padding: "10px 14px", borderRadius: 10, background: "rgba(123,57,252,0.06)", border: "1px solid rgba(123,57,252,0.15)" }}>
-                          <span style={{ fontSize: 12, color: T.text2 }}>&quot;Make the headline bolder and add a customer count&quot;</span>
-                        </div>
-                        <div style={{ padding: "10px 16px", borderRadius: 10, background: CTA_GRAD }}>
-                          <span style={{ fontSize: 11, color: "#fff", fontWeight: 600 }}>Send</span>
-                        </div>
-                      </div>
-                      <div style={{ padding: 16, borderRadius: 12, background: "rgba(123,57,252,0.04)", border: "1px solid rgba(123,57,252,0.1)" }}>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.purple }} />
-                          <span style={{ fontSize: 10, color: T.purpleLight, fontWeight: 500 }}>AI Editor</span>
-                        </div>
-                        <p style={{ fontSize: 11, color: T.text2, lineHeight: 1.5 }}>Done! I&apos;ve updated the hero headline to &quot;Trusted by 2,000+ entrepreneurs&quot; and increased the font weight. I also regenerated the hero image to match the new direction.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* AI-powered editing */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#9998;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Edit With Plain English</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Type what you want changed. AI rewrites copy, swaps images, adds sections, and updates your live site instantly.</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {["\"Change the hero image to something warmer\"", "\"Add a pricing section with 3 tiers\"", "\"Rewrite the about page to sound more confident\""].map(ex => (
-                      <div key={ex} style={{ padding: "6px 10px", borderRadius: 6, background: "rgba(123,57,252,0.06)", border: "1px solid rgba(123,57,252,0.08)" }}>
-                        <span style={{ fontSize: 10, color: T.purpleLight, fontStyle: "italic" }}>{ex}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-                {/* Live preview */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128187;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Live Preview</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>See every change in real-time. Toggle between desktop and mobile views. Auto-save with full undo history.</p>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <div style={{ flex: 1, padding: "8px 10px", borderRadius: 8, background: "rgba(123,57,252,0.1)", border: "1px solid rgba(123,57,252,0.15)", textAlign: "center" }}>
-                      <span style={{ fontSize: 10, color: T.purpleLight, fontWeight: 600 }}>Desktop</span>
-                    </div>
-                    <div style={{ flex: 1, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", textAlign: "center" }}>
-                      <span style={{ fontSize: 10, color: T.text3 }}>Mobile</span>
-                    </div>
-                  </div>
-                </Glass>
-                {/* 11 editable sections */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>11 Editable Sections — Zero Code</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {["Hero","About","Features","Products","Testimonials","Process","FAQ","CTA","Contact","SEO","Brand"].map(s => (
-                      <span key={s} style={{ padding: "6px 14px", borderRadius: 100, background: "rgba(123,57,252,0.08)", border: "1px solid rgba(123,57,252,0.15)", fontSize: "0.72rem", color: T.purpleLight, fontWeight: 500 }}>{s}</span>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "videos" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Video generation hero */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 280, background: T.bgEl }}>
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(123,57,252,0.08), rgba(168,85,247,0.04))" }} />
-                  <div style={{ position: "relative", height: "100%", display: "flex", alignItems: "center", padding: "0 40px", gap: 32 }}>
-                    {/* Video player mockup */}
-                    <div style={{ flex: "0 0 320px", height: 200, borderRadius: 12, background: "#0a0a12", border: `1px solid ${T.border}`, overflow: "hidden", position: "relative" }}>
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(123,57,252,0.15), rgba(245,158,11,0.1))" }} />
-                      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 20, marginLeft: 3 }}>&#9654;</span>
-                      </div>
-                      <div style={{ position: "absolute", bottom: 8, left: 8, right: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.1)" }}>
-                          <div style={{ width: "35%", height: "100%", borderRadius: 2, background: T.purple }} />
-                        </div>
-                        <span style={{ fontSize: 9, color: T.text3 }}>0:15</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 8 }}>AI-Generated Video & Image Ads</p>
-                      <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.6, maxWidth: 340 }}>Promo videos, UGC-style clips, and scroll-stopping image ads — generated from your business data. Ready for Meta, TikTok, and Twitter.</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Promo videos */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#127909;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Promo Videos</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Full product showcase videos with AI voiceover. Script, narration, and visuals — generated automatically from your brand.</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {[{ s: "Script", c: T.green }, { s: "Voiceover", c: T.green }, { s: "Rendering", c: T.purple }].map(step => (
-                      <div key={step.s} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: step.c }} />
-                        <span style={{ fontSize: 11, color: T.text2 }}>{step.s}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-                {/* UGC & social clips */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, #F59E0B, #EF4444)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128248;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>UGC-Style Ads</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Short-form video clips designed for social feeds. Authentic, scroll-stopping content that converts — no filming needed.</p>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {["Meta", "TikTok", "Twitter"].map(p => (
-                      <span key={p} style={{ padding: "5px 12px", borderRadius: 100, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)", fontSize: "0.7rem", color: T.gold, fontWeight: 500 }}>{p}</span>
-                    ))}
-                  </div>
-                </Glass>
-                {/* Image ads */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128444;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>AI Image Generation</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Hero images, product shots, and ad creatives — generated to match your brand. Swap any image on your site with one prompt.</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                    {["Hero Image", "Product Shots", "Ad Creatives", "Social Graphics"].map(t => (
-                      <div key={t} style={{ padding: 12, borderRadius: 8, background: "rgba(123,57,252,0.06)", border: "1px solid rgba(123,57,252,0.1)", textAlign: "center" }}>
-                        <span style={{ fontSize: 11, color: T.purpleLight, fontWeight: 500 }}>{t}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "branding" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Large brand identity image */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 280 }}>
-                  <img src="/landing/showcase-branding.jpg" alt="Brand Identity Kit" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.3) 40%, transparent 70%)" }} />
-                  <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-                    <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 6 }}>Complete Brand Identity</p>
-                    <p style={{ fontSize: "0.8rem", color: T.text2, lineHeight: 1.5 }}>Logo, colors, fonts, tone of voice — generated instantly from your business description.</p>
-                  </div>
-                </div>
-                {/* Color palette card */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#127912;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Auto Color Palettes</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>AI picks a primary, secondary, accent, and neutral palette that fits your industry and vibe.</p>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    {["#7B39FC","#A855F7","#E9D5FF","#1E1B4B","#0F172A"].map(c => <div key={c} style={{ flex: 1, height: 28, borderRadius: 6, background: c }} />)}
-                  </div>
-                </Glass>
-                {/* Font pairing card */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#9998;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Smart Font Pairing</p>
-                  </div>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Headlines, body, and accents matched for readability and brand personality.</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontFamily: T.h, fontSize: "1.1rem", fontWeight: 700, color: T.text }}>Headline</span>
-                      <span style={{ fontSize: 10, color: T.text3 }}>Plus Jakarta Sans</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontSize: "0.85rem", color: T.text2 }}>Body text goes here</span>
-                      <span style={{ fontSize: 10, color: T.text3 }}>Inter</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <span style={{ fontFamily: T.mono, fontSize: "0.75rem", color: T.purpleLight }}>$2,499 /mo</span>
-                      <span style={{ fontSize: 10, color: T.text3 }}>JetBrains Mono</span>
-                    </div>
-                  </div>
-                </Glass>
-                {/* Tone card — full width */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: CTA_GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128172;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Brand Voice & Tone</p>
-                  </div>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    {["Professional","Confident","Approachable","Bold","Trustworthy"].map(t => (
-                      <span key={t} style={{ padding: "6px 14px", borderRadius: 100, background: "rgba(123,57,252,0.1)", border: "1px solid rgba(123,57,252,0.2)", fontSize: "0.75rem", color: T.purpleLight, fontWeight: 500 }}>{t}</span>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "coach" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Large coach image */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 260 }}>
-                  <img src="/landing/feature-coach.jpg" alt="AI Business Coach" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.6) 50%, transparent 100%)" }} />
-                  <div style={{ position: "absolute", top: 24, left: 24, maxWidth: 340 }}>
-                    <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 8 }}>Your 24/7 Business Coach</p>
-                    <p style={{ fontSize: "0.8rem", color: T.text2, lineHeight: 1.55 }}>Not generic advice — a 30-day action plan tailored to your niche. Daily assignments. Real accountability. It tells you what to do and checks if you did it.</p>
-                  </div>
-                </div>
-                {/* Day-by-day timeline */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 16 }}>30-Day Action Plan</p>
-                  {[
-                    { day: "Day 1", task: "Welcome + profile your ideal customer", color: T.green, done: true },
-                    { day: "Day 5", task: "Write & publish your first offer post", color: T.green, done: true },
-                    { day: "Day 12", task: "Cold outreach — DM 10 prospects", color: T.purple, done: false },
-                    { day: "Day 21", task: "Launch a paid ad with $20 budget", color: T.text3, done: false },
-                    { day: "Day 30", task: "Revenue review + next quarter plan", color: T.text3, done: false },
-                  ].map((step, i) => (
-                    <div key={step.day} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: i < 4 ? 14 : 0 }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        <div style={{ width: 10, height: 10, borderRadius: "50%", background: step.done ? T.green : "rgba(255,255,255,0.1)", border: !step.done ? `2px solid ${step.color}` : "none", flexShrink: 0 }} />
-                        {i < 4 && <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.06)" }} />}
-                      </div>
-                      <div style={{ paddingBottom: 2 }}>
-                        <p style={{ fontSize: "0.7rem", fontWeight: 600, color: step.color, marginBottom: 2 }}>{step.day}</p>
-                        <p style={{ fontSize: "0.78rem", color: T.text2, lineHeight: 1.4 }}>{step.task}</p>
-                      </div>
-                    </div>
-                  ))}
-                </Glass>
-                {/* Coach features list */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 16 }}>What Your Coach Does</p>
-                  {[
-                    { icon: "&#9889;", title: "Daily Assignments", desc: "Specific, actionable tasks — not vague tips" },
-                    { icon: "&#128200;", title: "Progress Tracking", desc: "Marks milestones, adjusts pace to your speed" },
-                    { icon: "&#128172;", title: "Real Accountability", desc: "Checks in if you miss a day. No ghosting." },
-                    { icon: "&#127919;", title: "Revenue Focus", desc: "Every task maps back to getting your first sale" },
-                  ].map(f => (
-                    <div key={f.title} style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(123,57,252,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <span style={{ fontSize: 14 }} dangerouslySetInnerHTML={{ __html: f.icon }} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text, marginBottom: 2 }}>{f.title}</p>
-                        <p style={{ fontSize: "0.75rem", color: T.text3, lineHeight: 1.4 }}>{f.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "content" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Content workspace image */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 260 }}>
-                  <img src="/landing/feature-content.jpg" alt="Content Creation" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.3) 40%, transparent 70%)" }} />
-                  <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-                    <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 6 }}>AI-Written Content That Sells</p>
-                    <p style={{ fontSize: "0.8rem", color: T.text2, lineHeight: 1.5 }}>Blog posts, ad copy, social captions, email sequences — generated and published automatically.</p>
-                  </div>
-                </div>
-                {/* Blog post preview */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(123,57,252,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128221;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Blog Post Generator</p>
-                  </div>
-                  <div style={{ padding: 14, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <p style={{ fontSize: "0.75rem", fontWeight: 600, color: T.text, marginBottom: 6 }}>5 Things Every New Freelancer Gets Wrong</p>
-                    <p style={{ fontSize: "0.72rem", color: T.text3, lineHeight: 1.5, marginBottom: 8 }}>Starting freelance? Most people focus on the portfolio. But your first $1,000 comes from outreach, not aesthetics. Here&apos;s what actually works...</p>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <span style={{ padding: "3px 8px", borderRadius: 4, background: "rgba(34,197,94,0.1)", fontSize: 10, color: T.green }}>1,200 words</span>
-                      <span style={{ padding: "3px 8px", borderRadius: 4, background: "rgba(123,57,252,0.1)", fontSize: 10, color: T.purpleLight }}>SEO optimized</span>
-                    </div>
-                  </div>
-                </Glass>
-                {/* Social captions */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(123,57,252,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128247;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Social Media Captions</p>
-                  </div>
-                  {["Instagram","X / Twitter","LinkedIn"].map((platform, i) => (
-                    <div key={platform} style={{ padding: 10, borderRadius: 8, background: "rgba(255,255,255,0.02)", marginBottom: i < 2 ? 8 : 0, border: "1px solid rgba(255,255,255,0.03)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: 600, color: T.text2 }}>{platform}</span>
-                        <span style={{ fontSize: 9, color: T.green }}>&#10003; Ready</span>
-                      </div>
-                      <p style={{ fontSize: "0.7rem", color: T.text3, lineHeight: 1.4 }}>
-                        {i === 0 && "Stop overthinking your first product. Ship ugly. Fix later. Your v1 just needs to solve ONE problem..."}
-                        {i === 1 && "Hot take: You don't need a perfect website to make $5K/mo. You need 10 conversations."}
-                        {i === 2 && "After 6 months of freelancing, here's what moved the needle most: not my portfolio — my DMs."}
-                      </p>
-                    </div>
-                  ))}
-                </Glass>
-                {/* Ad copy + email */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(123,57,252,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 13 }}>&#128231;</span>
-                    </div>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Email Sequences & Ad Copy</p>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div style={{ padding: 12, borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}>
-                      <p style={{ fontSize: "0.72rem", fontWeight: 600, color: T.text2, marginBottom: 4 }}>Welcome Sequence (5 emails)</p>
-                      <p style={{ fontSize: "0.68rem", color: T.text3, lineHeight: 1.4 }}>Day 0: Welcome + free resource &bull; Day 1: Your story &bull; Day 3: Case study &bull; Day 5: Soft offer &bull; Day 7: Last chance</p>
-                    </div>
-                    <div style={{ padding: 12, borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}>
-                      <p style={{ fontSize: "0.72rem", fontWeight: 600, color: T.text2, marginBottom: 4 }}>Facebook Ad Variations (3x)</p>
-                      <p style={{ fontSize: "0.68rem", color: T.text3, lineHeight: 1.4 }}>Pain-point hook &bull; Testimonial hook &bull; Curiosity hook — each with headline, body, and CTA pre-written</p>
-                    </div>
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "audits" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Audit overview */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, background: T.bgEl, padding: 24 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-                    <div>
-                      <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 6 }}>AI Site Audits</p>
-                      <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.5 }}>Get a full quality report on your site — SEO, conversions, accessibility, content, and brand consistency. AI finds the issues and tells you exactly how to fix them.</p>
-                    </div>
-                    <div style={{ padding: "12px 20px", borderRadius: 12, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center", flexShrink: 0 }}>
-                      <p style={{ fontFamily: T.mono, fontSize: "1.8rem", fontWeight: 700, color: T.green }}>87</p>
-                      <p style={{ fontSize: 9, color: T.text3 }}>Score</p>
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
-                    {[
-                      { cat: "SEO", score: 92, color: T.green },
-                      { cat: "Content", score: 88, color: T.green },
-                      { cat: "Conversion", score: 79, color: T.gold },
-                      { cat: "Accessibility", score: 85, color: T.green },
-                      { cat: "Brand", score: 91, color: T.green },
-                    ].map(c => (
-                      <div key={c.cat} style={{ padding: 10, borderRadius: 8, background: "rgba(255,255,255,0.02)", textAlign: "center" }}>
-                        <p style={{ fontFamily: T.mono, fontSize: "1rem", fontWeight: 700, color: c.color }}>{c.score}</p>
-                        <p style={{ fontSize: 9, color: T.text3 }}>{c.cat}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Findings list */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>Findings</p>
-                  {[
-                    { sev: "Critical", title: "Missing meta description on 2 pages", color: "#EF4444" },
-                    { sev: "Important", title: "Hero CTA below the fold on mobile", color: T.gold },
-                    { sev: "Suggestion", title: "Add social proof near pricing section", color: T.purple },
-                    { sev: "Suggestion", title: "Compress hero image for faster loading", color: T.purple },
-                  ].map((f, i) => (
-                    <div key={f.title} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: i < 3 ? 12 : 0 }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: f.color, padding: "2px 6px", borderRadius: 4, background: `${f.color}15`, flexShrink: 0, marginTop: 2 }}>{f.sev}</span>
-                      <p style={{ fontSize: "0.78rem", color: T.text2, lineHeight: 1.4 }}>{f.title}</p>
-                    </div>
-                  ))}
-                </Glass>
-                {/* One-click fixes */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>One-Prompt Fixes</p>
-                  <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.5, marginBottom: 14 }}>Every finding comes with an actionable recommendation. Tell the AI editor to fix it and it&apos;s done — no manual work needed.</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {["\"Fix the SEO issues from my audit\"", "\"Move the CTA above the fold\"", "\"Add testimonials near pricing\""].map(ex => (
-                      <div key={ex} style={{ padding: "8px 12px", borderRadius: 8, background: "rgba(123,57,252,0.06)", border: "1px solid rgba(123,57,252,0.1)" }}>
-                        <span style={{ fontSize: 11, color: T.purpleLight, fontStyle: "italic" }}>{ex}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "payments" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Checkout image */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 260 }}>
-                  <img src="/landing/feature-checkout.jpg" alt="Stripe Checkout" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.3) 40%, transparent 70%)" }} />
-                  <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-                    <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 6 }}>Get Paid Instantly</p>
-                    <p style={{ fontSize: "0.8rem", color: T.text2, lineHeight: 1.5 }}>Stripe checkout, subscriptions, and invoicing — set up automatically with your business.</p>
-                  </div>
-                </div>
-                {/* Checkout mockup */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>One-Click Checkout</p>
-                  <div style={{ padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <span style={{ fontSize: "0.78rem", color: T.text2 }}>Starter Package</span>
-                      <span style={{ fontFamily: T.mono, fontSize: "1rem", fontWeight: 700, color: T.text }}>$49.00</span>
-                    </div>
-                    <div style={{ height: 1, background: "rgba(255,255,255,0.04)", marginBottom: 12 }} />
-                    <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                      <div style={{ flex: 1, padding: "8px 10px", borderRadius: 6, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <span style={{ fontSize: 10, color: T.text3 }}>4242 &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; 4242</span>
-                      </div>
-                      <div style={{ padding: "8px 10px", borderRadius: 6, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <span style={{ fontSize: 10, color: T.text3 }}>12/28</span>
-                      </div>
-                    </div>
-                    <div style={{ padding: "10px 0", borderRadius: 8, background: "#635BFF", textAlign: "center", cursor: "pointer" }}>
-                      <span style={{ fontSize: "0.8rem", color: "#fff", fontWeight: 600 }}>Pay Now</span>
-                    </div>
-                  </div>
-                </Glass>
-                {/* Revenue chart */}
-                <Glass style={{ padding: 20 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>Revenue</p>
-                    <span style={{ fontFamily: T.mono, fontSize: "0.7rem", color: T.green }}>+127% &#8593;</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80, marginBottom: 10 }}>
-                    {[15,22,18,30,35,28,42,55,48,62,70,85].map((h,i) => (
-                      <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 3, background: i >= 9 ? "rgba(123,57,252,0.5)" : "rgba(123,57,252,0.2)", transition: "height 0.3s" }} />
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontSize: 9, color: T.text3 }}>Jan</span>
-                    <span style={{ fontSize: 9, color: T.text3 }}>Jun</span>
-                    <span style={{ fontSize: 9, color: T.text3 }}>Dec</span>
-                  </div>
-                </Glass>
-                {/* Pricing tiers */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>Your Pricing Page — Auto-Generated</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                    {[
-                      { tier: "Starter", price: "$29", features: ["1 project","Email support","Basic analytics"] },
-                      { tier: "Pro", price: "$79", features: ["5 projects","Priority support","Advanced analytics","Custom domain"], popular: true },
-                      { tier: "Agency", price: "$199", features: ["Unlimited","Dedicated manager","White-label","API access"] },
-                    ].map(plan => (
-                      <div key={plan.tier} style={{ padding: 14, borderRadius: 10, background: plan.popular ? "rgba(123,57,252,0.08)" : "rgba(255,255,255,0.02)", border: `1px solid ${plan.popular ? "rgba(123,57,252,0.3)" : "rgba(255,255,255,0.04)"}` }}>
-                        {plan.popular && <span style={{ fontSize: 9, fontWeight: 600, color: T.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Most Popular</span>}
-                        <p style={{ fontFamily: T.mono, fontSize: "1.1rem", fontWeight: 700, color: T.text, margin: "4px 0 8px" }}>{plan.price}<span style={{ fontSize: "0.6rem", color: T.text3 }}>/mo</span></p>
-                        {plan.features.map(f => (
-                          <p key={f} style={{ fontSize: "0.68rem", color: T.text3, marginBottom: 3 }}>&#10003; {f}</p>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-
-            {featureTab === "analytics" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                {/* Analytics dashboard image */}
-                <div style={{ gridColumn: "1 / -1", borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}`, position: "relative", height: 260 }}>
-                  <img src="/landing/feature-analytics.jpg" alt="Analytics Dashboard" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,10,15,0.9) 0%, rgba(10,10,15,0.3) 40%, transparent 70%)" }} />
-                  <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-                    <p style={{ fontFamily: T.h, fontSize: "1.3rem", fontWeight: 700, color: T.text, marginBottom: 6 }}>Know What&apos;s Working</p>
-                    <p style={{ fontSize: "0.8rem", color: T.text2, lineHeight: 1.5 }}>Traffic, conversions, revenue — real-time dashboards that tell you exactly where to focus.</p>
-                  </div>
-                </div>
-                {/* Stats overview */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 16 }}>This Week</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    {[
-                      { label: "Visitors", value: "2,847", change: "+18%", up: true },
-                      { label: "Conversions", value: "127", change: "+24%", up: true },
-                      { label: "Revenue", value: "$4,290", change: "+31%", up: true },
-                      { label: "Avg. Order", value: "$33.78", change: "-2%", up: false },
-                    ].map(stat => (
-                      <div key={stat.label} style={{ padding: 10, borderRadius: 8, background: "rgba(255,255,255,0.02)" }}>
-                        <p style={{ fontSize: 9, color: T.text3, marginBottom: 4 }}>{stat.label}</p>
-                        <p style={{ fontFamily: T.mono, fontSize: "1rem", fontWeight: 700, color: T.text }}>{stat.value}</p>
-                        <p style={{ fontSize: 10, color: stat.up ? T.green : "#EF4444", fontWeight: 500 }}>{stat.change}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-                {/* Traffic sources */}
-                <Glass style={{ padding: 20 }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 16 }}>Traffic Sources</p>
-                  {[
-                    { source: "Organic Search", pct: 42, color: T.purple },
-                    { source: "Social Media", pct: 28, color: T.purpleLight },
-                    { source: "Direct", pct: 18, color: T.gold },
-                    { source: "Referral", pct: 12, color: T.green },
-                  ].map(s => (
-                    <div key={s.source} style={{ marginBottom: 12 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: "0.75rem", color: T.text2 }}>{s.source}</span>
-                        <span style={{ fontFamily: T.mono, fontSize: "0.7rem", color: T.text3 }}>{s.pct}%</span>
-                      </div>
-                      <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.04)" }}>
-                        <div style={{ height: "100%", width: `${s.pct}%`, borderRadius: 2, background: s.color, transition: "width 0.5s" }} />
-                      </div>
-                    </div>
-                  ))}
-                </Glass>
-                {/* Live activity feed */}
-                <Glass style={{ padding: 20, gridColumn: "1 / -1" }}>
-                  <p style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text, marginBottom: 14 }}>Live Activity</p>
-                  <div style={{ display: "flex", gap: 10, overflowX: "auto" }}>
-                    {[
-                      { icon: "&#128065;", text: "New visitor from Google", time: "2s ago", color: T.purple },
-                      { icon: "&#128722;", text: "Purchase — $49.00", time: "1m ago", color: T.green },
-                      { icon: "&#128231;", text: "Email signup", time: "3m ago", color: T.purpleLight },
-                      { icon: "&#128065;", text: "Returning visitor", time: "5m ago", color: T.text3 },
-                      { icon: "&#128722;", text: "Purchase — $79.00", time: "8m ago", color: T.green },
-                    ].map((event, i) => (
-                      <div key={i} style={{ padding: "10px 14px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", minWidth: 160, flexShrink: 0 }}>
-                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12 }} dangerouslySetInnerHTML={{ __html: event.icon }} />
-                          <span style={{ fontSize: "0.72rem", fontWeight: 500, color: event.color }}>{event.text}</span>
-                        </div>
-                        <span style={{ fontSize: 9, color: T.text3 }}>{event.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 5: SHOWCASE GALLERY ═══════════ */}
-      <section id="showcase" style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Showcase</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px" }}>
-              Real Businesses. Built in Seconds.
-            </h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16 }}>
-            {SHOWCASE_SITES.map(s => <SiteCard key={s.name} {...s} />)}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 6: AI COACH (split) ═══════════ */}
-      <section style={{ padding: "100px 24px" }}>
-        <div className="flex flex-col md:flex-row" style={{ maxWidth: 1080, margin: "0 auto", gap: 48, alignItems: "center" }}>
-          {/* Chat mockup */}
-          <div style={{ flex: "1 1 55%", minWidth: 0 }}>
-            <Glass style={{ padding: 24 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 20 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.purple }} />
-                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: T.purpleLight }}>AI Coach &middot; Day 8</span>
-              </div>
-              {/* Coach message */}
-              <div style={{ padding: 14, borderRadius: 12, background: "rgba(123,57,252,0.08)", marginBottom: 10, maxWidth: "85%" }}>
-                <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.55 }}>
-                  Your site&apos;s getting traffic but no one&apos;s buying. Let&apos;s fix that today. DM 5 people who liked your last Instagram post. Here&apos;s your script. Copy it. Send it. Report back.
-                </p>
-              </div>
-              {/* User reply */}
-              <div style={{ padding: 14, borderRadius: 12, background: "rgba(255,255,255,0.04)", marginBottom: 10, maxWidth: "75%", marginLeft: "auto" }}>
-                <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.55 }}>
-                  Sent all 5. Two responded asking about pricing!
-                </p>
-              </div>
-              {/* Coach reply */}
-              <div style={{ padding: 14, borderRadius: 12, background: "rgba(123,57,252,0.08)", maxWidth: "85%" }}>
-                <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.55 }}>
-                  Two signals in one day. You&apos;re ahead of schedule. Tomorrow we close one of them. &#128640;
-                </p>
-              </div>
-            </Glass>
-          </div>
-          {/* Text */}
-          <div style={{ flex: "1 1 45%", minWidth: 0 }}>
-            <p style={{ fontFamily: T.mono, fontSize: "0.7rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>AI Business Coach</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              Not advice. Orders.
-            </h2>
-            <p style={{ color: T.text2, fontSize: "1rem", lineHeight: 1.7, marginBottom: 28 }}>
-              Every other AI gives you a list of options and wishes you luck. Your No Mistakes coach gives you one task per day. No choices. No overthinking. Just do the thing and move on.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                "Momentum Mode: Days 1–14, one action per day, zero strategy",
-                "Signal Mode: Days 15–30, pure outreach until first customer",
-                "Adapts to your business type, stage, and progress",
-              ].map(f => (
-                <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <Check />
-                  <p style={{ fontSize: "0.85rem", color: T.text2 }}>{f}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 7: 60-SECOND GENERATION (split reversed) ═══════════ */}
-      <section style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div className="flex flex-col-reverse md:flex-row" style={{ maxWidth: 1080, margin: "0 auto", gap: 48, alignItems: "center" }}>
-          {/* Text */}
-          <div style={{ flex: "1 1 45%", minWidth: 0 }}>
-            <p style={{ fontFamily: T.mono, fontSize: "0.7rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>AI Generation</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              Idea to Income. Sixty Seconds.
-            </h2>
-            <p style={{ color: T.text2, fontSize: "1rem", lineHeight: 1.7, marginBottom: 28 }}>
-              You answer 4 questions. AI generates 3 business concepts tailored to your skills. Pick one. AI builds everything &mdash; website, branding, products, checkout, business plan. You&apos;re live before your coffee gets cold.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
-              {[
-                "3 unique business concepts, personalized to you",
-                "Full website with 3 layout options",
-                "Stripe payments connected from day one",
-                "Custom branding: colors, fonts, tone, images",
-              ].map(f => (
-                <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <Check />
-                  <p style={{ fontSize: "0.85rem", color: T.text2 }}>{f}</p>
-                </div>
-              ))}
-            </div>
-            <Link href="/wizard" style={{ color: T.purple, fontSize: "0.9rem", fontWeight: 600, textDecoration: "none" }}>Try it free &rarr;</Link>
-          </div>
-          {/* Concept cards mockup */}
-          <div style={{ flex: "1 1 55%", minWidth: 0 }}>
-            <Glass style={{ padding: 24 }}>
-              <p style={{ fontSize: "0.75rem", color: T.text3, marginBottom: 16, fontWeight: 500 }}>Your AI-generated concepts</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[
-                  { name: "FitCoach Pro", tag: "Online coaching platform", rev: "$2K–$5K/mo", hl: false },
-                  { name: "DesignVault", tag: "Premium template store", rev: "$1K–$3K/mo", hl: true },
-                  { name: "ConsultEdge", tag: "B2B consulting service", rev: "$3K–$8K/mo", hl: false },
-                ].map(c => (
-                  <div key={c.name} style={{
-                    padding: 16, borderRadius: 12,
-                    background: c.hl ? "rgba(123,57,252,0.08)" : "rgba(255,255,255,0.02)",
-                    border: c.hl ? "1px solid rgba(123,57,252,0.25)" : "1px solid rgba(255,255,255,0.04)",
-                    boxShadow: c.hl ? "0 0 30px rgba(123,57,252,0.08)" : "none",
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p style={{ fontWeight: 700, color: T.text, fontSize: "0.9rem", marginBottom: 4 }}>{c.name}</p>
-                        <p style={{ fontSize: "0.75rem", color: T.text3 }}>{c.tag}</p>
-                      </div>
-                      <span style={{ fontFamily: T.mono, fontSize: "0.75rem", color: T.green, fontWeight: 600 }}>{c.rev}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Glass>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 8: RESULTS (gold accents) ═══════════ */}
-      <section style={{ padding: "100px 24px" }}>
-        <div className="flex flex-col md:flex-row" style={{ maxWidth: 1080, margin: "0 auto", gap: 48, alignItems: "center" }}>
-          {/* Revenue dashboard mockup */}
-          <div style={{ flex: "1 1 55%", minWidth: 0 }}>
-            <Glass style={{ padding: 24 }}>
-              <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-                <div style={{ flex: 1, padding: 14, borderRadius: 10, background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.1)" }}>
-                  <p style={{ fontSize: "0.7rem", color: T.gold, marginBottom: 4 }}>Revenue</p>
-                  <p style={{ fontFamily: T.mono, fontSize: "1.2rem", fontWeight: 700, color: T.text }}>$847</p>
-                </div>
-                <div style={{ flex: 1, padding: 14, borderRadius: 10, background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.1)" }}>
-                  <p style={{ fontSize: "0.7rem", color: T.green, marginBottom: 4 }}>Customers</p>
-                  <p style={{ fontFamily: T.mono, fontSize: "1.2rem", fontWeight: 700, color: T.text }}>12</p>
-                </div>
-              </div>
-              {/* Chart */}
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80, marginBottom: 16 }}>
-                {[15,25,20,35,45,40,55,65,60,75,85,100].map((h,i) => <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 3, background: `rgba(245,158,11,${h > 60 ? 0.4 : 0.2})` }} />)}
-              </div>
-              {/* Milestone */}
-              <div style={{ padding: 12, borderRadius: 10, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.1)", display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: "1.1rem" }}>&#127881;</span>
-                <div>
-                  <p style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text }}>First $100 milestone reached!</p>
-                  <p style={{ fontSize: "0.7rem", color: T.text3 }}>Day 12 &middot; Ahead of schedule</p>
-                </div>
-              </div>
-            </Glass>
-          </div>
-          {/* Text */}
-          <div style={{ flex: "1 1 45%", minWidth: 0 }}>
-            <p style={{ fontFamily: T.mono, fontSize: "0.7rem", fontWeight: 600, color: T.gold, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>Real Results</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              Your First Customer. Not Next Year. This Month.
-            </h2>
-            <p style={{ color: T.text2, fontSize: "1rem", lineHeight: 1.7, marginBottom: 28 }}>
-              No Mistakes isn&apos;t a website builder. It&apos;s a 30-day system designed to get you from zero to first customer. The AI Coach doesn&apos;t let you hide behind &ldquo;getting ready.&rdquo; It pushes you to sell.
-            </p>
-            <div style={{ display: "flex", gap: 32, marginBottom: 20, flexWrap: "wrap" }}>
-              <div><p style={{ fontFamily: T.mono, fontSize: "1.5rem", fontWeight: 700, color: T.gold }}>47 sec</p><p style={{ fontSize: "0.75rem", color: T.text3 }}>Avg build time</p></div>
-              <div><p style={{ fontFamily: T.mono, fontSize: "1.5rem", fontWeight: 700, color: T.gold }}>Day 12</p><p style={{ fontSize: "0.75rem", color: T.text3 }}>Avg first signal</p></div>
-              <div><p style={{ fontFamily: T.mono, fontSize: "1.5rem", fontWeight: 700, color: T.gold }}>83%</p><p style={{ fontSize: "0.75rem", color: T.text3 }}>Completion rate</p></div>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: T.text3, fontStyle: "italic" }}>Targets the AI Coach drives you toward.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 9: 5-PHASE BLUEPRINT ═══════════ */}
-      <section style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <p style={{ fontFamily: T.mono, fontSize: "0.7rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>The Blueprint</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              A 5-Phase System to Your First Dollar
-            </h2>
-            <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 560, margin: "0 auto" }}>
-              Not a template. Not a course. A step-by-step execution engine with ~150 tasks personalized to your business type. AI completes most of them for you.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
-            {/* Vertical line */}
-            <div style={{ position: "absolute", left: 24, top: 24, bottom: 24, width: 2, background: `linear-gradient(to bottom, ${T.purple}, ${T.gold}, ${T.green})`, borderRadius: 2 }} className="hidden md:block" />
-
+          <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 9, padding: 14 }}>
+            <div style={{ fontFamily: font, fontSize: 12.5, fontWeight: 600, color: C.text, marginBottom: 12 }}>Recent activity</div>
             {[
-              { phase: "1", title: "Foundation", desc: "AI builds your website, brand identity, and product pages. Stripe payments connected. You're live in 60 seconds.", tasks: "~30 tasks", ai: "90% AI-completed", color: T.purple, icon: "&#128640;" },
-              { phase: "2", title: "Content Engine", desc: "AI writes your blog posts, social captions, email sequences, and ad copy. SEO-optimized and on-brand.", tasks: "~25 tasks", ai: "85% AI-completed", color: T.purpleLight, icon: "&#128221;" },
-              { phase: "3", title: "Growth Launch", desc: "Cold outreach scripts, ad creatives, UGC video generation, and competitor analysis. Time to get in front of people.", tasks: "~35 tasks", ai: "70% AI-completed", color: T.gold, icon: "&#128200;" },
-              { phase: "4", title: "Optimize & Convert", desc: "Site audits, A/B testing guidance, conversion optimization, and analytics setup. Turn visitors into customers.", tasks: "~30 tasks", ai: "75% AI-completed", color: "#F97316", icon: "&#9889;" },
-              { phase: "5", title: "Scale & Systemize", desc: "Automation setup, upsell funnels, referral systems, and recurring revenue models. Build a real business, not a side project.", tasks: "~30 tasks", ai: "60% AI-completed", color: T.green, icon: "&#127775;" },
-            ].map((p, i) => (
-              <div key={p.phase} className="flex flex-col md:flex-row" style={{ gap: 20, alignItems: "flex-start", marginBottom: i < 4 ? 32 : 0, paddingLeft: 0 }}>
-                {/* Phase marker */}
-                <div className="hidden md:flex" style={{ width: 48, height: 48, borderRadius: 14, background: `${p.color}15`, border: `1px solid ${p.color}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative", zIndex: 1 }}>
-                  <span style={{ fontFamily: T.mono, fontSize: "0.85rem", fontWeight: 700, color: p.color }}>{p.phase}</span>
+              { t: "Sarah Johnson accepted proposal — $4,500", time: "2m ago", c: C.green },
+              { t: "New lead: Marcus Chen via website", time: "1h ago", c: C.gold },
+              { t: "Invoice INV-0024 paid — $2,100", time: "3h ago", c: C.green },
+              { t: "Blog post published: 5 Tips for New Clients", time: "5h ago", c: C.blue },
+            ].map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "9px 0",
+                  borderTop: i > 0 ? `1px solid ${C.border}` : "none",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: item.c }} />
+                  <span style={{ fontFamily: font, fontSize: 12.5, color: C.textSec }}>{item.t}</span>
                 </div>
-                {/* Content */}
-                <Glass style={{ flex: 1, padding: 24 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 18 }} dangerouslySetInnerHTML={{ __html: p.icon }} />
-                      <div>
-                        <p style={{ fontSize: "0.65rem", fontWeight: 600, color: p.color, textTransform: "uppercase", letterSpacing: "0.08em" }}>Phase {p.phase}</p>
-                        <p style={{ fontFamily: T.h, fontSize: "1.1rem", fontWeight: 700, color: T.text }}>{p.title}</p>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <span style={{ padding: "4px 10px", borderRadius: 100, background: `${p.color}10`, fontSize: "0.7rem", color: p.color, fontWeight: 500 }}>{p.tasks}</span>
-                      <span style={{ padding: "4px 10px", borderRadius: 100, background: "rgba(34,197,94,0.08)", fontSize: "0.7rem", color: T.green, fontWeight: 500 }}>{p.ai}</span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.6 }}>{p.desc}</p>
-                </Glass>
+                <span style={{ fontFamily: font, fontSize: 11, color: C.textDim, whiteSpace: "nowrap" }}>{item.time}</span>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  </section>
+);
 
-      {/* ═══════════ SECTION 10: AUTO-SCROLLING STRIP ═══════════ */}
-      <section style={{ padding: "60px 0", overflow: "hidden", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ display: "flex", animation: "autoScroll 40s linear infinite", width: "max-content" }}>
-          {[...SHOWCASE_SITES, ...SHOWCASE_SITES].map((s, i) => (
-            <div key={`${s.name}-${i}`} style={{ width: 280, flexShrink: 0, marginRight: 12, borderRadius: 14, overflow: "hidden", border: `1px solid ${T.border}` }}>
-              <div style={{ display: "flex", gap: 5, padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.04)", background: T.bgEl }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+/* ─── SOCIAL PROOF BAR ─── */
+const SocialProof = () => (
+  <section style={{ padding: "44px 32px", borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", display: "flex", justifyContent: "center", gap: 64, flexWrap: "wrap" }}>
+      {[
+        { v: "2,400+", l: "Businesses launched" },
+        { v: "$8M+", l: "Revenue processed" },
+        { v: "98%", l: "Client satisfaction" },
+        { v: "4.9★", l: "Platform rating" },
+      ].map((s, i) => (
+        <div key={i} style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: font, fontSize: 28, fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>{s.v}</div>
+          <div style={{ fontFamily: font, fontSize: 12.5, color: C.textDim, marginTop: 3 }}>{s.l}</div>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
+/* ─── FOUR PILLARS ─── */
+const FourPillars = () => {
+  const pillars = [
+    {
+      tag: "Build",
+      color: C.gold,
+      dimColor: C.goldDim,
+      title: "Launch a professional business in minutes.",
+      desc: "Answer a few questions about your skill. Kovra\u2019s AI generates your website, sets up your booking system, and creates your business infrastructure \u2014 all customized to your industry.",
+      features: [
+        { name: "AI Website Builder", detail: "Professional site generated from your answers. Custom domain ready." },
+        { name: "Business Setup Wizard", detail: "Guided onboarding that builds your business model, pricing, and positioning." },
+        { name: "Custom Domain", detail: "Connect yourbrand.com or use a free kovra.com subdomain." },
+        { name: "Mobile-Optimized", detail: "Every site looks perfect on any device, automatically." },
+      ],
+    },
+    {
+      tag: "Sell",
+      color: C.green,
+      dimColor: C.greenDim,
+      title: "Services, products, memberships. One checkout.",
+      desc: "Book discovery calls, send AI-generated proposals, invoice clients, sell digital products, and run membership subscriptions \u2014 all with Stripe-powered payments built in.",
+      features: [
+        { name: "Discovery Calls", detail: "Free consultation bookings with calendar sync and automated reminders." },
+        { name: "Smart Proposals", detail: "AI generates branded proposals from your call notes. One-click accept & pay." },
+        { name: "Invoicing & Payments", detail: "Professional invoices, deposits, payment links. Paid via Stripe." },
+        { name: "Digital Products", detail: "Sell ebooks, templates, courses. Instant delivery on purchase." },
+        { name: "Memberships", detail: "Recurring subscriptions with gated content and member portal." },
+      ],
+    },
+    {
+      tag: "Manage",
+      color: C.blue,
+      dimColor: C.blueDim,
+      title: "Every client, every interaction. One timeline.",
+      desc: "Track clients from first website visit to repeat customer. Automate follow-ups, manage support tickets, and run email sequences that nurture leads while you sleep.",
+      features: [
+        { name: "Built-in CRM", detail: "Contact lifecycle tracking from visitor \u2192 lead \u2192 customer \u2192 advocate." },
+        { name: "Email Sequences", detail: "Automated nurture flows, follow-ups, broadcasts, and drip campaigns." },
+        { name: "Support Inbox", detail: "Client tickets with AI-suggested replies. Every interaction logged." },
+        { name: "Client Portal", detail: "Branded portal where clients view proposals, invoices, and deliverables." },
+      ],
+    },
+    {
+      tag: "Grow",
+      color: C.purple,
+      dimColor: C.purpleDim,
+      title: "Marketing that runs itself.",
+      desc: "AI writes your blog posts, optimizes your SEO, generates ad copy, monitors competitors, and delivers weekly reports on what\u2019s working \u2014 so you can focus on delivering great work.",
+      features: [
+        { name: "Blog Engine", detail: "AI-generated posts optimized for your niche. Publish with one click." },
+        { name: "SEO Automation", detail: "Auto-generated meta tags, sitemaps, structured data. Rank without thinking." },
+        { name: "AI Ad Copy", detail: "Facebook, Instagram, Google ad copy tailored to your business and audience." },
+        { name: "Competitor Monitoring", detail: "Track competitor pricing, positioning, and reviews automatically." },
+        { name: "Weekly AI Reports", detail: "What\u2019s working, what\u2019s not, and exactly what to do next." },
+      ],
+    },
+  ];
+
+  const [active, setActive] = useState(0);
+  const p = pillars[active];
+
+  return (
+    <section id="pillars" style={{ padding: "100px 32px" }}>
+      <div style={{ maxWidth: 940, margin: "0 auto" }}>
+        <p style={{ fontFamily: font, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: C.gold, margin: "0 0 14px", textAlign: "center" }}>
+          Everything you need
+        </p>
+        <h2
+          style={{
+            fontFamily: font,
+            fontSize: "clamp(26px, 4vw, 42px)",
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+            color: C.text,
+            margin: "0 0 12px",
+            lineHeight: 1.1,
+            textAlign: "center",
+          }}
+        >
+          One platform. Four superpowers.
+        </h2>
+        <p style={{ fontFamily: font, fontSize: 15.5, color: C.textSec, textAlign: "center", margin: "0 0 48px", maxWidth: 500, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+          Build your business, sell your services, manage your clients, and grow your revenue — without switching tabs.
+        </p>
+
+        {/* Tab bar */}
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            justifyContent: "center",
+            marginBottom: 48,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 12,
+            padding: 5,
+            maxWidth: 480,
+            margin: "0 auto 48px",
+          }}
+        >
+          {pillars.map((pl, i) => (
+            <button
+              key={pl.tag}
+              onClick={() => setActive(i)}
+              style={{
+                flex: 1,
+                background: active === i ? C.bg : "transparent",
+                color: active === i ? pl.color : C.textDim,
+                border: active === i ? `1px solid ${C.borderLight}` : "1px solid transparent",
+                borderRadius: 8,
+                padding: "10px 0",
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: font,
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+            >
+              {pl.tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div key={active} style={{ animation: "fadeIn 0.3s ease" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
+            <div>
+              <div
+                style={{
+                  display: "inline-block",
+                  fontFamily: font,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: p.color,
+                  background: p.dimColor,
+                  padding: "4px 10px",
+                  borderRadius: 5,
+                  marginBottom: 16,
+                }}
+              >
+                {p.tag}
               </div>
-              <div style={{ height: 160 }}>
-                <img src={s.img} alt={s.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <h3 style={{ fontFamily: font, fontSize: 26, fontWeight: 700, color: C.text, margin: "0 0 12px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                {p.title}
+              </h3>
+              <p style={{ fontFamily: font, fontSize: 14.5, color: C.textSec, margin: 0, lineHeight: 1.65 }}>{p.desc}</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {p.features.map((f, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 10,
+                    padding: "16px 18px",
+                    transition: "all 0.2s",
+                    cursor: "default",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = p.color;
+                    (e.currentTarget as HTMLElement).style.transform = "translateX(4px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.borderColor = C.border;
+                    (e.currentTarget as HTMLElement).style.transform = "translateX(0)";
+                  }}
+                >
+                  <div style={{ fontFamily: font, fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>{f.name}</div>
+                  <div style={{ fontFamily: font, fontSize: 12.5, color: C.textDim, lineHeight: 1.5 }}>{f.detail}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+    </section>
+  );
+};
+
+/* ─── REPLACES STRIP ─── */
+const ReplacesStrip = () => (
+  <section style={{ padding: "60px 32px", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+    <div style={{ maxWidth: 940, margin: "0 auto", textAlign: "center" }}>
+      <p style={{ fontFamily: font, fontSize: 14, color: C.textSec, margin: "0 0 24px" }}>Kovra replaces your entire tool stack</p>
+      <div style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap" }}>
+        {[
+          "Squarespace", "Calendly", "HoneyBook", "PandaDoc", "FreshBooks", "Mailchimp", "Gumroad",
+        ].map((name) => (
+          <span
+            key={name}
+            style={{
+              fontFamily: font,
+              fontSize: 14.5,
+              fontWeight: 500,
+              color: C.textDim,
+              textDecoration: "line-through",
+              textDecorationColor: C.textDim,
+              transition: "color 0.2s",
+            }}
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+/* ─── HOW IT WORKS ─── */
+const HowItWorks = () => (
+  <section style={{ padding: "100px 32px" }}>
+    <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <p style={{ fontFamily: font, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: C.gold, margin: "0 0 14px", textAlign: "center" }}>
+        How it works
+      </p>
+      <h2
+        style={{
+          fontFamily: font,
+          fontSize: "clamp(26px, 4vw, 42px)",
+          fontWeight: 700,
+          letterSpacing: "-0.03em",
+          color: C.text,
+          margin: "0 0 56px",
+          lineHeight: 1.1,
+          textAlign: "center",
+        }}
+      >
+        From zero to operating.
+        <span style={{ color: C.textDim }}> Fifteen minutes.</span>
+      </h2>
+
+      {[
+        { s: "01", t: "Tell us about your skill", d: "Coaching, design, consulting, fitness, photography — whatever you\u2019re great at. Our AI builds your entire business model around it." },
+        { s: "02", t: "Launch your business", d: "Website, booking system, CRM, proposals, invoicing — everything generates in minutes, connected and customized to your industry." },
+        { s: "03", t: "Get your first client", d: "Share your site. Leads book a free discovery call. You meet, Kovra generates the proposal. They accept and pay. That\u2019s it." },
+        { s: "04", t: "Scale with AI", d: "Blog posts write themselves. SEO runs automatically. Ad copy generates on demand. Weekly reports tell you exactly what to do next." },
+      ].map((item, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            gap: 28,
+            padding: "28px 0",
+            borderTop: i === 0 ? "none" : `1px solid ${C.border}`,
+            alignItems: "flex-start",
+          }}
+        >
+          <span style={{ fontFamily: font, fontSize: 44, fontWeight: 700, color: "rgba(200,164,78,0.15)", lineHeight: 1, minWidth: 70 }}>
+            {item.s}
+          </span>
+          <div>
+            <h3 style={{ fontFamily: font, fontSize: 19, fontWeight: 600, color: C.text, margin: "0 0 6px" }}>{item.t}</h3>
+            <p style={{ fontFamily: font, fontSize: 14.5, color: C.textSec, margin: 0, lineHeight: 1.6, maxWidth: 460 }}>{item.d}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
+/* ─── DUAL LANE ─── */
+const DualLane = () => (
+  <section style={{ padding: "80px 32px", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+    <div style={{ maxWidth: 940, margin: "0 auto" }}>
+      <p style={{ fontFamily: font, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: C.gold, margin: "0 0 14px", textAlign: "center" }}>
+        Built for you
+      </p>
+      <h2 style={{ fontFamily: font, fontSize: "clamp(26px,4vw,38px)", fontWeight: 700, letterSpacing: "-0.03em", color: C.text, margin: "0 0 48px", lineHeight: 1.1, textAlign: "center" }}>
+        Whether you&apos;re starting fresh or leveling up.
+      </h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {[
+          {
+            label: "Starting from scratch",
+            title: "You have a skill. You need a business.",
+            points: [
+              "AI builds your site, brand, and pricing strategy",
+              "Guided setup \u2014 no business experience needed",
+              "Built-in coaching that teaches you as you grow",
+              "Everything connected from day one",
+            ],
+            color: C.gold,
+            dim: C.goldDim,
+          },
+          {
+            label: "Already running",
+            title: "You have clients. You need one platform.",
+            points: [
+              "Replace 6-8 tools with a single workspace",
+              "Import existing clients and data",
+              "Professional proposals and invoicing from day one",
+              "Marketing automation that scales with you",
+            ],
+            color: C.green,
+            dim: C.greenDim,
+          },
+        ].map((lane) => (
+          <div
+            key={lane.label}
+            style={{
+              background: C.bg,
+              border: `1px solid ${C.border}`,
+              borderRadius: 14,
+              padding: 32,
+              transition: "border-color 0.2s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = lane.color; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = C.border; }}
+          >
+            <span
+              style={{
+                fontFamily: font,
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: lane.color,
+                background: lane.dim,
+                padding: "4px 10px",
+                borderRadius: 5,
+                display: "inline-block",
+                marginBottom: 16,
+              }}
+            >
+              {lane.label}
+            </span>
+            <h3 style={{ fontFamily: font, fontSize: 20, fontWeight: 600, color: C.text, margin: "0 0 18px", lineHeight: 1.25 }}>
+              {lane.title}
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {lane.points.map((pt, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <span style={{ color: lane.color, fontSize: 13, marginTop: 1 }}>✓</span>
+                  <span style={{ fontFamily: font, fontSize: 13.5, color: C.textSec, lineHeight: 1.5 }}>{pt}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+/* ─── PRICING ─── */
+const Pricing = () => {
+  const plans = [
+    {
+      name: "Free",
+      price: "$0",
+      period: "",
+      desc: "Try Kovra with basic features. Upgrade when you\u2019re ready.",
+      features: ["AI-generated website", "Up to 10 clients", "3 proposals/month", "Basic invoicing", "Kovra subdomain", "Community support"],
+      cta: "Get started",
+      featured: false,
+    },
+    {
+      name: "Starter",
+      price: "$49",
+      period: "/mo",
+      desc: "Everything you need to look professional and land clients.",
+      features: ["Everything in Free", "Up to 100 clients", "Unlimited proposals", "Custom domain", "Email sequences", "Blog engine", "Priority support"],
+      cta: "Get started",
+      featured: false,
+    },
+    {
+      name: "Growth",
+      price: "$99",
+      period: "/mo",
+      desc: "The full toolkit for growing service businesses.",
+      features: ["Everything in Starter", "Unlimited clients", "Full CRM + lifecycle tracking", "Digital products & memberships", "SEO automation", "AI ad copy generator", "Competitor monitoring", "Weekly AI reports"],
+      cta: "Get started",
+      featured: true,
+    },
+    {
+      name: "Scale",
+      price: "$199",
+      period: "/mo",
+      desc: "For established businesses scaling operations.",
+      features: ["Everything in Growth", "AI business coach", "Advanced analytics", "White-label proposals", "Member portal", "API access", "Dedicated account manager"],
+      cta: "Contact sales",
+      featured: false,
+    },
+  ];
+
+  return (
+    <section id="pricing" style={{ padding: "100px 32px" }}>
+      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+        <p style={{ fontFamily: font, fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: C.gold, margin: "0 0 14px", textAlign: "center" }}>
+          Pricing
+        </p>
+        <h2 style={{ fontFamily: font, fontSize: "clamp(26px,4vw,42px)", fontWeight: 700, letterSpacing: "-0.03em", color: C.text, margin: "0 0 10px", lineHeight: 1.1, textAlign: "center" }}>
+          Less than what you&apos;re paying now.
+        </h2>
+        <p style={{ fontFamily: font, fontSize: 15, color: C.textSec, textAlign: "center", margin: "0 0 52px" }}>
+          Cancel the 7 subscriptions. Keep the one that does it all.
+        </p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              style={{
+                background: plan.featured ? C.surface : "transparent",
+                border: `1px solid ${plan.featured ? C.gold : C.border}`,
+                borderRadius: 13,
+                padding: "28px 22px",
+                position: "relative",
+                transition: "all 0.2s",
+              }}
+            >
+              {plan.featured && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -11,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: C.gold,
+                    color: "#0A0A0A",
+                    fontFamily: font,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    padding: "3px 14px",
+                    borderRadius: 100,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Most popular
+                </div>
+              )}
+              <h3 style={{ fontFamily: font, fontSize: 16, fontWeight: 600, color: C.text, margin: "0 0 6px" }}>{plan.name}</h3>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 1, marginBottom: 6 }}>
+                <span style={{ fontFamily: font, fontSize: 34, fontWeight: 700, color: C.text, letterSpacing: "-0.03em" }}>{plan.price}</span>
+                <span style={{ fontFamily: font, fontSize: 14, color: C.textDim }}>{plan.period}</span>
+              </div>
+              <p style={{ fontFamily: font, fontSize: 12.5, color: C.textSec, margin: "0 0 20px", lineHeight: 1.5, minHeight: 36 }}>{plan.desc}</p>
+              <Link
+                href={plan.name === "Scale" ? "/wizard" : "/wizard"}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "center",
+                  background: plan.featured ? C.gold : "transparent",
+                  color: plan.featured ? "#0A0A0A" : C.text,
+                  border: plan.featured ? "none" : `1px solid ${C.borderLight}`,
+                  borderRadius: 8,
+                  padding: "10px 0",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  fontFamily: font,
+                  cursor: "pointer",
+                  marginBottom: 20,
+                  transition: "all 0.2s",
+                  textDecoration: "none",
+                }}
+              >
+                {plan.cta}
+              </Link>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {plan.features.map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: font, fontSize: 12.5, color: C.textSec }}>
+                    <span style={{ color: C.green, fontSize: 12 }}>✓</span>
+                    {f}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
         </div>
-        <p style={{ textAlign: "center", color: T.text3, fontSize: "0.9rem", marginTop: 32, padding: "0 24px", maxWidth: 640, margin: "32px auto 0" }}>
-          Coaching. Freelance. E-commerce. Consulting. Courses. Templates. Memberships. Whatever you&apos;re good at, AI builds the business around it.
+      </div>
+    </section>
+  );
+};
+
+/* ─── CTA ─── */
+const FinalCTA = () => (
+  <section style={{ padding: "100px 32px", borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
+    <div style={{ maxWidth: 560, margin: "0 auto" }}>
+      <CobraMark size={44} />
+      <h2 style={{ fontFamily: font, fontSize: "clamp(26px,4vw,38px)", fontWeight: 700, letterSpacing: "-0.03em", color: C.text, margin: "24px 0 14px", lineHeight: 1.15 }}>
+        You have the skill.
+        <br />
+        Kovra handles everything else.
+      </h2>
+      <p style={{ fontFamily: font, fontSize: 15.5, color: C.textSec, margin: "0 0 32px", lineHeight: 1.6 }}>
+        Join thousands of service professionals who stopped juggling tools and started growing their business.
+      </p>
+      <Link
+        href="/wizard"
+        style={{
+          background: C.gold,
+          color: "#0A0A0A",
+          border: "none",
+          borderRadius: 10,
+          padding: "14px 36px",
+          fontSize: 15,
+          fontWeight: 600,
+          fontFamily: font,
+          cursor: "pointer",
+          transition: "all 0.2s",
+          textDecoration: "none",
+          display: "inline-block",
+        }}
+      >
+        Start building for free →
+      </Link>
+      <p style={{ fontFamily: font, fontSize: 12, color: C.textDim, marginTop: 14 }}>
+        Free plan available · No credit card required
+      </p>
+    </div>
+  </section>
+);
+
+/* ─── FOOTER ─── */
+const Footer = () => (
+  <footer style={{ padding: "56px 32px 36px", borderTop: `1px solid ${C.border}` }}>
+    <div style={{ maxWidth: 940, margin: "0 auto", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 32 }}>
+      <div>
+        <Logo />
+        <p style={{ fontFamily: font, fontSize: 12.5, color: C.textDim, lineHeight: 1.6, marginTop: 14, maxWidth: 220 }}>
+          The all-in-one operating system for service businesses. Build, sell, manage, grow.
         </p>
-      </section>
-
-      {/* ═══════════ SECTION 10.5: EVERYTHING YOU GET ═══════════ */}
-      <section style={{ padding: "100px 24px" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <p style={{ fontFamily: T.mono, fontSize: "0.7rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Everything Included</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              A Complete Business. Not Just a Website.
-            </h2>
-            <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 580, margin: "0 auto" }}>
-              Other platforms sell you a blank canvas and charge extra for everything. We give you the entire toolkit from day one.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            {[
-              { icon: "&#127760;", title: "AI Website Builder", desc: "Full site generated in 60 seconds with 3 layout options", included: true },
-              { icon: "&#9998;", title: "Visual Site Editor", desc: "Edit anything with plain English — no code needed", included: true },
-              { icon: "&#127912;", title: "Brand Identity", desc: "Logo, colors, fonts, and tone of voice — all AI-generated", included: true },
-              { icon: "&#128176;", title: "Stripe Payments", desc: "Accept cards, subscriptions, and invoices from day one", included: true },
-              { icon: "&#128172;", title: "AI Business Coach", desc: "30-day action plan with daily tasks and accountability", included: true },
-              { icon: "&#128221;", title: "Blog & SEO Content", desc: "AI-written blog posts, meta descriptions, and keywords", included: true },
-              { icon: "&#127909;", title: "Promo Videos", desc: "AI-generated video ads with voiceover and branding", included: true },
-              { icon: "&#128248;", title: "UGC-Style Ads", desc: "Short-form video clips for Meta, TikTok, and Twitter", included: true },
-              { icon: "&#128444;", title: "AI Image Generation", desc: "Hero images, product shots, and ad creatives on demand", included: true },
-              { icon: "&#128270;", title: "Site Audits", desc: "SEO, conversion, accessibility, and brand scoring", included: true },
-              { icon: "&#128231;", title: "Email Sequences", desc: "Welcome series, nurture flows, and promotional emails", included: true },
-              { icon: "&#128200;", title: "Launch Checklist", desc: "~150 personalized tasks across 5 phases to first revenue", included: true },
-              { icon: "&#127919;", title: "Ad Copy Generator", desc: "Facebook, Instagram, and Google ad copy variations", included: true },
-              { icon: "&#128247;", title: "Social Media Content", desc: "Platform-specific captions for Instagram, X, and LinkedIn", included: true },
-              { icon: "&#128279;", title: "Custom Domain", desc: "Connect your own domain with free SSL and DNS guidance", included: true },
-              { icon: "&#128197;", title: "Calendly Integration", desc: "Embedded scheduling for coaching and consulting businesses", included: true },
-            ].map(tool => (
-              <Glass key={tool.title} style={{ padding: 18 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontSize: 16 }} dangerouslySetInnerHTML={{ __html: tool.icon }} />
-                  <p style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text }}>{tool.title}</p>
-                </div>
-                <p style={{ fontSize: "0.72rem", color: T.text3, lineHeight: 1.45 }}>{tool.desc}</p>
-              </Glass>
-            ))}
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: 40 }}>
-            <p style={{ fontSize: "0.9rem", color: T.text2, marginBottom: 8 }}>All of this starting at <span style={{ fontFamily: T.mono, fontWeight: 700, color: T.text }}>$0/month</span></p>
-            <p style={{ fontSize: "0.8rem", color: T.text3 }}>Most competitors charge $50–$200/mo for half of this. We give you everything.</p>
-          </div>
+      </div>
+      {[
+        { t: "Product", l: [{ label: "Features", href: "#pillars" }, { label: "Pricing", href: "#pricing" }, { label: "Get Started", href: "/wizard" }] },
+        { t: "Resources", l: [{ label: "Sign In", href: "/auth/login" }, { label: "Dashboard", href: "/dashboard" }] },
+        { t: "Company", l: [{ label: "Contact", href: "mailto:support@kovra.com" }] },
+        { t: "Legal", l: [{ label: "Terms", href: "/terms" }, { label: "Privacy", href: "/privacy" }] },
+      ].map((col) => (
+        <div key={col.t}>
+          <h4 style={{ fontFamily: font, fontSize: 12.5, fontWeight: 600, color: C.text, margin: "0 0 14px" }}>{col.t}</h4>
+          {col.l.map((link) => (
+            <Link
+              key={link.label}
+              href={link.href}
+              style={{ display: "block", fontFamily: font, fontSize: 12.5, color: C.textDim, textDecoration: "none", marginBottom: 9 }}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
-      </section>
+      ))}
+    </div>
+    <div style={{ maxWidth: 940, margin: "36px auto 0", paddingTop: 20, borderTop: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <span style={{ fontFamily: font, fontSize: 11.5, color: C.textDim }}>© 2026 Kovra, Inc. All rights reserved.</span>
+    </div>
+  </footer>
+);
 
-      {/* ═══════════ SECTION 11: INTEGRATIONS ═══════════ */}
-      <section style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 12 }}>
-              Built on tools you can trust.
-            </h2>
-            <p style={{ color: T.text2, fontSize: "1rem" }}>No setup. No hassle. Everything connects.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            {[
-              { name: "Stripe", desc: "Accept payments instantly. Cards, wallets, subscriptions.", color: "#635BFF" },
-              { name: "Custom Domains", desc: "YourBusiness.com — connected with zero config.", color: T.text },
-              { name: "Calendly", desc: "Book calls automatically from your generated site.", color: "#006BFF" },
-              { name: "Claude & GPT", desc: "Powered by the best AI models for every generation task.", color: T.purple },
-            ].map(tool => (
-              <Glass key={tool.name} style={{ padding: 24 }}>
-                <span style={{ fontSize: "0.7rem", fontWeight: 700, color: tool.color, letterSpacing: "0.06em", textTransform: "uppercase" }}>{tool.name}</span>
-                <p style={{ fontSize: "0.9rem", color: T.text2, marginTop: 10, lineHeight: 1.6 }}>{tool.desc}</p>
-              </Glass>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 11: LEAVE YOUR 9-5 ═══════════ */}
-      <section style={{ padding: "100px 24px", position: "relative", overflow: "hidden" }}>
-        {/* Background lifestyle image */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <img src="/landing/lifestyle-aspire.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.15 }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.7) 60%, #000000 100%)" }} />
-        </div>
-        <div style={{ maxWidth: 900, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-              They told you to get a job.<br />You built a business instead.
-            </h2>
-            <p style={{ color: T.text2, fontSize: "1rem", maxWidth: 540, margin: "0 auto", lineHeight: 1.7 }}>
-              No Mistakes exists for the person who&apos;s tired of making someone else rich. The one who knows they&apos;re capable but doesn&apos;t know where to start. Start here.
-            </p>
-          </div>
-
-          {/* Testimonials */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 56 }}>
-            {[
-              { quote: "I launched a coaching business in my lunch break. Got my first client the same week.", name: "Marcus T.", role: "Fitness Coach", initials: "MT", color: "#7B39FC" },
-              { quote: "I sell design templates now. Made $400 in my first month. That was my car payment.", name: "Priya S.", role: "Template Creator", initials: "PS", color: "#F59E0B" },
-              { quote: "I was doom-scrolling every night after work. Now I spend that time building my consulting brand.", name: "Jordan K.", role: "Business Consultant", initials: "JK", color: "#22C55E" },
-            ].map(t => (
-              <Glass key={t.name} style={{ padding: 24 }}>
-                <p style={{ fontSize: "0.9rem", color: T.text2, lineHeight: 1.6, marginBottom: 20, fontStyle: "italic" }}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: t.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#fff" }}>
-                    {t.initials}
-                  </div>
-                  <div>
-                    <p style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text }}>{t.name}</p>
-                    <p style={{ fontSize: "0.7rem", color: T.text3 }}>{t.role}</p>
-                  </div>
-                </div>
-              </Glass>
-            ))}
-          </div>
-
-          {/* Stats bar */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 64, flexWrap: "wrap" }}>
-            <Stat value="2,000+" label="Businesses Launched" />
-            <Stat value="8" label="Business Types" />
-            <Stat value="60s" label="Average Build Time" />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 12: PRICING ═══════════ */}
-      <section id="pricing" style={{ padding: "100px 24px", background: T.bgAlt }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: "0.75rem", fontWeight: 600, color: T.purple, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12 }}>Pricing</p>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 12 }}>
-              Less than your morning coffee. More than most agencies deliver.
-            </h2>
-            <p style={{ fontSize: "1rem", color: T.text2, maxWidth: 560, margin: "0 auto" }}>
-              Website + branding + AI coach + content + video ads + payments + launch checklist. Others charge $5K–$15K for this. You get it all starting free.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 16 }}>
-            {[
-              { name: "Free", price: "$0", sub: "", desc: "Launch Your First Business", features: ["1 business", "50 AI credits/month", "Full AI site generation", "Visual site editor", "AI business coach", "Stripe payments", "Custom domain"], popular: false },
-              { name: "Starter", price: "$19.99", sub: "/mo", desc: "Grow With AI Power Tools", features: ["3 businesses", "200 AI credits/month", "Full AI coach (advanced)", "Blog posts & SEO content", "AI image generation", "Promo video creation", "Ad copy generator", "Site audits"], popular: true },
-              { name: "Growth", price: "$49.99", sub: "/mo", desc: "Full Growth Engine", features: ["10 businesses", "500 AI credits/month", "UGC video ads", "Email sequences", "Competitor analysis", "Advanced analytics", "Priority support"], popular: false },
-            ].map(tier => (
-              <Glass key={tier.name} style={{
-                padding: 28, display: "flex", flexDirection: "column", position: "relative",
-                border: tier.popular ? "1px solid rgba(123,57,252,0.3)" : `1px solid ${T.border}`,
-                boxShadow: tier.popular ? "0 0 60px rgba(123,57,252,0.1)" : "none",
-              }}>
-                {tier.popular && (
-                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: T.gold, color: "#000", fontSize: "0.65rem", fontWeight: 700, padding: "4px 14px", borderRadius: 100, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Most Popular
-                  </div>
-                )}
-                <p style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text3, marginBottom: 8 }}>{tier.desc}</p>
-                <div style={{ marginBottom: 20 }}>
-                  <span style={{ fontFamily: T.mono, fontSize: "2.5rem", fontWeight: 800, color: T.text }}>{tier.price}</span>
-                  {tier.sub && <span style={{ color: T.text3, fontSize: "0.85rem" }}>{tier.sub}</span>}
-                </div>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, flex: 1, display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
-                  {tier.features.map(f => (
-                    <li key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "0.8rem", color: T.text2 }}>
-                      <Check />{f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/wizard" style={{
-                  display: "block", textAlign: "center", padding: "14px 0", borderRadius: 12,
-                  fontSize: "0.85rem", fontWeight: 700, textDecoration: "none",
-                  background: tier.popular ? CTA_GRAD : "transparent",
-                  color: tier.popular ? "#fff" : T.text2,
-                  border: tier.popular ? "none" : `1px solid ${T.border}`,
-                }}>
-                  {tier.name === "Free" ? "Get Started" : tier.name === "Starter" ? "Start Growing" : "Go Growth"}
-                </Link>
-              </Glass>
-            ))}
-          </div>
-
-          {/* Value comparison */}
-          <Glass style={{ padding: 24, marginTop: 24, textAlign: "center" }}>
-            <p style={{ fontSize: "0.9rem", fontWeight: 600, color: T.text, marginBottom: 12 }}>What you&apos;d pay separately</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 16 }}>
-              {[
-                { item: "Website Builder", cost: "$29/mo" },
-                { item: "Brand Design", cost: "$2,000+" },
-                { item: "AI Copywriting", cost: "$49/mo" },
-                { item: "Video Ads", cost: "$500+" },
-                { item: "Business Coach", cost: "$200/mo" },
-                { item: "SEO Tools", cost: "$99/mo" },
-              ].map(v => (
-                <div key={v.item} style={{ textAlign: "center" }}>
-                  <p style={{ fontSize: "0.7rem", color: T.text3 }}>{v.item}</p>
-                  <p style={{ fontFamily: T.mono, fontSize: "0.8rem", fontWeight: 600, color: "#EF4444", textDecoration: "line-through" }}>{v.cost}</p>
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: "0.85rem", color: T.text2 }}>
-              Total: <span style={{ fontFamily: T.mono, fontWeight: 700, color: "#EF4444", textDecoration: "line-through" }}>$2,877+</span>{" "}
-              &rarr; <span style={{ fontFamily: T.mono, fontWeight: 700, color: T.green, fontSize: "1rem" }}>$0 to start</span>
-            </p>
-          </Glass>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 13: FAQ ═══════════ */}
-      <section id="faq" style={{ padding: "100px 24px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h2 style={{ fontFamily: T.h, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 800, letterSpacing: "-1px" }}>
-              Frequently asked questions
-            </h2>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {FAQS.map((faq, i) => (
-              <Glass key={i} style={{ padding: 0, overflow: "hidden", cursor: "pointer" }} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                <div style={{ padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <p style={{ fontSize: "0.9rem", fontWeight: 600, color: T.text }}>{faq.q}</p>
-                  <span style={{ color: T.purple, fontSize: "1.2rem", transition: "transform 0.2s", transform: openFaq === i ? "rotate(45deg)" : "none" }}>+</span>
-                </div>
-                {openFaq === i && (
-                  <div style={{ padding: "0 24px 18px" }}>
-                    <p style={{ fontSize: "0.85rem", color: T.text2, lineHeight: 1.65 }}>{faq.a}</p>
-                  </div>
-                )}
-              </Glass>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 14: FINAL CTA + STATS ═══════════ */}
-      <section style={{ padding: "100px 24px", background: T.bgAlt, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, background: "radial-gradient(circle, rgba(123,57,252,0.08), transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center", position: "relative" }}>
-          <div style={{ display: "flex", justifyContent: "center", gap: 64, flexWrap: "wrap", marginBottom: 64 }}>
-            <Stat value="2,000+" label="Businesses Launched" color={T.purple} />
-            <Stat value="8" label="Business Types" color={T.purple} />
-            <Stat value="60s" label="Average Build Time" color={T.purple} />
-          </div>
-          <h2 style={{ fontFamily: T.h, fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 800, letterSpacing: "-1px", marginBottom: 16 }}>
-            Your vision, launched.
-          </h2>
-          <p style={{ color: T.text2, fontSize: "1rem", marginBottom: 40 }}>No credit card. No coding. No excuses.</p>
-          <Link href="/wizard" style={{
-            display: "inline-block", padding: "18px 48px", borderRadius: 12,
-            background: CTA_GRAD, color: "#fff", fontWeight: 700, fontSize: "1.05rem",
-            textDecoration: "none", boxShadow: "0 0 60px rgba(123,57,252,0.3)",
-          }}>
-            Start Building &mdash; Free
-          </Link>
-        </div>
-      </section>
-
-      {/* ═══════════ SECTION 15: FOOTER ═══════════ */}
-      <footer style={{ padding: "48px 24px", borderTop: `1px solid ${T.border}`, background: "#050508" }}>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-          <div className="flex flex-col md:flex-row" style={{ justifyContent: "space-between", gap: 32, marginBottom: 32 }}>
-            <div>
-              <p style={{ fontFamily: T.h, fontWeight: 800, fontSize: "1rem", marginBottom: 8 }}>No Mistakes</p>
-              <p style={{ fontSize: "0.8rem", color: T.text3, maxWidth: 280, lineHeight: 1.6 }}>
-                AI builds and runs your entire business. From zero to first customer in 30 days.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
-              <div>
-                <p style={{ fontSize: "0.7rem", fontWeight: 600, color: T.text3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Product</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {["Features", "Pricing", "Showcase", "FAQ"].map(l => (
-                    <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "0.8rem", color: T.text2, textDecoration: "none" }}>{l}</a>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p style={{ fontSize: "0.7rem", fontWeight: 600, color: T.text3, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Legal</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <Link href="/terms" style={{ fontSize: "0.8rem", color: T.text2, textDecoration: "none" }}>Terms</Link>
-                  <Link href="/privacy" style={{ fontSize: "0.8rem", color: T.text2, textDecoration: "none" }}>Privacy</Link>
-                  <a href="mailto:ronalddavenport08@gmail.com" style={{ fontSize: "0.8rem", color: T.text2, textDecoration: "none" }}>Contact</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 24 }}>
-            <p style={{ fontSize: "0.72rem", color: T.text3 }}>
-              &copy; 2026 No Mistakes. Built with AI. Made for entrepreneurs.
-            </p>
-          </div>
-        </div>
-      </footer>
+/* ─── APP ─── */
+export default function KovraLanding() {
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh" }}>
+      <style>{`
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::selection { background: rgba(200,164,78,0.3); color: #FAFAFA; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+      `}</style>
+      <Nav />
+      <Hero />
+      <DashboardMockup />
+      <SocialProof />
+      <FourPillars />
+      <ReplacesStrip />
+      <HowItWorks />
+      <DualLane />
+      <Pricing />
+      <FinalCTA />
+      <Footer />
     </div>
   );
 }

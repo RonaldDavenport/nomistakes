@@ -1,5 +1,5 @@
 -- ============================================
--- No Mistakes — Database Schema
+-- Kovra — Database Schema
 -- Run this in Supabase SQL Editor
 -- ============================================
 

@@ -13,7 +13,7 @@ export default function TermsPage() {
           {/* 1. Acceptance of Terms */}
           <h2 className="text-xl font-semibold text-white mt-10 mb-4">1. Acceptance of Terms</h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            By accessing or using No Mistakes (&ldquo;the Service&rdquo;), operated by No Mistakes
+            By accessing or using Kovra (&ldquo;the Service&rdquo;), operated by Kovra
             (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;), you agree to be bound by
             these Terms of Service (&ldquo;Terms&rdquo;). If you do not agree to these Terms, you
             may not use the Service.
@@ -26,7 +26,7 @@ export default function TermsPage() {
           {/* 2. Service Description */}
           <h2 className="text-xl font-semibold text-white mt-10 mb-4">2. Service Description</h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            No Mistakes is an AI-powered business builder. Users answer a series of questions, and
+            Kovra is an AI-powered business builder. Users answer a series of questions, and
             our AI generates a complete business including a website, online store, branding, copy,
             SEO optimization, and advertising assets. The Service also provides ongoing AI-powered
             business management tools including content creation, competitor analysis, analytics, and
@@ -50,13 +50,13 @@ export default function TermsPage() {
           {/* 4. Subscription & Billing */}
           <h2 className="text-xl font-semibold text-white mt-10 mb-4">4. Subscription &amp; Billing</h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            No Mistakes offers the following subscription plans:
+            Kovra offers the following subscription plans:
           </p>
           <ul className="list-disc list-inside text-zinc-400 text-sm space-y-2 mb-4">
-            <li><strong className="text-zinc-300">Free</strong> &mdash; AI builds your full business at no cost</li>
-            <li><strong className="text-zinc-300">Starter ($19.99/month)</strong> &mdash; AI-managed marketing, SEO, blog posts, and mobile app access</li>
-            <li><strong className="text-zinc-300">Growth ($49.99/month)</strong> &mdash; Full growth engine with product research, UGC scripts, competitor analysis, and business reports</li>
-            <li><strong className="text-zinc-300">Pro ($249.99/month)</strong> &mdash; Full AI autopilot with unlimited requests, daily management, and advanced analytics</li>
+            <li><strong className="text-zinc-300">Free</strong> &mdash; Build your website and brand at no cost</li>
+            <li><strong className="text-zinc-300">Starter ($29/month)</strong> &mdash; CRM, proposals, email, SEO tools, and AI coaching</li>
+            <li><strong className="text-zinc-300">Growth ($79/month)</strong> &mdash; Full growth engine with advanced analytics, competitor intel, and reports</li>
+            <li><strong className="text-zinc-300">Scale ($199/month)</strong> &mdash; Everything unlimited with priority support and lowest transaction fees</li>
           </ul>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
             Paid subscriptions are billed on a recurring monthly basis through Stripe. You authorize
@@ -92,7 +92,7 @@ export default function TermsPage() {
             license to host, display, and process this content as necessary to provide the Service.
           </p>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            <strong className="text-zinc-300">Our Platform:</strong> No Mistakes owns all rights to
+            <strong className="text-zinc-300">Our Platform:</strong> Kovra owns all rights to
             the platform, including its software, design, features, AI models and prompts, templates,
             and underlying technology. You may not copy, modify, distribute, or create derivative
             works based on any part of the platform.
@@ -101,7 +101,7 @@ export default function TermsPage() {
           {/* 7. Stripe Connect & Payment Processing */}
           <h2 className="text-xl font-semibold text-white mt-10 mb-4">7. Stripe Connect &amp; Payment Processing</h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            If you sell products or services through your No Mistakes-generated business, payment
+            If you sell products or services through your Kovra-generated business, payment
             processing is handled through Stripe Connect. By using this feature, you agree to:
           </p>
           <ul className="list-disc list-inside text-zinc-400 text-sm space-y-2 mb-4">
@@ -128,13 +128,13 @@ export default function TermsPage() {
             <li>Infringe on the intellectual property rights of others</li>
             <li>Attempt to reverse engineer, decompile, or extract the source code of the platform</li>
             <li>Circumvent any security measures or access restrictions</li>
-            <li>Use the Service to compete directly with No Mistakes</li>
+            <li>Use the Service to compete directly with Kovra</li>
           </ul>
 
           {/* 9. Limitation of Liability */}
           <h2 className="text-xl font-semibold text-white mt-10 mb-4">9. Limitation of Liability</h2>
           <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-            To the maximum extent permitted by applicable law, No Mistakes and its officers,
+            To the maximum extent permitted by applicable law, Kovra and its officers,
             directors, employees, and agents shall not be liable for any indirect, incidental,
             special, consequential, or punitive damages, including but not limited to loss of
             profits, data, business opportunities, or goodwill, arising out of or related to your

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
+import { trackSignupStart, trackSignupComplete, trackSignupError } from "@/lib/analytics";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    trackSignupStart("email");
 
     const { error: signupError } = await supabase.auth.signUp({
       email,
@@ -27,11 +29,13 @@ export default function SignupPage() {
     });
 
     if (signupError) {
+      trackSignupError("email", signupError.message);
       setError(signupError.message);
       setLoading(false);
       return;
     }
 
+    trackSignupComplete("email");
     router.push("/wizard");
   }
 
@@ -103,7 +107,9 @@ export default function SignupPage() {
           <div className="flex-1 h-px bg-white/5" />
         </div>
 
-        <GoogleSignInButton redirectTo="/wizard" />
+        <div onClick={() => trackSignupStart("google")}>
+          <GoogleSignInButton redirectTo="/wizard" />
+        </div>
 
         <p className="text-center text-sm text-zinc-500 mt-6">
           Already have an account?{" "}
