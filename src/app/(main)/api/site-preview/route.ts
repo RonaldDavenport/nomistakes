@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase";
+import { getTheme, resolveVars, buildHero, ThemeVars, SiteTheme } from "@/lib/site-themes";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface SiteData {
@@ -49,7 +50,7 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-// ─── Compute theme variables (same logic as site-template.ts) ────────
+// ─── Compute base theme variables ────────────────────────────────────
 function computeTheme(site: SiteData) {
   const primary = site.brand?.colors?.primary || "#6366f1";
   const accent = site.brand?.colors?.accent || "#a78bfa";
@@ -66,9 +67,26 @@ function computeTheme(site: SiteData) {
   return { primary, accent, bg, headingFont, bodyFont, isServices, isLight, textColor, tb, shadowAlpha, ctaText };
 }
 
-// ─── CSS (exact copy from site-template.ts globals.css) ──────────────
-function buildCSS(site: SiteData): string {
-  const { primary, accent, bg, headingFont, bodyFont, textColor, tb, shadowAlpha, ctaText } = computeTheme(site);
+// ─── Convert to ThemeVars ─────────────────────────────────────────────
+function toThemeVars(site: SiteData): ThemeVars {
+  const c = computeTheme(site);
+  return {
+    primary: c.primary,
+    accent: c.accent,
+    bg: c.bg,
+    textColor: c.textColor,
+    tb: c.tb,
+    ctaText: c.ctaText,
+    shadowAlpha: c.shadowAlpha,
+    isLight: c.isLight,
+    headingFont: c.headingFont,
+    isServices: c.isServices,
+  };
+}
+
+// ─── CSS (base styles + theme overrides appended) ────────────────────
+function buildCSS(v: ThemeVars, bodyFont: string, extraCSS = ""): string {
+  const { primary, accent, bg, headingFont, textColor, tb, shadowAlpha, ctaText } = v;
 
   return `
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -202,12 +220,12 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
   .grid-2 { gap: 24px; }
   .grid-3 { gap: 24px; }
 }
-`;
+${extraCSS}`;
 }
 
-// ─── Nav Builder (matches Nav component from site-template.ts) ───────
-function buildNav(site: SiteData): string {
-  const { primary, bg, tb, ctaText, isServices } = computeTheme(site);
+// ─── Nav Builder ─────────────────────────────────────────────────────
+function buildNav(site: SiteData, v: ThemeVars): string {
+  const { primary, bg, tb, ctaText, isServices } = v;
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -249,9 +267,9 @@ function buildNav(site: SiteData): string {
   `;
 }
 
-// ─── Footer Builder (matches layout.tsx footer from site-template.ts) ─
-function buildFooter(site: SiteData): string {
-  const { tb, isServices } = computeTheme(site);
+// ─── Footer Builder ───────────────────────────────────────────────────
+function buildFooter(site: SiteData, v: ThemeVars): string {
+  const { tb, isServices } = v;
 
   const navLinks = [
     { href: "/", label: "Home" },
@@ -285,14 +303,14 @@ function buildFooter(site: SiteData): string {
   `;
 }
 
-// ─── Page Content Builder (matches page.tsx from site-template.ts) ───
-function buildPageContent(site: SiteData): string {
-  const { primary, accent, bg, tb, shadowAlpha, ctaText, isServices } = computeTheme(site);
+// ─── Page Content Builder ─────────────────────────────────────────────
+function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): string {
+  const { primary, accent, tb, shadowAlpha, ctaText, isServices } = v;
 
   const hero = site.site_content?.hero || {};
   const features = site.site_content?.features || [];
   const testimonials = site.site_content?.testimonials || [];
-  const processData = site.site_content?.process || {};
+  const processData = site.site_content?.process || {} as { title?: string; steps?: { step: string; title: string; desc: string }[] };
   const stats = site.site_content?.stats || [];
   const faq = site.site_content?.faq || [];
   const cta = site.site_content?.cta || {};
@@ -300,76 +318,42 @@ function buildPageContent(site: SiteData): string {
   const products = site.site_content?.products || [];
   const images = site.site_content?.images || {};
 
-  let html = "";
-
-  // ── Hero ──
-  html += `
-      <section style="min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 40px;position:relative;overflow:hidden">
-        <!-- Background glow -->
-        <div style="position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:80%;max-width:700px;height:500px;background:radial-gradient(ellipse,${primary}15 0%,transparent 70%);filter:blur(60px);pointer-events:none"></div>
-        <div style="position:relative;max-width:720px;margin:0 auto">`;
-
-  if (hero.badge) {
-    html += `
-          <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;border:1px solid rgba(${tb},0.1);background:rgba(${tb},0.04);font-size:13px;font-weight:500;color:rgba(${tb},0.6);margin-bottom:24px">
-            <span class="glow-dot"></span>
-            ${esc(hero.badge)}
-          </div>`;
-  } else {
-    html += `
-          <p style="font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${primary};margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px">
-            <span class="glow-dot"></span>
-            ${site.type === "services" ? "Professional Services" : "Digital Products"}
-          </p>`;
-  }
-
-  html += `
-          <h1 style="font-size:clamp(2.5rem,6vw,4.25rem);font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">
-            ${esc(hero.headline || site.name)}
-          </h1>
-          <p style="font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(${tb},0.55);line-height:1.7;margin-bottom:40px;max-width:560px;margin:0 auto 40px">
-            ${esc(hero.subheadline || site.tagline)}
-          </p>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-            <a href="${isServices ? "/contact" : "/" + (isServices ? "services" : "products")}" class="cta-btn">
-              ${esc(cta.button_text || (isServices ? "Book a Strategy Call" : "View Products"))}
-              <span style="font-size:18px">&rarr;</span>
-            </a>
-            <a href="/about" class="btn-secondary">Learn More</a>
-          </div>
-        </div>
-
-        <!-- Hero Visual -->
-        <div style="position:relative;max-width:900px;width:100%;margin:56px auto 0;padding:0 24px">`;
-
-  if (images.hero) {
-    html += `
-          <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08">
+  // ── Hero ──────────────────────────────────────────────────────────────────
+  const heroImageHtml = images.hero
+    ? `<div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08">
             <img src="${esc(images.hero)}" alt="${esc(site.name)}" style="width:100%;height:auto;display:block" />
-          </div>`;
-  } else {
-    html += `
-          <div style="height:340px;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}18,${accent}12,rgba(${tb},0.03));box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08;display:flex;align-items:center;justify-content:center">
+          </div>`
+    : `<div style="height:340px;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}18,${accent}12,rgba(${tb},0.03));box-shadow:0 24px 80px rgba(0,0,0,${shadowAlpha}),0 0 120px ${primary}08;display:flex;align-items:center;justify-content:center">
             <div style="font-size:clamp(3rem,8vw,6rem);font-weight:800;background:linear-gradient(135deg,${primary}44,${accent}33);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
               ${esc(site.name.charAt(0))}
             </div>
           </div>`;
-  }
 
-  html += `
-        </div>
-      </section>`;
+  const heroSection = buildHero(
+    theme.heroVariant,
+    theme.heroFontSize,
+    {
+      headline: esc(hero.headline || site.name),
+      subheadline: esc(hero.subheadline || site.tagline),
+      badge: hero.badge ? esc(hero.badge) : "",
+      ctaLabel: esc(cta.button_text || (isServices ? "Book a Strategy Call" : "View Products")),
+      ctaHref: isServices ? "/contact" : "/products",
+      imageHtml: heroImageHtml,
+    },
+    v
+  );
 
-  // ── Social Proof / Trusted By ──
-  if (socialProof.logos && socialProof.logos.length > 0) {
-    const logoSpans = socialProof.logos
+  // ── Social Proof ──────────────────────────────────────────────────────────
+  let socialProofSection = "";
+  if ((socialProof as any).logos?.length > 0) {
+    const logoSpans = (socialProof as any).logos
       .map(
         (name: string) =>
           `<span style="font-size:16px;font-weight:700;letter-spacing:-0.02em;color:rgba(${tb},0.2)">${esc(name)}</span>`
       )
       .join("\n                ");
 
-    html += `
+    socialProofSection = `
       <section style="padding:40px 24px;border-top:1px solid rgba(${tb},0.05)">
         <div class="container" style="text-align:center">
           <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:rgba(${tb},0.3);margin-bottom:24px">
@@ -382,7 +366,8 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── Stats Bar ──
+  // ── Stats Bar ─────────────────────────────────────────────────────────────
+  let statsSection = "";
   if (stats.length > 0) {
     const statItems = stats
       .map(
@@ -396,7 +381,7 @@ function buildPageContent(site: SiteData): string {
       )
       .join("");
 
-    html += `
+    statsSection = `
       <section style="border-top:1px solid rgba(${tb},0.05);border-bottom:1px solid rgba(${tb},0.05);padding:40px 24px">
         <div class="container" style="display:flex;justify-content:center;flex-wrap:wrap;gap:40px 64px">
           ${statItems}
@@ -404,7 +389,8 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── Features / Why Us ──
+  // ── Features ──────────────────────────────────────────────────────────────
+  let featuresSection = "";
   if (features.length > 0) {
     const featureEmojis = ["\u2728", "\u26A1", "\uD83D\uDE80", "\uD83C\uDFAF", "\uD83D\uDCA1", "\uD83D\uDD0D"];
     const featureCards = features
@@ -420,7 +406,7 @@ function buildPageContent(site: SiteData): string {
       )
       .join("");
 
-    html += `
+    featuresSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
           <div style="text-align:center;margin-bottom:56px">
@@ -438,33 +424,19 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── Video / Showcase Section ──
-  html += `
-      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
-        <div class="container">
-          <div style="text-align:center;margin-bottom:48px">
-            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
-              See It In Action
-            </p>
-            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              ${isServices ? "How we deliver results" : "Watch how it works"}
-            </h2>
-          </div>`;
-
-  if (site.video_url) {
-    html += `
-          <div style="position:relative;padding-bottom:56.25%;height:0;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
+  // ── Video ─────────────────────────────────────────────────────────────────
+  let videoSection = "";
+  if (!theme.noVideo) {
+    const videoInner = site.video_url
+      ? `<div style="position:relative;padding-bottom:56.25%;height:0;border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
             <iframe
               src="${esc(site.video_url)}"
               style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen
             ></iframe>
-          </div>`;
-  } else {
-    html += `
-          <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}08,${accent}06);padding:80px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
-            <!-- Play button placeholder -->
+          </div>`
+      : `<div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.1);background:linear-gradient(135deg,${primary}08,${accent}06);padding:80px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;box-shadow:0 16px 64px rgba(0,0,0,${shadowAlpha})">
             <div style="width:72px;height:72px;border-radius:50%;background:${primary};display:flex;align-items:center;justify-content:center;margin-bottom:24px;box-shadow:0 8px 32px ${primary}44;cursor:pointer">
               <div style="width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:22px solid ${ctaText};margin-left:4px"></div>
             </div>
@@ -475,25 +447,36 @@ function buildPageContent(site: SiteData): string {
               Video coming soon
             </p>
           </div>`;
-  }
 
-  html += `
+    videoSection = `
+      <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
+        <div class="container">
+          <div style="text-align:center;margin-bottom:48px">
+            <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
+              See It In Action
+            </p>
+            <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
+              ${isServices ? "How we deliver results" : "Watch how it works"}
+            </h2>
+          </div>
+          ${videoInner}
         </div>
       </section>`;
+  }
 
-  // ── Featured Products/Services Preview ──
+  // ── Products/Services ─────────────────────────────────────────────────────
+  let productsSection = "";
   if (products.length > 0) {
     const productCards = products
       .slice(0, 3)
       .map((p: any, i: number) => {
         const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/g, "");
-        // Compute gradient hex for card visual header
         const primaryHex = (15 + i * 8).toString(16).padStart(2, "0");
         const accentHex = (10 + i * 6).toString(16).padStart(2, "0");
 
         let imageSection: string;
-        if (images.products && images.products[i]) {
-          imageSection = `<img src="${esc(images.products[i])}" alt="${esc(p.name)}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0" />`;
+        if (images.products && (images.products as string[])[i]) {
+          imageSection = `<img src="${esc((images.products as string[])[i])}" alt="${esc(p.name)}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0" />`;
         } else {
           const emojis = ["\uD83C\uDFAF", "\uD83D\uDE80", "\uD83D\uDCA1"];
           imageSection = `<span style="font-size:48px;opacity:0.4">${emojis[i % 3]}</span>`;
@@ -516,12 +499,10 @@ function buildPageContent(site: SiteData): string {
 
         return `
               <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(${tb},0.08);transition:all 0.3s ease-out;display:flex;flex-direction:column">
-                <!-- Card visual header -->
                 <div style="height:180px;position:relative;overflow:hidden;background:linear-gradient(135deg,${primary}${primaryHex},${accent}${accentHex});display:flex;align-items:center;justify-content:center">
                   ${imageSection}
                   ${popularBadge}
                 </div>
-                <!-- Card body -->
                 <div style="padding:24px 24px 28px;flex:1;display:flex;flex-direction:column">
                   <h3 style="font-weight:700;font-size:18px;margin-bottom:4px">${esc(p.name)}</h3>
                   ${taglineHtml}
@@ -550,7 +531,7 @@ function buildPageContent(site: SiteData): string {
             </div>`
         : "";
 
-    html += `
+    productsSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
           <div style="text-align:center;margin-bottom:48px">
@@ -569,11 +550,12 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── Testimonials ──
+  // ── Testimonials ──────────────────────────────────────────────────────────
+  let testimonialsSection = "";
   if (testimonials.length > 0) {
     const testimonialCards = testimonials
       .map(
-        (t: any, i: number) => {
+        (t: any) => {
           const ratingHtml = t.rating
             ? `<div style="margin-bottom:12px;color:#facc15;font-size:14px;letter-spacing:2px">${"\u2605".repeat(t.rating)}${"\u2606".repeat(5 - t.rating)}</div>`
             : "";
@@ -598,7 +580,7 @@ function buildPageContent(site: SiteData): string {
       )
       .join("");
 
-    html += `
+    testimonialsSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
           <div style="text-align:center;margin-bottom:56px">
@@ -616,7 +598,8 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── Process / How It Works ──
+  // ── Process / How It Works ────────────────────────────────────────────────
+  let processSection = "";
   const processSteps = processData.steps || [];
   if (processSteps.length > 0) {
     const stepItems = processSteps
@@ -634,7 +617,7 @@ function buildPageContent(site: SiteData): string {
       )
       .join("");
 
-    html += `
+    processSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
           <div style="text-align:center;margin-bottom:56px">
@@ -652,7 +635,8 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── FAQ ──
+  // ── FAQ ───────────────────────────────────────────────────────────────────
+  let faqSection = "";
   if (faq.length > 0) {
     const faqItems = faq
       .map(
@@ -664,7 +648,7 @@ function buildPageContent(site: SiteData): string {
       )
       .join("");
 
-    html += `
+    faqSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div style="max-width:700px;margin:0 auto;padding:0 24px">
           <div style="text-align:center;margin-bottom:48px">
@@ -682,8 +666,8 @@ function buildPageContent(site: SiteData): string {
       </section>`;
   }
 
-  // ── CTA Section ──
-  html += `
+  // ── CTA ───────────────────────────────────────────────────────────────────
+  const ctaSection = `
       <section style="padding:80px 24px;border-top:1px solid rgba(${tb},0.05);text-align:center;position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-50%;left:50%;transform:translateX(-50%);width:90%;max-width:800px;height:400px;background:radial-gradient(ellipse,${primary}10 0%,transparent 70%);filter:blur(80px);pointer-events:none"></div>
         <div style="position:relative;max-width:550px;margin:0 auto">
@@ -693,20 +677,31 @@ function buildPageContent(site: SiteData): string {
           <p style="color:rgba(${tb},0.5);font-size:16px;line-height:1.7;margin-bottom:32px">
             ${esc(cta.subheadline || site.tagline)}
           </p>
-          <a href="${isServices ? "/contact" : "/" + (isServices ? "services" : "products")}" class="cta-btn">
+          <a href="${isServices ? "/contact" : "/products"}" class="cta-btn">
             ${esc(cta.button_text || (isServices ? "Book a Strategy Call" : "Get Started"))}
             <span style="font-size:18px">&rarr;</span>
           </a>
         </div>
       </section>`;
 
-  return html;
+  // ── Assemble with theme-aware ordering ────────────────────────────────────
+  const parts: string[] = [heroSection, socialProofSection];
+  if (theme.statsFirst) parts.push(statsSection);
+  if (theme.testimonialsEarly) parts.push(testimonialsSection);
+  parts.push(featuresSection);
+  if (!theme.statsFirst) parts.push(statsSection);
+  parts.push(videoSection);
+  parts.push(productsSection);
+  if (!theme.testimonialsEarly) parts.push(testimonialsSection);
+  parts.push(processSection, faqSection, ctaSection);
+
+  return parts.join("\n");
 }
 
 // ─── Calendly Section ────────────────────────────────────────────────
-function buildCalendly(site: SiteData): string {
+function buildCalendly(site: SiteData, v: ThemeVars): string {
   if (!site.calendly_url) return "";
-  const { primary, bg, textColor, tb } = computeTheme(site);
+  const { primary, bg, textColor, tb } = v;
   return `
     <section style="padding:80px 24px;text-align:center">
       <div style="max-width:700px;margin:0 auto">
@@ -728,7 +723,11 @@ function buildCalendly(site: SiteData): string {
 
 // ─── Full HTML Document ──────────────────────────────────────────────
 function buildFullHTML(site: SiteData): string {
-  const { headingFont, bodyFont } = computeTheme(site);
+  const computed = computeTheme(site);
+  const baseVars = toThemeVars(site);
+  const theme = getTheme(site.slug);
+  const v = resolveVars(baseVars, theme);
+  const { headingFont, bodyFont } = computed;
 
   const fontLink = `<link href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(headingFont)}:wght@400;500;600;700;800&amp;family=${encodeURIComponent(bodyFont)}:wght@400;500;600&amp;display=swap" rel="stylesheet" />`;
 
@@ -743,13 +742,13 @@ function buildFullHTML(site: SiteData): string {
   <title>${esc(seoTitle)}</title>
   <meta name="description" content="${esc(seoDesc)}" />
   ${fontLink}
-  <style>${buildCSS(site)}</style>
+  <style>${buildCSS(v, bodyFont, theme.themeCSS(v))}</style>
 </head>
 <body>
-  ${buildNav(site)}
-  ${buildPageContent(site)}
-  ${buildCalendly(site)}
-  ${buildFooter(site)}
+  ${buildNav(site, v)}
+  ${buildPageContent(site, theme, v)}
+  ${buildCalendly(site, v)}
+  ${buildFooter(site, v)}
 </body>
 </html>`;
 }
