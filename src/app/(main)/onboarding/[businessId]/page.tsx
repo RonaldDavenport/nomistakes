@@ -14,7 +14,6 @@ import {
   ONBOARDING_STEPS,
   COLOR_PRESETS,
   ONBOARDING_AFFILIATES,
-  SOCIAL_PROOF_STATS,
   type ColorPreset,
 } from "@/lib/onboarding-data";
 import { getTrackedUrl } from "@/lib/affiliates";
@@ -306,31 +305,12 @@ export default function OnboardingPage() {
                       borderRadius: 100,
                       transition: "all 0.3s ease",
                       width: i === currentStep ? 32 : 24,
-                      background: i < currentStep ? T.purple : i === currentStep ? T.purpleLight : "rgba(255,255,255,0.04)",
+                      background: i < currentStep ? T.gold : i === currentStep ? T.gold : T.border,
                     }}
                   />
                 ))}
               </div>
               <span style={{ fontSize: "0.8rem", color: T.text3 }}>Step {currentStep + 1} of {ONBOARDING_STEPS.length}</span>
-            </div>
-            {/* Social proof glass card */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              flexWrap: "wrap",
-              padding: "10px 16px",
-              borderRadius: 12,
-              background: T.glass,
-              border: `1px solid ${T.border}`,
-              backdropFilter: "blur(12px)",
-            }}>
-              <div style={{ width: 4, height: 20, borderRadius: 2, background: CTA_GRAD }} />
-              {SOCIAL_PROOF_STATS.map((stat) => (
-                <span key={stat.label} style={{ fontSize: "0.75rem", color: T.text3 }}>
-                  <span style={{ color: T.text2, fontWeight: 600 }}>{stat.value}</span>{" "}{stat.label}
-                </span>
-              ))}
             </div>
           </div>
 
@@ -745,74 +725,7 @@ export default function OnboardingPage() {
                   </motion.div>
                 )}
 
-                {/* ═══ STEP 4: Booking (Calendly link) ═══ */}
-                {stepDef.id === "booking" && (
-                  <motion.div key="booking" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    <div style={{
-                      padding: 20,
-                      borderRadius: 16,
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      backdropFilter: "blur(12px)",
-                    }}>
-                      <p style={{ color: T.text2, fontSize: "0.9rem", marginBottom: 16 }}>
-                        Add your Calendly link to let visitors book meetings directly from your website.
-                        A booking widget will appear on your site&apos;s contact page.
-                      </p>
-                      <label style={labelStyle}>Calendly URL</label>
-                      <input
-                        type="url"
-                        value={calendlyUrl}
-                        onChange={(e) => setCalendlyUrl(e.target.value)}
-                        placeholder="https://calendly.com/your-name"
-                        style={inputStyle}
-                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
-                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-                      />
-                    </div>
-
-                    {calendlyUrl && calendlyUrl.includes("calendly.com") && (
-                      <div style={{
-                        padding: 16,
-                        borderRadius: 16,
-                        border: "1px solid rgba(123,57,252,0.15)",
-                        background: "rgba(123,57,252,0.03)",
-                      }}>
-                        <p style={{ fontSize: "0.75rem", color: T.text3, marginBottom: 8 }}>Preview</p>
-                        <div style={{ borderRadius: 8, overflow: "hidden" }}>
-                          <iframe
-                            src={`${calendlyUrl}?hide_gdpr_banner=1&background_color=000000&text_color=fafafa&primary_color=7B39FC`}
-                            style={{ width: "100%", height: 400, border: "none" }}
-                            title="Calendly preview"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <p style={{ fontSize: "0.75rem", color: T.text3 }}>
-                      Don&apos;t have Calendly?{" "}
-                      <a href="https://calendly.com" target="_blank" rel="noopener noreferrer" style={{ color: T.purple }}>
-                        Create a free account
-                      </a>
-                    </p>
-
-                    <StepActions
-                      saving={saving}
-                      skippable
-                      onContinue={async () => {
-                        if (calendlyUrl) {
-                          await saveStep("scheduling", { calendlyUrl });
-                        } else {
-                          await saveStep("scheduling", {});
-                        }
-                        nextStep();
-                      }}
-                      onSkip={skipStep}
-                    />
-                  </motion.div>
-                )}
-
-                {/* ═══ STEP 5: Go Live (email + launch) ═══ */}
+                {/* ═══ STEP 4: Go Live (email + launch) ═══ */}
                 {stepDef.id === "go-live" && (
                   <motion.div key="go-live" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                     <AffiliateCard step="email" businessId={businessId} />

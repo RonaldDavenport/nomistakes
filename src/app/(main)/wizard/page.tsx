@@ -2,179 +2,95 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import AuthGateModal from "@/components/onboarding/AuthGateModal";
 import BuildingScreen from "@/components/wizard/BuildingScreen";
+import AuthGateModal from "@/components/onboarding/AuthGateModal";
 import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
 import {
   trackWizardStep,
-  trackWizardSkillToggle,
-  trackWizardTypeSelect,
-  trackWizardSubtypeSelect,
-  trackWizardBudgetSelect,
-  trackWizardTimeSelect,
-  trackWizardConceptsGenerated,
-  trackWizardConceptPicked,
   trackWizardBuildStarted,
   trackWizardBuildComplete,
-  trackWizardBack,
 } from "@/lib/analytics";
-import {
-  SKILLS,
-  TIME_OPTIONS,
-  BUDGET_OPTIONS,
-  TYPE_OPTIONS,
-  SUBTYPE_OPTIONS,
-  generateConcepts as localGenerateConcepts,
-  type BusinessConcept,
-} from "@/lib/wizard-data";
 
-type Step = "skills" | "audience" | "budget" | "time" | "generating" | "building" | "done";
+type Step = "describe" | "name" | "building" | "done";
 
-const QUESTION_STEPS = ["skills", "audience", "budget", "time"];
+// New business: describe what they do first, name comes last (with AI suggestions)
+const NEW_STEPS: Step[]      = ["describe", "name"];
+// Existing business: name first (they know it), then describe
+const EXISTING_STEPS: Step[] = ["name", "describe"];
 
-function getStepNumber(step: Step): { current: number; total: number } {
-  const idx = QUESTION_STEPS.indexOf(step);
-  if (idx === -1) return { current: 0, total: 0 };
-  return { current: idx + 1, total: 4 };
-}
-
-/* Subtype descriptions for the second-phase picker */
-const SUBTYPE_DESCS: Record<string, string> = {
-  freelance: "Solo client work",
-  consulting: "Strategic advisory",
-  coaching: "1:1 or group coaching",
-  agency: "Team-based services",
-  courses: "Online education",
-  templates: "Downloadable assets",
-  ebooks: "Written products",
-  memberships: "Recurring community",
-};
+const BUILD_STEPS = [
+  { at: 5,  label: "Setting up your business profile..." },
+  { at: 15, label: "Designing your brand and website..." },
+  { at: 30, label: "Building your booking and proposal system..." },
+  { at: 50, label: "Configuring your CRM and client workspace..." },
+  { at: 65, label: "Setting up invoicing and payments..." },
+  { at: 78, label: "Generating your marketing content..." },
+  { at: 92, label: "Deploying your site to a live URL..." },
+];
 
 export default function WizardPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("skills");
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState("");
-  const [selectedBudget, setSelectedBudget] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedSubtype, setSelectedSubtype] = useState("");
-  const [selectedAudience, setSelectedAudience] = useState("");
-  const [concepts, setConcepts] = useState<BusinessConcept[]>([]);
-  const [chosenConcept, setChosenConcept] = useState<BusinessConcept | null>(null);
+  const params = useSearchParams();
+  const isExisting = params.get("existing") === "true";
+  const QUESTION_STEPS = isExisting ? EXISTING_STEPS : NEW_STEPS;
+
+  const [step, setStep] = useState<Step>(QUESTION_STEPS[0]);
+  const [description, setDescription] = useState("");
+  const [bizName, setBizName] = useState("");
+  const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
+  const [loadingNames, setLoadingNames] = useState(false);
+
   const [buildProgress, setBuildProgress] = useState(0);
-  const [siteSlug, setSiteSlug] = useState("");
-  const [businessIdResult, setBusinessIdResult] = useState("");
   const [deployedUrl, setDeployedUrl] = useState("");
   const [error, setError] = useState("");
+
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pendingBusinessId, setPendingBusinessId] = useState("");
-  const [pendingBusinessName, setPendingBusinessName] = useState("");
-  const buildStarted = useRef(false);
-  const buildStartTime = useRef<number>(0);
 
-  // Track step changes
+  const buildStarted = useRef(false);
+  const buildStartTime = useRef(0);
+
   useEffect(() => {
     trackWizardStep(step);
   }, [step]);
 
-  const stepInfo = getStepNumber(step);
-
-  function toggleSkill(id: string) {
-    trackWizardSkillToggle(id, !selectedSkills.includes(id));
-    setSelectedSkills((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : prev.length < 5 ? [...prev, id] : prev
-    );
-  }
+  const stepIdx = QUESTION_STEPS.indexOf(step as Step);
+  const isQuestionStep = stepIdx !== -1;
+  const stepNum = stepIdx + 1;
+  const stepTotal = QUESTION_STEPS.length;
 
   function goBack() {
-    trackWizardBack(step);
-    const currentIdx = QUESTION_STEPS.indexOf(step);
-    if (currentIdx > 0) {
-      setStep(QUESTION_STEPS[currentIdx - 1] as Step);
-    }
+    if (stepIdx > 0) setStep(QUESTION_STEPS[stepIdx - 1]);
   }
 
-  /* Phase 1: pick a category. Phase 2: pick subtype (if applicable), then advance. */
-  function handleTypeSelect(id: string) {
-    trackWizardTypeSelect(id);
-    setSelectedType(id);
-    setSelectedSubtype("");
-    // "both" and "any" have no subtypes — advance immediately
-    if (!SUBTYPE_OPTIONS[id]) {
-      setSelectedAudience(id);
-      setTimeout(() => setStep("budget"), 300);
-    }
-  }
-
-  function handleSubtypeSelect(sub: string) {
-    trackWizardSubtypeSelect(sub);
-    setSelectedSubtype(sub);
-    setSelectedAudience(`${selectedType}__${sub}`);
-    setTimeout(() => setStep("budget"), 300);
-  }
-
-  function handleBudgetSelect(id: string) {
-    trackWizardBudgetSelect(id);
-    setSelectedBudget(id);
-    setTimeout(() => setStep("time"), 300);
-  }
-
-  function handleTimeSelect(id: string) {
-    trackWizardTimeSelect(id);
-    setSelectedTime(id);
-    setTimeout(() => setStep("generating"), 300);
-  }
-
-  // Generate concepts
-  useEffect(() => {
-    if (step !== "generating") return;
-    let cancelled = false;
-
-    async function fetchConcepts() {
-      try {
-        const res = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "concepts",
-            skills: selectedSkills,
-            time: selectedTime,
-            budget: selectedBudget,
-            bizType: selectedType,
-            subtype: selectedSubtype || undefined,
-          }),
-        });
-
-        if (!cancelled && res.ok) {
-          const data = await res.json();
-          if (data.concepts && data.concepts.length > 0) {
-            setConcepts(data.concepts);
-            trackWizardConceptsGenerated(data.concepts.length);
-            return;
-          }
-        }
-      } catch {
-        // API failed -- fallback to local
+  async function suggestNames() {
+    setLoadingNames(true);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "names",
+          currentName: bizName.trim() || description.slice(0, 60),
+          type: "service",
+          audience: "",
+          tagline: description,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.names?.length) setNameSuggestions(data.names);
       }
+    } catch {}
+    setLoadingNames(false);
+  }
 
-      if (!cancelled) {
-        const results = localGenerateConcepts(selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype || undefined);
-        setConcepts(results);
-        trackWizardConceptsGenerated(results.length);
-      }
-    }
-
-    fetchConcepts();
-    return () => { cancelled = true; };
-  }, [step, selectedSkills, selectedTime, selectedBudget, selectedType, selectedSubtype]);
-
-  // Build business
+  // Build
   useEffect(() => {
-    if (step !== "building" || !chosenConcept || buildStarted.current) return;
+    if (step !== "building" || buildStarted.current) return;
     buildStarted.current = true;
     buildStartTime.current = Date.now();
     trackWizardBuildStarted();
@@ -182,15 +98,23 @@ export default function WizardPage() {
     setError("");
 
     const interval = setInterval(() => {
-      setBuildProgress((prev) => {
-        if (prev >= 90) return 90;
-        return prev + 1;
-      });
+      setBuildProgress((p) => (p >= 90 ? 90 : p + 1));
     }, 150);
 
-    async function buildBusiness() {
+    async function run() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
+
+        const concept = {
+          name: bizName,
+          tagline: "",
+          type: "service",
+          subtype: "",
+          desc: description,
+          revenue: "",
+          startup: "",
+          audience: "",
+        };
 
         const res = await fetch("/api/generate", {
           method: "POST",
@@ -198,12 +122,11 @@ export default function WizardPage() {
           body: JSON.stringify({
             action: "build",
             userId: user?.id || null,
-            concept: chosenConcept,
-            skills: selectedSkills,
-            time: selectedTime,
-            budget: selectedBudget,
-            bizType: selectedType,
-            subtype: selectedSubtype || chosenConcept?.subtype || undefined,
+            concept,
+            skills: [],
+            time: "",
+            budget: "",
+            bizType: "service",
           }),
         });
 
@@ -212,8 +135,6 @@ export default function WizardPage() {
         if (res.ok) {
           const data = await res.json();
           const bizId = data.business?.id;
-          setSiteSlug(data.siteUrl || "");
-          if (bizId) setBusinessIdResult(bizId);
 
           if (bizId) {
             setBuildProgress(92);
@@ -224,594 +145,359 @@ export default function WizardPage() {
                 body: JSON.stringify({ businessId: bizId, userId: user?.id || null }),
               });
               const deployData = await deployRes.json();
-              if (deployRes.ok && deployData.url) {
-                setDeployedUrl(deployData.url);
-              } else {
-                console.error("[wizard] Deploy failed:", deployData.error || deployRes.status);
-              }
-            } catch (deployErr) {
-              console.error("[wizard] Deploy exception:", deployErr);
-            }
-          }
-          setBuildProgress(100);
-          if (bizId) {
-            const buildTimeSec = Math.round((Date.now() - buildStartTime.current) / 1000);
-            trackWizardBuildComplete(bizId, buildTimeSec);
-          }
+              if (deployRes.ok && deployData.url) setDeployedUrl(deployData.url);
+            } catch {}
 
-          if (bizId) {
+            setBuildProgress(100);
+            trackWizardBuildComplete(bizId, Math.round((Date.now() - buildStartTime.current) / 1000));
+
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (authUser) {
               router.push(`/onboarding/${bizId}`);
             } else {
               setPendingBusinessId(bizId);
-              setPendingBusinessName(chosenConcept?.name || "your business");
               setShowAuthGate(true);
+              setStep("done");
             }
           } else {
-            setError("Something went wrong creating your business. Please try again.");
+            setBuildProgress(100);
+            setError("Something went wrong. Please try again.");
           }
         } else {
-          console.error("[wizard] Build API returned non-ok:", res.status);
-          clearInterval(interval);
           setBuildProgress(100);
           setError("Build failed. Please try again.");
         }
-      } catch (err) {
-        console.error("[wizard] Build error:", err);
+      } catch {
         clearInterval(interval);
         setBuildProgress(100);
         setError("Something went wrong. Please try again.");
       }
     }
 
-    buildBusiness();
+    run();
     return () => clearInterval(interval);
-  }, [step, chosenConcept, selectedSkills, selectedTime, selectedBudget, selectedType]);
+  }, [step]);
 
-  function pickConcept(c: BusinessConcept) {
-    trackWizardConceptPicked(c.name);
-    setChosenConcept(c);
-    buildStarted.current = false;
-    setStep("building");
-  }
+  const currentBuildStep = BUILD_STEPS.filter((s) => buildProgress >= s.at).pop();
 
-  const buildSteps = [
-    { at: 5, label: "Setting up your business profile..." },
-    { at: 15, label: "Designing your brand and website..." },
-    { at: 30, label: "Building your booking and proposal system..." },
-    { at: 50, label: "Configuring your CRM and client workspace..." },
-    { at: 65, label: "Setting up invoicing and payments..." },
-    { at: 78, label: "Generating your marketing content..." },
-    { at: 92, label: "Deploying your site to a live URL..." },
-  ];
+  // ── Styles ──
 
-  const currentBuildStep = buildSteps.filter((s) => buildProgress >= s.at).pop();
-
-  const pageTransition = {
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -8 },
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "13px 16px",
+    borderRadius: 10,
+    background: T.bgEl,
+    border: `1px solid ${T.border}`,
+    color: T.text,
+    fontSize: "0.95rem",
+    fontFamily: T.h,
+    outline: "none",
+    boxSizing: "border-box",
   };
 
-  // Shared layout for question steps
-  const questionLayout: React.CSSProperties = {
-    minHeight: "calc(100vh - 144px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "0 24px",
-  };
-
-  // Glass option button style
-  function optionStyle(isSelected: boolean): React.CSSProperties {
+  function primaryBtn(disabled: boolean): React.CSSProperties {
     return {
-      display: "flex",
-      alignItems: "center",
-      gap: 16,
-      padding: "18px 20px",
-      borderRadius: 16,
-      textAlign: "left" as const,
-      transition: "all 0.2s ease",
-      border: isSelected ? `1px solid rgba(123,57,252,0.3)` : `1px solid ${T.border}`,
-      borderLeft: isSelected ? `3px solid ${T.purple}` : `1px solid ${isSelected ? "rgba(123,57,252,0.3)" : T.border}`,
-      background: isSelected ? "rgba(123,57,252,0.1)" : T.glass,
-      backdropFilter: "blur(12px)",
-      cursor: "pointer",
-      width: "100%",
+      padding: "13px 28px",
+      borderRadius: 10,
+      fontSize: "0.9rem",
+      fontWeight: 600,
+      fontFamily: T.h,
+      border: "none",
+      cursor: disabled ? "not-allowed" : "pointer",
+      background: disabled ? T.bgAlt : CTA_GRAD,
+      color: disabled ? T.text3 : "#09090B",
+      opacity: disabled ? 0.5 : 1,
+      transition: "all 0.15s",
+      letterSpacing: "-0.01em",
     };
   }
 
-  // Heading style
-  const headingStyle: React.CSSProperties = {
+  const backBtn: React.CSSProperties = {
+    background: "none",
+    border: "none",
+    color: T.text3,
+    fontSize: "0.85rem",
+    cursor: "pointer",
+    marginBottom: 32,
+    padding: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
     fontFamily: T.h,
-    fontSize: "clamp(2rem, 5vw, 3rem)",
-    fontWeight: 600,
-    color: T.text,
-    letterSpacing: "-0.02em",
-    lineHeight: 1.1,
-    marginBottom: 12,
   };
 
-  // Back button style
-  const backBtnStyle: React.CSSProperties = {
-    background: T.glass,
-    border: `1px solid ${T.border}`,
-    borderRadius: 8,
+  const stepLabel: React.CSSProperties = {
+    fontSize: "0.7rem",
     color: T.text3,
-    fontSize: "0.8rem",
-    cursor: "pointer",
-    marginBottom: 40,
-    padding: "6px 14px",
-    backdropFilter: "blur(8px)",
-    transition: "all 0.2s ease",
+    fontFamily: T.h,
+    marginBottom: 20,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
   };
+
+  const headingStyle: React.CSSProperties = {
+    fontSize: "clamp(1.9rem, 5vw, 2.6rem)",
+    fontWeight: 700,
+    color: T.text,
+    letterSpacing: "-0.03em",
+    lineHeight: 1.05,
+    marginBottom: 10,
+    fontFamily: T.h,
+  };
+
+  const subtitleStyle: React.CSSProperties = {
+    color: T.text2,
+    fontSize: "0.95rem",
+    marginBottom: 32,
+    lineHeight: 1.65,
+  };
+
+  const pt = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit:    { opacity: 0, y: -8 },
+    transition: { duration: 0.28 },
+  };
+
+  const BackArrow = () => (
+    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  );
 
   return (
-    <>
-      <Navbar />
+    <div style={{ minHeight: "100vh", background: T.bg }}>
 
-      {/* Progress indicator: "Step X of 4" */}
-      {QUESTION_STEPS.includes(step) && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: "rgba(255,255,255,0.04)",
-          zIndex: 100,
-        }}>
+      {/* Progress bar */}
+      {isQuestionStep && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 2, background: T.border, zIndex: 100 }}>
           <motion.div
             style={{ height: "100%", background: CTA_GRAD }}
-            animate={{ width: `${(stepInfo.current / stepInfo.total) * 100}%` }}
+            animate={{ width: `${(stepNum / stepTotal) * 100}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           />
         </div>
       )}
 
-      <div style={{ minHeight: "100vh", paddingTop: 80, paddingBottom: 64, background: T.bg }}>
+      {/* Logo bar */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0,
+        height: 56, display: "flex", alignItems: "center",
+        padding: "0 24px", zIndex: 50,
+      }}>
+        <Link href="/" style={{ textDecoration: "none", color: T.text, fontWeight: 700, fontSize: 18, letterSpacing: "-0.03em", fontFamily: T.h }}>
+          kovra
+        </Link>
+      </div>
+
+      {/* Content */}
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "80px 24px 64px",
+      }}>
         <AnimatePresence mode="wait">
 
-          {/* ---- SKILLS ---- */}
-          {step === "skills" && (
-            <motion.div key="skills" {...pageTransition} style={questionLayout}>
-              <div style={{ maxWidth: 600, width: "100%" }}>
-                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
-                  Step {stepInfo.current} of {stepInfo.total}
-                </p>
-                <h2 style={headingStyle}>
-                  What are you good at?
-                </h2>
-                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
-                  Pick up to five. We&apos;ll match you with businesses that play to your strengths.
-                </p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 44 }}>
-                  {SKILLS.map((s) => {
-                    const active = selectedSkills.includes(s.id);
+          {/* ── DESCRIBE ── */}
+          {step === "describe" && (
+            <motion.div key="describe" {...pt} style={{ maxWidth: 520, width: "100%" }}>
+              <p style={stepLabel}>{stepNum} / {stepTotal}</p>
+              <h2 style={headingStyle}>What do you do?</h2>
+              <p style={subtitleStyle}>{isExisting ? "Describe what you do. We use this to write your site copy, set up your tools, and configure your workspace." : "Describe your work in plain terms. We build everything around it."}</p>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g. I help small business owners with their finances and bookkeeping"
+                rows={3}
+                style={{ ...inputStyle, resize: "none", lineHeight: 1.65, marginBottom: 20 }}
+                autoFocus
+              />
+              <button
+                disabled={description.trim().length < 10}
+                onClick={() => {
+                  const next = QUESTION_STEPS[stepIdx + 1];
+                  if (next) setStep(next);
+                  else { buildStarted.current = false; setStep("building"); }
+                }}
+                style={primaryBtn(description.trim().length < 10)}
+              >
+                Continue
+              </button>
+            </motion.div>
+          )}
+
+
+          {/* ── NAME ── */}
+          {step === "name" && (
+            <motion.div key="name" {...pt} style={{ maxWidth: 480, width: "100%" }}>
+              <button onClick={goBack} style={backBtn}>
+                <BackArrow /> Back
+              </button>
+              <p style={stepLabel}>{stepNum} / {stepTotal}</p>
+              <h2 style={headingStyle}>{isExisting ? "What's your business called?" : "What's it called?"}</h2>
+              <p style={subtitleStyle}>{isExisting ? "We'll set up your workspace around it." : "Don't have a name yet? We'll suggest some."}</p>
+
+              <input
+                type="text"
+                value={bizName}
+                onChange={(e) => setBizName(e.target.value)}
+                placeholder="Your business name"
+                style={{ ...inputStyle, marginBottom: 12 }}
+                autoFocus
+              />
+
+              {nameSuggestions.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                  {nameSuggestions.map((name) => {
+                    const active = bizName === name;
                     return (
                       <button
-                        key={s.id}
-                        onClick={() => toggleSkill(s.id)}
+                        key={name}
+                        onClick={() => setBizName(name)}
                         style={{
-                          padding: "10px 20px",
+                          padding: "6px 14px",
                           borderRadius: 100,
-                          border: active ? `1px solid rgba(123,57,252,0.4)` : `1px solid ${T.border}`,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: active ? "rgba(123,57,252,0.12)" : T.glass,
-                          color: active ? T.purpleLight : T.text2,
-                          fontSize: "0.85rem",
-                          fontWeight: 500,
+                          fontSize: "0.8rem",
                           fontFamily: T.h,
-                          backdropFilter: "blur(8px)",
+                          fontWeight: 500,
+                          background: active ? T.goldDim : T.bgEl,
+                          border: `1px solid ${active ? "rgba(200,164,78,0.25)" : T.border}`,
+                          color: active ? T.gold : T.text2,
+                          cursor: "pointer",
+                          transition: "all 0.15s",
                         }}
                       >
-                        {s.label}
+                        {name}
                       </button>
                     );
                   })}
                 </div>
-                <button
-                  disabled={selectedSkills.length === 0}
-                  onClick={() => setStep("audience")}
-                  style={{
-                    padding: "14px 44px",
-                    borderRadius: 100,
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    fontFamily: T.h,
-                    border: "none",
-                    cursor: selectedSkills.length === 0 ? "not-allowed" : "pointer",
-                    background: selectedSkills.length === 0 ? "rgba(123,57,252,0.2)" : CTA_GRAD,
-                    color: "#fff",
-                    opacity: selectedSkills.length === 0 ? 0.5 : 1,
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  Continue &middot; {selectedSkills.length} selected
-                </button>
-              </div>
-            </motion.div>
-          )}
+              )}
 
-          {/* ---- AUDIENCE (two-phase: category → subtype) ---- */}
-          {step === "audience" && (
-            <motion.div key="audience" {...pageTransition} style={questionLayout}>
-              <div style={{ maxWidth: 480, width: "100%" }}>
-                <button onClick={goBack} style={backBtnStyle}>
-                  &larr; Back
-                </button>
-                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
-                  Step {stepInfo.current} of {stepInfo.total}
-                </p>
-                <h2 style={headingStyle}>
-                  Who do you serve?
-                </h2>
-                <p style={{ color: T.text2, marginBottom: 36, fontSize: "1rem", lineHeight: 1.6 }}>
-                  Pick the business model that fits you best.
-                </p>
-
-                {/* Phase 1: Category cards */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {TYPE_OPTIONS.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => handleTypeSelect(t.id)}
-                      style={optionStyle(selectedType === t.id)}
-                    >
-                      <div>
-                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
-                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Phase 2: Subtypes slide in when a category with subtypes is selected */}
-                <AnimatePresence>
-                  {selectedType && SUBTYPE_OPTIONS[selectedType] && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginTop: 32, marginBottom: 14 }}>
-                        What kind of {selectedType === "services" ? "service" : "product"}?
-                      </p>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                        {SUBTYPE_OPTIONS[selectedType].map((s, i) => (
-                          <motion.button
-                            key={s.id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.06 }}
-                            onClick={() => handleSubtypeSelect(s.id)}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              padding: "14px 16px",
-                              borderRadius: 14,
-                              textAlign: "left" as const,
-                              transition: "all 0.2s ease",
-                              border: selectedSubtype === s.id
-                                ? `1px solid rgba(123,57,252,0.3)`
-                                : `1px solid ${T.border}`,
-                              background: selectedSubtype === s.id
-                                ? "rgba(123,57,252,0.1)"
-                                : T.glass,
-                              backdropFilter: "blur(12px)",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <div>
-                              <span style={{ color: T.text, fontWeight: 500, display: "block", fontSize: "0.85rem", fontFamily: T.h }}>{s.label}</span>
-                              <span style={{ color: T.text3, fontSize: "0.7rem" }}>{SUBTYPE_DESCS[s.id] || ""}</span>
-                            </div>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
+              {/* Only show name suggestions for new business journey */}
+              {!isExisting && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+                  <button
+                    onClick={suggestNames}
+                    disabled={loadingNames}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "7px 14px",
+                      borderRadius: 8,
+                      fontSize: "0.8rem",
+                      fontFamily: T.h,
+                      fontWeight: 500,
+                      background: T.bgEl,
+                      border: `1px solid ${T.border}`,
+                      color: loadingNames ? T.text3 : T.text2,
+                      cursor: loadingNames ? "wait" : "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                    {loadingNames ? "Thinking..." : "Suggest names"}
+                  </button>
+                  {!loadingNames && nameSuggestions.length === 0 && (
+                    <span style={{ fontSize: "0.75rem", color: T.text3, fontFamily: T.h }}>or just type yours</span>
                   )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ---- BUDGET ---- */}
-          {step === "budget" && (
-            <motion.div key="budget" {...pageTransition} style={questionLayout}>
-              <div style={{ maxWidth: 480, width: "100%" }}>
-                <button onClick={goBack} style={backBtnStyle}>
-                  &larr; Back
-                </button>
-                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
-                  Step {stepInfo.current} of {stepInfo.total}
-                </p>
-                <h2 style={headingStyle}>
-                  What&apos;s your<br />starting budget?
-                </h2>
-                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
-                  $0 is totally fine. Seriously.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {BUDGET_OPTIONS.map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => handleBudgetSelect(b.id)}
-                      style={optionStyle(selectedBudget === b.id)}
-                    >
-                      <div>
-                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{b.label}</p>
-                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{b.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ---- TIME ---- */}
-          {step === "time" && (
-            <motion.div key="time" {...pageTransition} style={questionLayout}>
-              <div style={{ maxWidth: 480, width: "100%" }}>
-                <button onClick={goBack} style={backBtnStyle}>
-                  &larr; Back
-                </button>
-                <p style={{ color: T.text3, fontSize: "0.8rem", fontFamily: T.h, marginBottom: 16 }}>
-                  Step {stepInfo.current} of {stepInfo.total}
-                </p>
-                <h2 style={headingStyle}>
-                  How much time<br />can you commit?
-                </h2>
-                <p style={{ color: T.text2, marginBottom: 40, fontSize: "1rem", lineHeight: 1.6 }}>
-                  This helps us find the right scale.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {TIME_OPTIONS.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => handleTimeSelect(t.id)}
-                      style={optionStyle(selectedTime === t.id)}
-                    >
-                      <div>
-                        <p style={{ color: T.text, fontWeight: 500, marginBottom: 2, fontSize: "0.95rem", fontFamily: T.h }}>{t.label}</p>
-                        <p style={{ color: T.text3, fontSize: "0.8rem" }}>{t.desc} &middot; {t.hours}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ---- GENERATING (spinner + inline concept cards when ready) ---- */}
-          {step === "generating" && (
-            <motion.div
-              key="generating"
-              {...pageTransition}
-              style={{
-                minHeight: "calc(100vh - 144px)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 24px",
-              }}
-            >
-              {/* Show spinner while concepts haven't loaded */}
-              {concepts.length === 0 && (
-                <>
-                  <div style={{ width: 48, height: 48, marginBottom: 32, position: "relative" }}>
-                    <div style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      border: `2px solid rgba(123,57,252,0.12)`,
-                    }} />
-                    <div style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: "50%",
-                      border: "2px solid transparent",
-                      borderTopColor: T.purple,
-                      animation: "spin 1s linear infinite",
-                    }} />
-                  </div>
-                  <h2 style={{
-                    fontFamily: T.h,
-                    fontSize: "1.5rem",
-                    fontWeight: 600,
-                    color: T.text,
-                    letterSpacing: "-0.02em",
-                    marginBottom: 8,
-                  }}>
-                    Analyzing your profile...
-                  </h2>
-                  <p style={{ color: T.text3, fontSize: "0.9rem" }}>
-                    Generating three perfect-fit business ideas
-                  </p>
-                </>
-              )}
-
-              {/* Concepts loaded -- show them inline as glass cards */}
-              {concepts.length > 0 && (
-                <div style={{ maxWidth: 600, width: "100%" }}>
-                  <div style={{ marginBottom: 48, textAlign: "center" }}>
-                    <h2 style={{
-                      ...headingStyle,
-                      textAlign: "center",
-                    }}>
-                      Here&apos;s what fits you
-                    </h2>
-                    <p style={{ color: T.text2, fontSize: "1rem" }}>
-                      Pick one. We&apos;ll set up the whole business.
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {concepts.map((c, i) => (
-                      <motion.button
-                        key={c.name}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.12 }}
-                        onClick={() => pickConcept(c)}
-                        style={{
-                          textAlign: "left",
-                          padding: 24,
-                          borderRadius: 16,
-                          border: `1px solid ${T.border}`,
-                          background: T.glass,
-                          backdropFilter: "blur(12px)",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          width: "100%",
-                        }}
-                        whileHover={{
-                          backgroundColor: "rgba(123,57,252,0.08)",
-                          borderColor: "rgba(123,57,252,0.25)",
-                        }}
-                      >
-                        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 10 }}>
-                          <div>
-                            <h3 style={{
-                              fontFamily: T.h,
-                              fontSize: "1.15rem",
-                              fontWeight: 600,
-                              color: T.text,
-                              marginBottom: 4,
-                            }}>
-                              {c.name}
-                            </h3>
-                            <p style={{ color: T.purpleLight, fontSize: "0.8rem", fontWeight: 500 }}>{c.tagline}</p>
-                          </div>
-                          <span style={{
-                            flexShrink: 0,
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: T.green,
-                          }}>
-                            {c.revenue}
-                          </span>
-                        </div>
-                        <p style={{ color: T.text2, fontSize: "0.85rem", marginBottom: 12, lineHeight: 1.55 }}>{c.desc}</p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: "0.75rem", color: T.text3 }}>
-                          <span>Startup: {c.startup}</span>
-                          <span>Audience: {c.audience}</span>
-                          <span style={{ textTransform: "capitalize" }}>Type: {c.type}{c.subtype ? ` \u00b7 ${c.subtype}` : ""}</span>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
                 </div>
               )}
+              {isExisting && <div style={{ marginBottom: 32 }} />}
+
+              <button
+                disabled={bizName.trim().length === 0}
+                onClick={() => {
+                  buildStarted.current = false;
+                  setStep("building");
+                }}
+                style={primaryBtn(bizName.trim().length === 0)}
+              >
+                {isExisting ? "Set up my workspace" : "Build my workspace"}
+              </button>
             </motion.div>
           )}
 
-          {/* ---- BUILDING ---- */}
-          {step === "building" && chosenConcept && (
-            <motion.div key="building" {...pageTransition}>
+          {/* ── BUILDING ── */}
+          {step === "building" && (
+            <motion.div key="building" {...pt} style={{ width: "100%", maxWidth: 600 }}>
               <BuildingScreen
-                businessName={chosenConcept.name}
-                tagline={chosenConcept.tagline}
+                businessName={bizName}
+                tagline={description}
                 buildProgress={buildProgress}
-                currentStepLabel={currentBuildStep?.label ?? "Initializing..."}
+                currentStepLabel={currentBuildStep?.label ?? "Setting up your workspace..."}
                 error={error}
                 onRetry={() => {
-                  setError("");
                   buildStarted.current = false;
+                  setBuildProgress(0);
+                  setError("");
                   setStep("building");
                 }}
               />
             </motion.div>
           )}
 
-          {/* ---- DONE ---- */}
-          {step === "done" && chosenConcept && (
-            <motion.div key="done" {...pageTransition} style={{
-              minHeight: "calc(100vh - 144px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 24px",
-            }}>
-              <div style={{ textAlign: "center", maxWidth: 480 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 28px" }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                </div>
-                <h2 style={{
-                  ...headingStyle,
-                  textAlign: "center",
-                  marginBottom: 16,
-                }}>
-                  {chosenConcept.name} is live.
-                </h2>
-                <p style={{ color: T.text2, fontSize: "1rem", marginBottom: 8 }}>
-                  {deployedUrl
-                    ? "Your site has been deployed."
-                    : "Your business is ready to go."}
-                </p>
-                {deployedUrl ? (
+          {/* ── DONE (auth gate shown as modal, this is fallback) ── */}
+          {step === "done" && (
+            <motion.div key="done" {...pt} style={{ textAlign: "center", maxWidth: 440 }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: 14,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 28px",
+              }}>
+                <svg width="22" height="22" fill="none" stroke={T.green} viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <h2 style={{ ...headingStyle, textAlign: "center", marginBottom: 10 }}>
+                {bizName} is live.
+              </h2>
+              <p style={{ color: T.text2, fontSize: "0.95rem", marginBottom: 32 }}>
+                Your workspace is ready. Sign in to access it.
+              </p>
+              {deployedUrl && (
+                <a
+                  href={deployedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: "block", color: T.text3, fontSize: "0.78rem", marginBottom: 28, textDecoration: "none", fontFamily: T.mono }}
+                >
+                  {deployedUrl}
+                </a>
+              )}
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 10 }}>
+                {deployedUrl && (
                   <a
                     href={deployedUrl}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: T.purpleLight, fontFamily: T.mono, fontSize: "0.8rem", display: "inline-block", marginBottom: 40 }}
-                  >
-                    {deployedUrl}
-                  </a>
-                ) : siteSlug ? (
-                  <Link href={siteSlug} style={{ color: T.purpleLight, fontFamily: T.mono, fontSize: "0.8rem", display: "inline-block", marginBottom: 40 }}>
-                    Preview: {siteSlug}
-                  </Link>
-                ) : null}
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 32 }}>
-                  {(deployedUrl || siteSlug) && (
-                    <a
-                      href={deployedUrl || siteSlug}
-                      target={deployedUrl ? "_blank" : undefined}
-                      rel={deployedUrl ? "noopener noreferrer" : undefined}
-                      style={{
-                        padding: "14px 36px",
-                        borderRadius: 100,
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                        fontFamily: T.h,
-                        textDecoration: "none",
-                        background: CTA_GRAD,
-                        color: "#fff",
-                        display: "inline-block",
-                      }}
-                    >
-                      View Your Site
-                    </a>
-                  )}
-                  <Link
-                    href="/dashboard"
+                    rel="noreferrer"
                     style={{
-                      padding: "14px 36px",
-                      borderRadius: 100,
-                      fontSize: "0.9rem",
-                      fontWeight: 500,
-                      fontFamily: T.h,
-                      color: T.text2,
-                      textDecoration: "none",
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      backdropFilter: "blur(8px)",
-                      display: "inline-block",
+                      padding: "12px 24px", borderRadius: 10, fontSize: "0.88rem",
+                      fontWeight: 600, fontFamily: T.h, textDecoration: "none",
+                      background: CTA_GRAD, color: "#09090B", display: "inline-block",
                     }}
                   >
-                    Go to Dashboard
-                  </Link>
-                </div>
+                    View site
+                  </a>
+                )}
+                <Link
+                  href="/dashboard"
+                  style={{
+                    padding: "12px 24px", borderRadius: 10, fontSize: "0.88rem",
+                    fontWeight: 500, fontFamily: T.h, color: T.text2,
+                    textDecoration: "none", background: T.bgEl,
+                    border: `1px solid ${T.border}`, display: "inline-block",
+                  }}
+                >
+                  Go to dashboard
+                </Link>
               </div>
             </motion.div>
           )}
@@ -819,25 +505,14 @@ export default function WizardPage() {
         </AnimatePresence>
       </div>
 
-      {/* Auth gate modal */}
       {showAuthGate && pendingBusinessId && (
         <AuthGateModal
           businessId={pendingBusinessId}
-          businessName={pendingBusinessName}
-          onSuccess={() => {
-            router.push(`/onboarding/${pendingBusinessId}`);
-          }}
-          onSkip={() => {
-            router.push(`/onboarding/${pendingBusinessId}`);
-          }}
+          businessName={bizName}
+          onSuccess={() => router.push(`/onboarding/${pendingBusinessId}`)}
+          onSkip={() => router.push(`/onboarding/${pendingBusinessId}`)}
         />
       )}
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }

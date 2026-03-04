@@ -8,22 +8,21 @@ export interface OnboardingStep {
 }
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
-  { id: "your-site", title: "Your Site", subtitle: "Name, URL, and layout — all in one place", skippable: false },
-  { id: "your-brand", title: "Your Brand", subtitle: "Colors and logo that set the vibe", skippable: false },
-  { id: "payments", title: "Payments", subtitle: "Start getting paid through your site", skippable: true },
-  { id: "booking", title: "Booking", subtitle: "Let clients book time with you", skippable: true },
-  { id: "go-live", title: "Go Live", subtitle: "Business email and you're live", skippable: true },
-  { id: "meet-your-coach", title: "Meet Your Coach", subtitle: "Your AI business coach is ready", skippable: false },
+  { id: "your-site",        title: "Your Site",        subtitle: "Name and URL for your workspace",         skippable: false },
+  { id: "your-brand",       title: "Your Brand",       subtitle: "Colors and logo",                          skippable: false },
+  { id: "payments",         title: "Payments",         subtitle: "Connect Stripe to send paid invoices",     skippable: true  },
+  { id: "go-live",          title: "Go Live",          subtitle: "Business email and launch",                skippable: true  },
+  { id: "meet-your-coach",  title: "Meet Your Coach",  subtitle: "Your AI business coach is ready",          skippable: false },
 ];
 
-/** Old step IDs mapped to new 6-step indices (for migration) */
+/** Old step IDs mapped to current indices (for migration) */
 export const OLD_STEP_TO_NEW: Record<string, number> = {
   name: 0, domain: 0, layout: 0,
   colors: 1, logo: 1,
   payments: 2,
-  scheduling: 3,
-  email: 4,
-  "your-coach": 3, "day-1-launch": 4,
+  scheduling: 2,
+  email: 3,
+  "your-coach": 4, "day-1-launch": 3,
 };
 
 // ── Color Presets ──
@@ -150,19 +149,10 @@ export function getStepAffiliate(step: string): OnboardingAffiliate | undefined 
   return ONBOARDING_AFFILIATES.find((a) => a.step === step);
 }
 
-// ── Social Proof ──
-
-export const SOCIAL_PROOF_STATS = [
-  { value: "12,847", label: "businesses built" },
-  { value: "4 min", label: "avg setup time" },
-  { value: "94%", label: "completion rate" },
-];
-
 export const STEP_MOTIVATION: Record<string, string> = {
-  "your-site": "A memorable name and clean URL boost organic traffic by 40%",
-  "your-brand": "Consistent brand colors increase recognition by 80%",
-  payments: "Sites that accept payments earn 5x more in their first month",
-  booking: "Online booking increases appointments by 3x",
-  "go-live": "Professional emails improve open rates by 20%",
-  "meet-your-coach": "Businesses with a coach grow 2.3x faster in their first 90 days",
+  "your-site":       "Your URL is the address you'll put on everything.",
+  "your-brand":      "Pick colors you'll actually want to look at.",
+  payments:          "You'll need this to send invoices that clients can actually pay.",
+  "go-live":         "A business email makes you look like you mean it.",
+  "meet-your-coach": "Your AI coach is available any time you have a question.",
 };
