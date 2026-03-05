@@ -23,7 +23,6 @@ interface Stats {
   revenue: number;
 }
 
-// Maps replaced tools to their Kovra equivalent
 const TOOL_MAP: Record<string, { kovra: string; section: string }> = {
   "Apollo":              { kovra: "Lead Engine", section: "leads" },
   "Lemlist":             { kovra: "Cold email infra", section: "infrastructure" },
@@ -33,7 +32,7 @@ const TOOL_MAP: Record<string, { kovra: string; section: string }> = {
   "Acuity":              { kovra: "Booking link", section: "calls" },
   "HoneyBook":           { kovra: "CRM + Proposals", section: "contacts" },
   "Dubsado":             { kovra: "CRM + Contracts", section: "proposals" },
-  "DocuSign":            { kovra: "E-signatures on proposals", section: "proposals" },
+  "DocuSign":            { kovra: "E-signatures", section: "proposals" },
   "PayPal":              { kovra: "Online invoicing", section: "invoices" },
   "FreshBooks":          { kovra: "Invoicing + payments", section: "invoices" },
   "Notion":              { kovra: "Projects + notes", section: "projects" },
@@ -43,31 +42,38 @@ const TOOL_MAP: Record<string, { kovra: string; section: string }> = {
   "17hats":              { kovra: "Full business OS", section: "contacts" },
 };
 
+const TOOL_COSTS: Record<string, number> = {
+  Calendly: 16, HoneyBook: 40, Dubsado: 200, DocuSign: 25,
+  Acuity: 20, PayPal: 0, FreshBooks: 17, Notion: 10,
+  Toggl: 10, Pipedrive: 15, Typeform: 25, "17hats": 45,
+  Apollo: 49, Lemlist: 99, Instantly: 37, "LinkedIn Sales Nav": 100,
+};
+
 const QUICK_ACTIONS = [
   {
     title: "Copy your booking link",
-    desc: "Share it anywhere — social bio, email, website. Clients pick a slot.",
+    desc: "Share it in your bio, email signature, anywhere. Clients pick a slot.",
     icon: "calendar",
     href: (bizId: string) => `/dashboard/${bizId}/calls`,
     cta: "Go to Calls",
   },
   {
-    title: "Write your first proposal",
-    desc: "Describe the project. Kovra writes it. Client signs on the page.",
+    title: "Write a proposal",
+    desc: "Describe the project. Kovra writes it. Client signs on the same page.",
     icon: "file",
     href: (bizId: string) => `/dashboard/${bizId}/proposals`,
     cta: "New proposal",
   },
   {
     title: "Send an invoice",
-    desc: "Branded, paid by card or bank. Not PayPal.",
+    desc: "Branded invoices paid by card or bank. Not PayPal.",
     icon: "invoice",
     href: (bizId: string) => `/dashboard/${bizId}/invoices`,
     cta: "New invoice",
   },
   {
     title: "Add your clients",
-    desc: "Your CRM is ready. Import a list or add them one by one.",
+    desc: "Your CRM is live. Import a list or add them one by one.",
     icon: "contacts",
     href: (bizId: string) => `/dashboard/${bizId}/contacts`,
     cta: "Add clients",
@@ -75,7 +81,7 @@ const QUICK_ACTIONS = [
 ];
 
 function Icon({ type }: { type: string }) {
-  const s = { width: 18, height: 18, color: T.gold };
+  const s = { width: 16, height: 16, color: T.gold };
   if (type === "calendar") return (
     <svg {...s} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
       <rect x="3" y="4" width="18" height="18" rx="2" /><path strokeLinecap="round" d="M16 2v4M8 2v4M3 10h18" />
@@ -94,14 +100,6 @@ function Icon({ type }: { type: string }) {
   return (
     <svg {...s} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="12" height="12" fill="none" stroke={T.green} viewBox="0 0 24 24" strokeWidth={2.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
     </svg>
   );
 }
@@ -132,7 +130,6 @@ function SwitchDashboardContent() {
           fetch(`/api/onboarding?businessId=${businessId}`),
           fetch(`/api/dashboard/stats?businessId=${businessId}`),
         ]);
-
         if (bizRes.ok) {
           const data = await bizRes.json();
           setBusiness(data.business);
@@ -152,8 +149,8 @@ function SwitchDashboardContent() {
     load();
   }, [businessId]);
 
-  const bookingUrl = business?.deployed_url || business?.live_url
-    ? `${business.deployed_url || business.live_url}/book`
+  const bookingUrl = businessId
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/book/${businessId}`
     : null;
 
   function copyBookingLink() {
@@ -163,6 +160,9 @@ function SwitchDashboardContent() {
     setTimeout(() => setBookingCopied(false), 2000);
   }
 
+  const totalSaved = replacedTools.reduce((acc, tool) => acc + (TOOL_COSTS[tool] ?? 0), 0);
+  const netSavings = totalSaved - 79;
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -171,15 +171,6 @@ function SwitchDashboardContent() {
       </div>
     );
   }
-
-  const totalSaved = replacedTools.reduce((acc, tool) => {
-    const costs: Record<string, number> = {
-      Calendly: 16, HoneyBook: 40, Dubsado: 200, DocuSign: 25,
-      Acuity: 20, PayPal: 0, FreshBooks: 17, Notion: 10,
-      Toggl: 10, Pipedrive: 15, Typeform: 25, "17hats": 45,
-    };
-    return acc + (costs[tool] ?? 0);
-  }, 0);
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.h }}>
@@ -194,71 +185,86 @@ function SwitchDashboardContent() {
         <Link href="/" style={{ textDecoration: "none", color: T.text, fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em" }}>
           kovra
         </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link
-            href={`/dashboard/${businessId}`}
-            style={{
-              padding: "7px 16px", borderRadius: 8,
-              fontSize: "0.82rem", fontWeight: 500,
-              color: T.text2, textDecoration: "none",
-              border: `1px solid ${T.border}`,
-              background: T.bgEl,
-            }}
-          >
-            Full dashboard
-          </Link>
-        </div>
+        <Link
+          href={`/dashboard/${businessId}`}
+          style={{
+            padding: "7px 16px", borderRadius: 8,
+            fontSize: "0.82rem", fontWeight: 500,
+            color: T.text2, textDecoration: "none",
+            border: `1px solid ${T.border}`,
+            background: T.bgEl,
+          }}
+        >
+          Full dashboard
+        </Link>
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 24px 80px" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "52px 24px 80px" }}>
 
-        {/* Welcome */}
-        <div style={{ marginBottom: 40 }}>
-          <p style={{ fontSize: "0.75rem", color: T.text3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>
-            Migration complete
-          </p>
-          <h1 style={{ fontSize: "clamp(1.8rem, 4vw, 2.4rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", marginBottom: 8 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 48 }}>
+          <h1 style={{
+            fontSize: "clamp(2rem, 5vw, 3rem)",
+            fontWeight: 800,
+            color: T.text,
+            letterSpacing: "-0.04em",
+            lineHeight: 1.0,
+            marginBottom: 14,
+          }}>
             {business?.name ?? "Your workspace"} is ready.
           </h1>
-          <p style={{ fontSize: "0.95rem", color: T.text2 }}>
-            Here's everything that's set up and where to go next.
-          </p>
+
+          {totalSaved > 0 ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "6px 14px", borderRadius: 100,
+                background: "rgba(200,164,78,0.08)",
+                border: "1px solid rgba(200,164,78,0.2)",
+              }}>
+                <span style={{ fontSize: "0.9rem", fontWeight: 700, color: T.gold, letterSpacing: "-0.02em" }}>
+                  ${totalSaved}/mo replaced
+                </span>
+              </div>
+              {netSavings > 0 && (
+                <span style={{ fontSize: "0.88rem", color: T.text3 }}>
+                  ${netSavings}/mo net after Kovra
+                </span>
+              )}
+            </div>
+          ) : (
+            <p style={{ fontSize: "0.95rem", color: T.text2 }}>
+              Your workspace is configured and ready to use.
+            </p>
+          )}
         </div>
 
-        {/* Savings banner */}
-        {totalSaved > 0 && (
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "16px 20px", borderRadius: 12,
-            background: "rgba(200,164,78,0.06)",
-            border: "1px solid rgba(200,164,78,0.2)",
-            marginBottom: 32,
-          }}>
-            <div>
-              <p style={{ fontSize: "0.88rem", fontWeight: 600, color: T.gold, marginBottom: 2 }}>
-                You replaced ${totalSaved}/mo in tools
-              </p>
-              <p style={{ fontSize: "0.78rem", color: T.text3 }}>
-                That's ${totalSaved * 12}/year freed up. Kovra is ${79}/mo.
-              </p>
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 40 }}>
+          {[
+            { label: "Clients", value: stats.contacts },
+            { label: "Proposals", value: stats.proposals },
+            { label: "Invoices", value: stats.invoices },
+            { label: "Revenue", value: `$${stats.revenue.toLocaleString()}` },
+          ].map(({ label, value }) => (
+            <div key={label} style={{
+              padding: "14px 16px", borderRadius: 10,
+              background: T.bgEl, border: `1px solid ${T.border}`,
+            }}>
+              <p style={{ fontSize: "1.3rem", fontWeight: 800, color: T.text, letterSpacing: "-0.03em", marginBottom: 2 }}>{value}</p>
+              <p style={{ fontSize: "0.72rem", color: T.text3 }}>{label}</p>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <p style={{ fontSize: "1.4rem", fontWeight: 800, color: T.gold, letterSpacing: "-0.03em" }}>
-                ${totalSaved - 79}/mo
-              </p>
-              <p style={{ fontSize: "0.72rem", color: T.text3 }}>net savings</p>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* Tools replaced */}
+        {/* Tools replaced — 2-col compact grid */}
         {replacedTools.length > 0 && (
-          <div style={{ marginBottom: 40 }}>
-            <p style={{ fontSize: "0.72rem", color: T.text3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
-              Tools replaced by Kovra
+          <div style={{ marginBottom: 44 }}>
+            <p style={{ fontSize: "0.7rem", color: T.text3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 12 }}>
+              Replaced by Kovra
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {replacedTools.map(tool => {
                 const map = TOOL_MAP[tool];
                 return (
@@ -266,41 +272,27 @@ function SwitchDashboardContent() {
                     key={tool}
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "12px 16px", borderRadius: 10,
+                      padding: "10px 14px", borderRadius: 9,
                       background: T.bgEl, border: `1px solid ${T.border}`,
+                      gap: 8,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{
-                        width: 24, height: 24, borderRadius: 6,
-                        background: "rgba(239,68,68,0.08)",
-                        border: "1px solid rgba(239,68,68,0.15)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }}>
-                        <svg width="10" height="10" fill="none" stroke="#EF4444" viewBox="0 0 24 24" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </div>
-                      <span style={{ fontSize: "0.88rem", color: T.text2, textDecoration: "line-through" }}>{tool}</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <svg width="14" height="14" fill="none" stroke={T.text3} viewBox="0 0 24 24" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                      </svg>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <CheckIcon />
-                        <span style={{ fontSize: "0.85rem", fontWeight: 600, color: T.text }}>
-                          {map?.kovra ?? "Kovra"}
-                        </span>
-                      </div>
+                    <span style={{ fontSize: "0.82rem", color: T.text3, textDecoration: "line-through", flexShrink: 0, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {tool}
+                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 600, color: T.text, whiteSpace: "nowrap" }}>
+                        {map?.kovra ?? "Kovra"}
+                      </span>
                       {map && (
                         <Link
                           href={`/dashboard/${businessId}/${map.section}`}
                           style={{
-                            fontSize: "0.72rem", color: T.gold, textDecoration: "none",
-                            padding: "3px 8px", borderRadius: 5,
+                            fontSize: "0.68rem", color: T.gold, textDecoration: "none",
+                            padding: "2px 8px", borderRadius: 4,
                             background: "rgba(200,164,78,0.08)",
                             border: "1px solid rgba(200,164,78,0.15)",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           Open
@@ -317,68 +309,63 @@ function SwitchDashboardContent() {
         {/* Booking link */}
         {bookingUrl && (
           <div style={{
-            padding: "18px 20px", borderRadius: 12,
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+            padding: "14px 18px", borderRadius: 10,
             background: T.bgEl, border: `1px solid ${T.border}`,
-            marginBottom: 32,
+            marginBottom: 40, flexWrap: "wrap",
           }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-              <div>
-                <p style={{ fontSize: "0.78rem", color: T.text3, marginBottom: 4, letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  Your booking link
-                </p>
-                <p style={{ fontSize: "0.88rem", color: T.text2, fontFamily: "monospace" }}>{bookingUrl}</p>
-              </div>
-              <button
-                onClick={copyBookingLink}
-                style={{
-                  padding: "9px 18px", borderRadius: 8, fontSize: "0.82rem",
-                  fontWeight: 600, fontFamily: T.h,
-                  border: `1px solid ${bookingCopied ? "rgba(34,197,94,0.3)" : T.border}`,
-                  background: bookingCopied ? "rgba(34,197,94,0.08)" : T.bgAlt,
-                  color: bookingCopied ? T.green : T.text2,
-                  cursor: "pointer", transition: "all 0.15s", flexShrink: 0,
-                }}
-              >
-                {bookingCopied ? "Copied" : "Copy link"}
-              </button>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <p style={{ fontSize: "0.7rem", color: T.text3, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 3 }}>
+                Your booking link
+              </p>
+              <p style={{ fontSize: "0.82rem", color: T.text2, fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {bookingUrl}
+              </p>
             </div>
+            <button
+              onClick={copyBookingLink}
+              style={{
+                padding: "8px 16px", borderRadius: 7, fontSize: "0.8rem",
+                fontWeight: 600, fontFamily: T.h, flexShrink: 0,
+                border: `1px solid ${bookingCopied ? "rgba(34,197,94,0.3)" : T.border}`,
+                background: bookingCopied ? "rgba(34,197,94,0.08)" : T.bgAlt,
+                color: bookingCopied ? T.green : T.text2,
+                cursor: "pointer", transition: "all 0.15s",
+              }}
+            >
+              {bookingCopied ? "Copied" : "Copy link"}
+            </button>
           </div>
         )}
 
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 40 }}>
-          {[
-            { label: "Clients", value: stats.contacts },
-            { label: "Proposals", value: stats.proposals },
-            { label: "Invoices", value: stats.invoices },
-            { label: "Revenue", value: `$${stats.revenue.toLocaleString()}` },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ padding: "16px 18px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
-              <p style={{ fontSize: "1.4rem", fontWeight: 800, color: T.text, letterSpacing: "-0.03em", marginBottom: 2 }}>{value}</p>
-              <p style={{ fontSize: "0.75rem", color: T.text3 }}>{label}</p>
-            </div>
-          ))}
-        </div>
-
         {/* Quick actions */}
         <div style={{ marginBottom: 40 }}>
-          <p style={{ fontSize: "0.72rem", color: T.text3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 14 }}>
+          <p style={{ fontSize: "0.7rem", color: T.text3, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 12 }}>
             Start here
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {QUICK_ACTIONS.map(({ title, desc, icon, href, cta }) => (
-              <div key={title} style={{ padding: "18px 20px", borderRadius: 12, background: T.bgEl, border: `1px solid ${T.border}` }}>
-                <div style={{ width: 36, height: 36, borderRadius: 9, background: T.bgAlt, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <div key={title} style={{
+                padding: "18px 20px", borderRadius: 12,
+                background: T.bgEl, border: `1px solid ${T.border}`,
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: T.bgAlt,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: 12,
+                }}>
                   <Icon type={icon} />
                 </div>
-                <p style={{ fontSize: "0.9rem", fontWeight: 600, color: T.text, marginBottom: 4 }}>{title}</p>
-                <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.55, marginBottom: 14 }}>{desc}</p>
+                <p style={{ fontSize: "0.88rem", fontWeight: 600, color: T.text, marginBottom: 4 }}>{title}</p>
+                <p style={{ fontSize: "0.76rem", color: T.text3, lineHeight: 1.55, marginBottom: 14 }}>{desc}</p>
                 <Link
                   href={href(businessId as string)}
                   style={{
                     display: "inline-block",
-                    padding: "8px 16px", borderRadius: 7, fontSize: "0.8rem",
-                    fontWeight: 600, fontFamily: T.h, textDecoration: "none",
+                    padding: "7px 14px", borderRadius: 7,
+                    fontSize: "0.78rem", fontWeight: 600, fontFamily: T.h,
+                    textDecoration: "none",
                     background: CTA_GRAD, color: "#09090B",
                   }}
                 >
@@ -389,26 +376,27 @@ function SwitchDashboardContent() {
           </div>
         </div>
 
-        {/* Go to full dashboard */}
+        {/* Full dashboard */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "16px 20px", borderRadius: 12,
           border: `1px solid ${T.border}`,
+          gap: 16,
         }}>
           <div>
-            <p style={{ fontSize: "0.88rem", fontWeight: 600, color: T.text, marginBottom: 2 }}>Ready to dive in?</p>
-            <p style={{ fontSize: "0.78rem", color: T.text3 }}>Your full dashboard has CRM, analytics, lead engine, and more.</p>
+            <p style={{ fontSize: "0.88rem", fontWeight: 600, color: T.text, marginBottom: 2 }}>Ready for the full picture?</p>
+            <p style={{ fontSize: "0.78rem", color: T.text3 }}>CRM, lead engine, analytics, inbox — all in one dashboard.</p>
           </div>
           <Link
             href={`/dashboard/${businessId}`}
             style={{
               padding: "10px 22px", borderRadius: 9, fontSize: "0.85rem",
               fontWeight: 600, fontFamily: T.h, textDecoration: "none",
-              border: `1px solid ${T.border}`, color: T.text2, background: T.bgEl,
+              background: CTA_GRAD, color: "#09090B",
               flexShrink: 0,
             }}
           >
-            Full dashboard
+            Open dashboard
           </Link>
         </div>
 

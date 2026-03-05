@@ -27,13 +27,6 @@ const SHOWCASE_SITES = [
   },
 ];
 
-const BUILD_STEP_LABELS = [
-  { at: 5, label: "Setting up your business profile..." },
-  { at: 20, label: "Building your website and brand..." },
-  { at: 40, label: "Configuring booking and proposals..." },
-  { at: 60, label: "Setting up your CRM and client workspace..." },
-  { at: 85, label: "Deploying your site..." },
-];
 
 interface BuildingScreenProps {
   businessName: string;
@@ -62,7 +55,7 @@ export default function BuildingScreen({
   }, []);
 
   const site = SHOWCASE_SITES[showcaseIndex];
-  const engagingLabel = BUILD_STEP_LABELS.filter((s) => buildProgress >= s.at).pop()?.label ?? currentStepLabel;
+  const engagingLabel = currentStepLabel;
 
   const ringSize = 96;
   const strokeWidth = 5;

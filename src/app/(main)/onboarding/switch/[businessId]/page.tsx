@@ -19,7 +19,7 @@ const STEPS: StepDef[] = [
   {
     id: "booking",
     title: "Your booking link is live.",
-    subtitle: "Clients book directly from your site or you can share the link anywhere. No more back-and-forth scheduling.",
+    subtitle: "Share it anywhere — social bio, email signature, a DM. Clients pick a slot, you get a notification. No more back-and-forth.",
     replaces: "Calendly / Acuity",
   },
   {
@@ -86,6 +86,8 @@ function SwitchOnboardingContent() {
   const searchParams = useSearchParams();
   const toolsParam = searchParams.get("tools") || "";
   const replacedTools = toolsParam ? toolsParam.split(",") : [];
+  const siteMode = searchParams.get("siteMode") || "scratch";
+  const isTransfer = siteMode === "transfer";
 
   const [business, setBusiness] = useState<Business | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -222,8 +224,8 @@ function SwitchOnboardingContent() {
     );
   }
 
-  const bookingUrl = business?.deployed_url || business?.live_url
-    ? `${business.deployed_url || business.live_url}/book`
+  const bookingUrl = businessId
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/book/${businessId}`
     : null;
 
   return (
@@ -385,15 +387,23 @@ function SwitchOnboardingContent() {
               </div>
 
               <div style={{ display: "flex", gap: 10 }}>
-                <Link
-                  href={`/dashboard/${businessId}/proposals`}
-                  style={{ ...primaryBtn(), textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}
-                >
-                  Write my first proposal <ArrowRight />
-                </Link>
-                <button onClick={markCompleteAndNext} style={ghostBtn()}>
-                  Do this later
-                </button>
+                {isTransfer ? (
+                  <button onClick={markCompleteAndNext} style={primaryBtn()}>
+                    Got it — next
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      href={`/dashboard/${businessId}/proposals`}
+                      style={{ ...primaryBtn(), textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}
+                    >
+                      Write my first proposal <ArrowRight />
+                    </Link>
+                    <button onClick={markCompleteAndNext} style={ghostBtn()}>
+                      Do this later
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
