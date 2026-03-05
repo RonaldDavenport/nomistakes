@@ -135,10 +135,12 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1160, width: "100%", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontFamily: SYNE, fontSize: 13, fontWeight: 900, color: "#07070A" }}>K</span>
-            </div>
-            <span style={{ fontFamily: SYNE, fontSize: 16, fontWeight: 700, letterSpacing: "-0.03em" }}>Kovra</span>
+            <svg width="24" height="26" viewBox="0 0 80 88" fill="none">
+              <path d="M40 4C40 4 14 16 14 38C14 54 26 62 32 65.5C34.5 67 36 69 36 72V80C36 82.5 37.5 84 40 84C42.5 84 44 82.5 44 80V72C44 69 45.5 67 48 65.5C54 62 66 54 66 38C66 16 40 4 40 4Z" fill="#C8A44E" />
+              <circle cx="33" cy="35" r="3.5" fill="#07070A" />
+              <circle cx="47" cy="35" r="3.5" fill="#07070A" />
+            </svg>
+            <span style={{ fontFamily: DISPLAY, fontSize: 16, fontWeight: 700, letterSpacing: "-0.03em" }}>kovra</span>
           </div>
 
           {!isMobile && (
@@ -338,7 +340,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FEATURE HOVER GRID ─── */}
-      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, overflow: "hidden" }}>
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, overflow: "hidden", padding: "0 clamp(20px, 5vw, 56px)" }}>
         <div style={{ textAlign: "center", padding: "80px clamp(20px, 5vw, 56px) 0" }}>
           <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Everything included</span>
           <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", marginTop: 12 }}>No feature gating. No upsells.</h2>
@@ -425,10 +427,12 @@ export default function LandingPage() {
       <footer style={{ padding: "40px clamp(20px, 5vw, 56px)", borderTop: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 6, background: GRAD, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontFamily: SYNE, fontSize: 10, fontWeight: 900, color: "#07070A" }}>K</span>
-            </div>
-            <span style={{ fontFamily: SYNE, fontSize: 14, fontWeight: 600, color: C.textSec }}>Kovra</span>
+            <svg width="20" height="22" viewBox="0 0 80 88" fill="none">
+              <path d="M40 4C40 4 14 16 14 38C14 54 26 62 32 65.5C34.5 67 36 69 36 72V80C36 82.5 37.5 84 40 84C42.5 84 44 82.5 44 80V72C44 69 45.5 67 48 65.5C54 62 66 54 66 38C66 16 40 4 40 4Z" fill="rgba(200,164,78,0.5)" />
+              <circle cx="33" cy="35" r="3.5" fill="#07070A" />
+              <circle cx="47" cy="35" r="3.5" fill="#07070A" />
+            </svg>
+            <span style={{ fontFamily: DISPLAY, fontSize: 14, fontWeight: 600, color: C.textSec }}>kovra</span>
           </div>
           <p style={{ fontSize: 12, color: C.textDim }}>© 2026 Kovra. All rights reserved.</p>
           <div style={{ display: "flex", gap: 24 }}>
