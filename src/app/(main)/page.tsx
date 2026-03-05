@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
+import { FeaturesSectionWithHoverEffects } from "@/components/blocks/feature-section-with-hover-effects";
 import { Calendar, FileText, FolderOpen, TrendingUp, ArrowRight } from "lucide-react";
 
 // ─── tokens ───────────────────────────────────────────────────────────────────
@@ -330,154 +331,126 @@ export default function LandingPage() {
                   Get started <ArrowRight size={13} />
                 </Link>
               </div>
-              <div style={{ borderRadius: 16, overflow: "hidden", aspectRatio: "4/3", border: `1px solid ${C.border}` }}>
-                <img src={p.img} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {/* Mock app UI per phase */}
+              <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.border}`, background: "#08080C", padding: 24, minHeight: 280 }}>
+                {p.tag === "BOOK" && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Book a discovery call</span>
+                      <span style={{ fontSize: 11, color: C.textSec }}>March 2026</span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 20 }}>
+                      {["Mon","Tue","Wed","Thu","Fri"].map((d) => (
+                        <div key={d} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: C.textDim, paddingBottom: 6 }}>{d}</div>
+                      ))}
+                      {["9:00","10:00","—","9:00","—","11:00","2:00","3:00","10:00","4:00"].map((slot, idx) => (
+                        <div key={idx} style={{
+                          borderRadius: 6, padding: "7px 0", fontSize: 11, textAlign: "center",
+                          background: idx === 1 ? C.goldDim : slot === "—" ? "transparent" : "rgba(255,255,255,0.04)",
+                          border: idx === 1 ? `1px solid ${C.goldBorder}` : slot === "—" ? "none" : `1px solid ${C.border}`,
+                          color: idx === 1 ? C.gold : slot === "—" ? "transparent" : C.textSec,
+                          fontWeight: idx === 1 ? 600 : 400,
+                        }}>{slot}</div>
+                      ))}
+                    </div>
+                    <div style={{ borderRadius: 8, border: `1px solid ${C.border}`, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: C.text, margin: 0 }}>Intake form</p>
+                        <p style={{ fontSize: 11, color: C.textSec, margin: "2px 0 0" }}>3 questions · sent automatically</p>
+                      </div>
+                      <span style={{ fontSize: 11, color: p.accent, fontWeight: 600 }}>Active</span>
+                    </div>
+                  </div>
+                )}
+                {p.tag === "SELL" && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Brand Identity Package</span>
+                      <span style={{ fontSize: 11, color: "#22C55E", fontWeight: 600, background: "rgba(34,197,94,0.1)", padding: "3px 8px", borderRadius: 5 }}>Accepted</span>
+                    </div>
+                    <p style={{ fontSize: 28, fontWeight: 800, color: C.text, margin: "0 0 16px", fontVariantNumeric: "tabular-nums" }}>$4,500</p>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                      {[["Draft","#444"], ["Sent","#444"], ["Viewed",p.accent], ["Accepted","#22C55E"]].map(([label, color], idx) => (
+                        <div key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: idx < 3 ? color : "#22C55E", opacity: idx < 2 ? 0.4 : 1 }} />
+                          <span style={{ fontSize: 10, color: idx < 2 ? C.textDim : color as string }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ borderRadius: 8, border: `1px solid ${C.border}`, padding: "12px 14px" }}>
+                      <p style={{ fontSize: 11, color: C.textSec, margin: "0 0 6px" }}>Contract · E-signature</p>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ flex: 1, height: 3, borderRadius: 2, background: "rgba(59,130,246,0.15)" }}>
+                          <div style={{ width: "100%", height: "100%", background: p.accent, borderRadius: 2 }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: p.accent, fontWeight: 600 }}>Signed</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {p.tag === "DELIVER" && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.text }}>Website Redesign</span>
+                      <span style={{ fontSize: 11, color: p.accent, fontWeight: 600 }}>In progress</span>
+                    </div>
+                    {[
+                      { task: "Discovery call notes", done: true },
+                      { task: "Wireframes delivered", done: true },
+                      { task: "Design mockups", done: false },
+                      { task: "Final handoff + files", done: false },
+                    ].map((t) => (
+                      <div key={t.task} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: `1px solid ${C.border}` }}>
+                        <div style={{ width: 18, height: 18, borderRadius: 5, border: `1.5px solid ${t.done ? p.accent : C.border}`, background: t.done ? p.accent + "18" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {t.done && <span style={{ fontSize: 10, color: p.accent, fontWeight: 700 }}>✓</span>}
+                        </div>
+                        <span style={{ fontSize: 12, color: t.done ? C.textSec : C.text, textDecoration: t.done ? "line-through" : "none" }}>{t.task}</span>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                      <span style={{ color: C.textDim }}>6.5h tracked · $780</span>
+                      <span style={{ color: p.accent, fontWeight: 600 }}>2 files shared</span>
+                    </div>
+                  </div>
+                )}
+                {p.tag === "GROW" && (
+                  <div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                      {[["Review requests", "12 sent", "#8B5CF6"], ["Re-engagements", "4 active", "#8B5CF6"]].map(([label, val, color]) => (
+                        <div key={label} style={{ borderRadius: 8, border: `1px solid ${C.border}`, padding: "12px 14px" }}>
+                          <p style={{ fontSize: 11, color: C.textSec, margin: "0 0 4px" }}>{label}</p>
+                          <p style={{ fontSize: 18, fontWeight: 700, color: color as string, margin: 0 }}>{val}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ borderRadius: 8, border: `1px solid ${C.border}`, padding: "12px 14px", marginBottom: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                        <span style={{ fontSize: 11, color: C.textSec }}>Referral link · Instagram bio</span>
+                        <span style={{ fontSize: 11, color: p.accent, fontWeight: 600 }}>47 clicks</span>
+                      </div>
+                      <div style={{ height: 4, borderRadius: 2, background: "rgba(139,92,246,0.12)" }}>
+                        <div style={{ width: "62%", height: "100%", background: p.accent, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                    <div style={{ borderRadius: 8, border: `1px solid ${C.border}`, padding: "12px 14px" }}>
+                      <p style={{ fontSize: 11, color: C.textSec, margin: "0 0 4px" }}>Automation · Project completed</p>
+                      <p style={{ fontSize: 12, color: C.text, margin: 0 }}>→ Send review request email</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ─── FEATURE BENTO ─── */}
-      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, padding: "80px clamp(20px, 5vw, 56px) 96px" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 12px" }}>What's inside</p>
-            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", margin: 0 }}>Everything a service business needs.</h2>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 12 }}>
-
-            {/* CRM + Pipeline — spans 2 cols */}
-            <div style={{ gridColumn: isMobile ? undefined : "span 2", borderRadius: 14, border: `1px solid ${C.border}`, overflow: "hidden", background: C.bg, display: "flex", flexDirection: "column" }}>
-              <div style={{ flex: 1, padding: "22px 22px 0", background: "#08080C" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: C.textSec, letterSpacing: "0.06em", textTransform: "uppercase" }}>Pipeline</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.gold, fontVariantNumeric: "tabular-nums" }}>$18,200</span>
-                </div>
-                {[
-                  { name: "Sarah Chen", stage: "Proposal Sent", val: "$4,500", dot: "#a855f7" },
-                  { name: "James Park",  stage: "Viewed",        val: "$6,800", dot: "#f59e0b" },
-                  { name: "Maya Torres", stage: "Won",           val: "$5,200", dot: "#22C55E" },
-                  { name: "Alex Kim",    stage: "Discovery",     val: "—",      dot: "#3b82f6" },
-                ].map((row) => (
-                  <div key={row.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: `1px solid ${C.border}` }}>
-                    <div style={{ width: 26, height: 26, borderRadius: 7, background: `${row.dot}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: row.dot }}>{row.name[0]}</span>
-                    </div>
-                    <span style={{ fontSize: 12, color: C.text, flex: 1, fontWeight: 500 }}>{row.name}</span>
-                    <span style={{ fontSize: 11, color: row.dot, fontWeight: 600 }}>{row.stage}</span>
-                    <span style={{ fontSize: 12, color: C.textSec, fontVariantNumeric: "tabular-nums", minWidth: 44, textAlign: "right" }}>{row.val}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: "18px 22px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 4px" }}>CRM + Pipeline</p>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>Every deal, every stage, every client.</p>
-                <p style={{ fontSize: 13, color: C.textSec, margin: 0 }}>Contacts, proposals, activity, and pipeline all linked together.</p>
-              </div>
-            </div>
-
-            {/* Booking — 1 col */}
-            <div style={{ borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg, overflow: "hidden" }}>
-              <div style={{ padding: "22px 22px 16px", background: "#08080C" }}>
-                <p style={{ fontSize: 11, color: C.textSec, margin: "0 0 14px", fontWeight: 500 }}>Book a discovery call</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 5 }}>
-                  {["M","T","W","T","F"].map((d, i) => (
-                    <div key={i} style={{ textAlign: "center", fontSize: 10, fontWeight: 600, color: C.textDim, marginBottom: 4 }}>{d}</div>
-                  ))}
-                  {["9am","10am","—","9am","—","11am","2pm","3pm","10am","4pm"].map((slot, i) => (
-                    <div key={i} style={{
-                      borderRadius: 5, padding: "5px 0", fontSize: 10, textAlign: "center",
-                      background: slot === "10am" && i === 1 ? C.goldDim : slot === "—" ? "transparent" : "rgba(255,255,255,0.04)",
-                      border: slot === "10am" && i === 1 ? `1px solid ${C.goldBorder}` : slot === "—" ? "none" : `1px solid ${C.border}`,
-                      color: slot === "10am" && i === 1 ? C.gold : slot === "—" ? "transparent" : C.textSec,
-                    }}>{slot}</div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ padding: "16px 22px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 4px" }}>Booking</p>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>Your own booking link.</p>
-                <p style={{ fontSize: 13, color: C.textSec, margin: 0 }}>Intake forms, auto-reminders, and calendar sync included.</p>
-              </div>
-            </div>
-
-            {/* Proposals — 1 col */}
-            <div style={{ borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg, overflow: "hidden" }}>
-              <div style={{ padding: "22px 22px 16px", background: "#08080C" }}>
-                <div style={{ borderRadius: 9, border: `1px solid ${C.border}`, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 11, color: C.textSec, margin: "0 0 6px" }}>Brand Identity Package</p>
-                  <p style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: "0 0 12px", fontVariantNumeric: "tabular-nums" }}>$4,500</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(34,197,94,0.15)", overflow: "hidden" }}>
-                      <div style={{ width: "100%", height: "100%", background: "#22C55E", borderRadius: 2 }} />
-                    </div>
-                    <span style={{ fontSize: 11, color: "#22C55E", fontWeight: 600, flexShrink: 0 }}>Accepted</span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ padding: "16px 22px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 4px" }}>Proposals</p>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>AI-written in 2 minutes.</p>
-                <p style={{ fontSize: 13, color: C.textSec, margin: 0 }}>Track views and opens. Clients pay via Stripe checkout.</p>
-              </div>
-            </div>
-
-            {/* Invoicing — 1 col */}
-            <div style={{ borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg, overflow: "hidden" }}>
-              <div style={{ padding: "22px 22px 16px", background: "#08080C" }}>
-                {[
-                  { id: "INV-024", val: "$2,400", status: "Paid",    color: "#22C55E" },
-                  { id: "INV-023", val: "$6,800", status: "Sent",    color: C.gold },
-                  { id: "INV-022", val: "$1,200", status: "Paid",    color: "#22C55E" },
-                ].map((inv) => (
-                  <div key={inv.id} style={{ display: "flex", alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${C.border}`, gap: 10 }}>
-                    <span style={{ fontSize: 12, color: C.textSec, flex: 1 }}>{inv.id}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: C.text, fontVariantNumeric: "tabular-nums" }}>{inv.val}</span>
-                    <span style={{ fontSize: 11, color: inv.color, fontWeight: 600, minWidth: 32, textAlign: "right" }}>{inv.status}</span>
-                  </div>
-                ))}
-                <div style={{ paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: C.textDim }}>Total collected</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#22C55E", fontVariantNumeric: "tabular-nums" }}>$10,400</span>
-                </div>
-              </div>
-              <div style={{ padding: "16px 22px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 4px" }}>Invoicing</p>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>Send invoices. Get paid via Stripe.</p>
-                <p style={{ fontSize: 13, color: C.textSec, margin: 0 }}>Recurring billing, deposits, and payment plans.</p>
-              </div>
-            </div>
-
-            {/* AI Website — 1 col */}
-            <div style={{ borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg, overflow: "hidden" }}>
-              <div style={{ padding: "22px 22px 16px", background: "#08080C" }}>
-                <div style={{ borderRadius: 8, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                  <div style={{ background: "#141418", padding: "6px 10px", display: "flex", alignItems: "center", gap: 5 }}>
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3a3a3a" }} />
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3a3a3a" }} />
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3a3a3a" }} />
-                    <div style={{ flex: 1, background: "#1C1C22", borderRadius: 3, height: 13, marginLeft: 6 }} />
-                    <div style={{ width: 36, height: 13, borderRadius: 3, background: C.goldDim, border: `1px solid ${C.goldBorder}` }} />
-                  </div>
-                  <div style={{ background: "#0F0F13", padding: "14px 12px" }}>
-                    <div style={{ width: "55%", height: 7, background: "#22222A", borderRadius: 3, marginBottom: 7 }} />
-                    <div style={{ width: "80%", height: 5, background: "#1A1A22", borderRadius: 3, marginBottom: 5 }} />
-                    <div style={{ width: "65%", height: 5, background: "#1A1A22", borderRadius: 3, marginBottom: 12 }} />
-                    <div style={{ width: 64, height: 22, borderRadius: 5, background: C.goldDim, border: `1px solid ${C.goldBorder}` }} />
-                  </div>
-                </div>
-              </div>
-              <div style={{ padding: "16px 22px" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 4px" }}>AI Website</p>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.text, margin: "0 0 4px" }}>Built and deployed from a prompt.</p>
-                <p style={{ fontSize: 13, color: C.textSec, margin: 0 }}>Custom domain, blog, SEO, and site editor included.</p>
-              </div>
-            </div>
-
-          </div>
+      {/* ─── FEATURE HOVER GRID ─── */}
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ textAlign: "center", padding: "80px clamp(20px, 5vw, 56px) 0" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Everything included</span>
+          <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", marginTop: 12 }}>No feature gating. No upsells.</h2>
         </div>
+        <FeaturesSectionWithHoverEffects />
       </section>
 
       {/* ─── PRICING ─── */}
