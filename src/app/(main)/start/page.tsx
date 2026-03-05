@@ -52,11 +52,29 @@ const FEATURES = [
 ];
 
 const BEFORE_AFTER = [
-  { before: "5 separate tools for one client", after: "One platform, everything connected" },
-  { before: "$280+/mo in subscriptions", after: "$79/mo, all features included" },
-  { before: "No professional website", after: "Site live in 4 minutes" },
-  { before: "Manual follow-up emails", after: "Automated reminders and re-engagement" },
-  { before: "PDF invoices sent by email", after: "Online payment with auto-receipts" },
+  { before: "No website — sending your LinkedIn to clients", after: "Professional site live in 4 minutes, on your domain" },
+  { before: "Quoting rates in a text message", after: "AI-written proposal sent in 30 seconds" },
+  { before: "PayPal invoices that feel amateurish", after: "Branded online invoices, paid by card or bank" },
+  { before: "Scheduling over email back-and-forth", after: "Your own booking link — clients pick a slot" },
+  { before: "Waiting weeks to find your first client", after: "Search 250M+ businesses and reach out the same day" },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "I went from emailing PDFs to looking like a real agency. First client signed and paid through Kovra in week two.",
+    name: "Marcus T.",
+    role: "Brand designer, Atlanta",
+  },
+  {
+    quote: "I was scared no one would take me seriously without a proper website. Kovra had mine live the same day I signed up. Booked a client the next week.",
+    name: "Priya S.",
+    role: "Marketing consultant, Austin",
+  },
+  {
+    quote: "The proposal tool alone is worth it. Used to spend hours writing them. Kovra does it in 30 seconds and they look better than anything I was sending.",
+    name: "James O.",
+    role: "IT consultant, Chicago",
+  },
 ];
 
 function useScrolled(offset = 24) {
@@ -290,6 +308,8 @@ export default function StartPage() {
           .feats-grid { grid-template-columns: 1fr !important; }
           .ba-grid { grid-template-columns: 1fr !important; }
           .visuals-row { flex-direction: column !important; }
+          .steps-grid { grid-template-columns: 1fr !important; }
+          .testi-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -428,6 +448,52 @@ export default function StartPage() {
         </div>
       </section>
 
+      {/* ─── FIRST CLIENT ─── */}
+      <section style={{ padding: "100px clamp(20px, 5vw, 56px)", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ marginBottom: 56 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Lead engine</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
+              Getting clients is the hardest part.<br />
+              <span style={{ color: C.textSec, fontWeight: 400 }}>We built tools for that too.</span>
+            </h2>
+            <p style={{ fontSize: 15, color: C.textSec, marginTop: 10, maxWidth: 520 }}>
+              You don&apos;t need to post on LinkedIn for months. Kovra connects to a database of 250M+ businesses so you can find your first clients and reach out the same day.
+            </p>
+          </div>
+          <div className="steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {[
+              {
+                step: "01",
+                label: "Find prospects",
+                desc: "Search 250M+ businesses by industry, city, and company size. Surface the exact people who need what you do — before they've even looked.",
+                accent: C.gold,
+              },
+              {
+                step: "02",
+                label: "Reach out",
+                desc: "AI writes a personalized first message based on their business. One click to send. Every outreach logged automatically in your CRM.",
+                accent: "#3B82F6",
+              },
+              {
+                step: "03",
+                label: "Convert them",
+                desc: "Send your booking link. They land on your professional site, book a call, and sign a proposal — without you chasing anyone.",
+                accent: "#22C55E",
+              },
+            ].map(s => (
+              <div key={s.step} className="feat-card" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${C.border}`, borderRadius: 14, padding: 28 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 9, background: s.accent + "14", border: `1px solid ${s.accent}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: s.accent, letterSpacing: "0.04em" }}>{s.step}</span>
+                </div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em", color: C.text, marginBottom: 8 }}>{s.label}</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── TYPE PICKER ─── */}
       <section id="start" style={{ padding: "80px clamp(20px, 5vw, 56px)", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
@@ -502,6 +568,36 @@ export default function StartPage() {
               Free to start. <span style={{ color: C.text }}>$79/mo</span> when you&apos;re ready for proposals, contracts, and payments.
             </p>
             <Link href="/#pricing" style={{ fontSize: 13, color: C.gold, fontWeight: 600 }}>See full pricing →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── TESTIMONIALS ─── */}
+      <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ marginBottom: 56, textAlign: "center" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>From the community</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
+              People who made the jump.
+            </h2>
+          </div>
+          <div className="testi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {TESTIMONIALS.map(t => (
+              <div key={t.name} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", gap: 3, marginBottom: 20 }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} style={{ color: C.gold, fontSize: 13 }}>★</span>
+                  ))}
+                </div>
+                <p style={{ fontSize: 14, color: C.text, lineHeight: 1.75, flex: 1, marginBottom: 24 }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 18 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: "0 0 3px" }}>{t.name}</p>
+                  <p style={{ fontSize: 11, color: C.textSec, margin: 0 }}>{t.role}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
