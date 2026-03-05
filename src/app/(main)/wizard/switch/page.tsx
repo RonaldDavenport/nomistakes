@@ -500,7 +500,11 @@ function SwitchWizardContent() {
               </button>
               <p style={stepLabel}>{stepNum} / {stepTotal}</p>
               <h2 style={headingStyle}>What kind of work do you do?</h2>
-              <p style={subtitleStyle}>We use this to write your site copy, configure your proposals, and set up your CRM. Pick one or describe it yourself.</p>
+              <p style={subtitleStyle}>
+                {siteChoice === "transfer"
+                  ? "We use this to configure your proposals, set up your CRM, and personalize your workspace. Pick one or describe it yourself."
+                  : "We use this to write your site copy, configure your proposals, and set up your CRM. Pick one or describe it yourself."}
+              </p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
                 {SERVICE_SUGGESTIONS.map((s) => {
