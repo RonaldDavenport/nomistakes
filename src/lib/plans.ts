@@ -45,6 +45,9 @@ const STARTER_FEATURES = [
   "seo_automation",
   "weekly_reports",
   "crm",
+  "lead_engine",
+  "satellite_infra",
+  "site_analytics",
 ];
 
 const GROWTH_FEATURES = [
@@ -66,6 +69,8 @@ const GROWTH_FEATURES = [
   "advanced_analytics",
   "priority_support",
   "push_notifications",
+  "multi_channel_inbox",
+  "ad_funnel_orchestrator",
 ];
 
 const PRO_FEATURES = [
@@ -93,8 +98,8 @@ export const PLANS: Record<string, PlanDefinition> = {
   starter: {
     id: "starter",
     name: "Starter",
-    price: 4900,
-    monthlyCredits: 100,
+    price: 7900,
+    monthlyCredits: 500,
     limits: {
       businesses: 1,
       chatMessagesPerDay: 50,
@@ -106,8 +111,8 @@ export const PLANS: Record<string, PlanDefinition> = {
   growth: {
     id: "growth",
     name: "Growth",
-    price: 9900,
-    monthlyCredits: 300,
+    price: 19900,
+    monthlyCredits: 2500,
     limits: {
       businesses: 3,
       chatMessagesPerDay: 200,

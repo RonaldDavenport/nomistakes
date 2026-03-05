@@ -29,6 +29,7 @@ export interface Business {
   coach_name: string | null;
   layout: string;
   availability_settings: Record<string, unknown> | null;
+  intake_form_fields: unknown[] | null;
 }
 
 interface BusinessContextValue {

@@ -11,7 +11,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   { id: "your-site",        title: "Your Site",        subtitle: "Name and URL for your workspace",         skippable: false },
   { id: "your-brand",       title: "Your Brand",       subtitle: "Colors and logo",                          skippable: false },
   { id: "payments",         title: "Payments",         subtitle: "Connect Stripe to send paid invoices",     skippable: true  },
+  { id: "booking",          title: "Booking",          subtitle: "Add your scheduling link",                 skippable: true  },
   { id: "go-live",          title: "Go Live",          subtitle: "Business email and launch",                skippable: true  },
+  { id: "lead-engine",      title: "Lead Engine",      subtitle: "Who are your ideal clients?",              skippable: true  },
+  { id: "satellite-domain", title: "Outreach Domain",  subtitle: "Dedicated domain for cold outreach",       skippable: true  },
+  { id: "inbox-connect",    title: "Connect Inbox",    subtitle: "Link LinkedIn and email for outreach",     skippable: true  },
   { id: "meet-your-coach",  title: "Meet Your Coach",  subtitle: "Your AI business coach is ready",          skippable: false },
 ];
 
@@ -20,9 +24,10 @@ export const OLD_STEP_TO_NEW: Record<string, number> = {
   name: 0, domain: 0, layout: 0,
   colors: 1, logo: 1,
   payments: 2,
-  scheduling: 2,
-  email: 3,
-  "your-coach": 4, "day-1-launch": 3,
+  scheduling: 3,
+  email: 4,
+  "lead-engine": 5, "satellite-domain": 6, "inbox-connect": 7,
+  "your-coach": 8, "day-1-launch": 4,
 };
 
 // ── Color Presets ──
@@ -150,9 +155,13 @@ export function getStepAffiliate(step: string): OnboardingAffiliate | undefined 
 }
 
 export const STEP_MOTIVATION: Record<string, string> = {
-  "your-site":       "Your URL is the address you'll put on everything.",
-  "your-brand":      "Pick colors you'll actually want to look at.",
-  payments:          "You'll need this to send invoices that clients can actually pay.",
-  "go-live":         "A business email makes you look like you mean it.",
-  "meet-your-coach": "Your AI coach is available any time you have a question.",
+  "your-site":        "Your URL is the address you'll put on everything.",
+  "your-brand":       "Pick colors you'll actually want to look at.",
+  payments:           "You'll need this to send invoices that clients can actually pay.",
+  booking:            "A scheduling link means fewer back-and-forth emails.",
+  "go-live":          "A business email makes you look like you mean it.",
+  "lead-engine":      "Define your ideal client once. Kovra finds them for you.",
+  "satellite-domain": "A dedicated outreach domain keeps your main domain clean.",
+  "inbox-connect":    "All your LinkedIn and email replies in one place.",
+  "meet-your-coach":  "Your AI coach is available any time you have a question.",
 };

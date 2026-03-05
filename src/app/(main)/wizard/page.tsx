@@ -22,6 +22,21 @@ const NEW_STEPS: Step[]      = ["describe", "name"];
 // Existing business: name first (they know it), then describe
 const EXISTING_STEPS: Step[] = ["name", "describe"];
 
+const SERVICE_SUGGESTIONS = [
+  { label: "Web design",        fill: "I design and build websites. Been doing it on the side and want to turn it into something real" },
+  { label: "Consulting",        fill: "I give advice on business and strategy. People pay me to help them figure things out" },
+  { label: "Coaching",          fill: "I'm good at helping people work through their goals and get unstuck" },
+  { label: "Marketing",         fill: "I do marketing: content, social, ads. I know how to get attention and drive results" },
+  { label: "Bookkeeping",       fill: "I do bookkeeping. I've been handling finances for years and want to go out on my own" },
+  { label: "Photography",       fill: "I take photos: portraits, events, brands. Been shooting on the side for years" },
+  { label: "Copywriting",       fill: "I write ads, emails, and websites. Good at making words actually work" },
+  { label: "Legal services",    fill: "I have a law background and want to offer consulting and advisory work independently" },
+  { label: "Fitness training",  fill: "I train people. Been doing it informally for years and want to do it properly" },
+  { label: "IT & tech",         fill: "I fix and set up tech for people. Computers, networks, software. I figure it out" },
+  { label: "Interior design",   fill: "I have a good eye for spaces and have been helping friends with their homes" },
+  { label: "HR consulting",     fill: "I have an HR background and want to help small companies hire and manage people better" },
+];
+
 const BUILD_STEPS = [
   { at: 5,  label: "Setting up your business profile..." },
   { at: 15, label: "Designing your brand and website..." },
@@ -91,7 +106,12 @@ function WizardContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.names?.length) setNameSuggestions(data.names);
+        if (data.names?.length) {
+            // API returns objects { name, slug, why } — extract just the name strings
+            setNameSuggestions(data.names.map((n: string | { name: string }) =>
+              typeof n === "string" ? n : n.name
+            ));
+          }
       }
     } catch {}
     setLoadingNames(false);
@@ -315,10 +335,38 @@ function WizardContent() {
               <p style={stepLabel}>{stepNum} / {stepTotal}</p>
               <h2 style={headingStyle}>What do you do?</h2>
               <p style={subtitleStyle}>{isExisting ? "Describe what you do. We use this to write your site copy, set up your tools, and configure your workspace." : "Describe your work in plain terms. We build everything around it."}</p>
+
+              {/* Quick-pick chips — only for new journey */}
+              {!isExisting && <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+                {SERVICE_SUGGESTIONS.map((s) => {
+                  const active = description === s.fill;
+                  return (
+                    <button
+                      key={s.label}
+                      onClick={() => setDescription(s.fill)}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: 100,
+                        fontSize: "0.78rem",
+                        fontFamily: T.h,
+                        fontWeight: 500,
+                        background: active ? T.goldDim : T.bgEl,
+                        border: `1px solid ${active ? "rgba(200,164,78,0.25)" : T.border}`,
+                        color: active ? T.gold : T.text2,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>}
+
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. I help small business owners with their finances and bookkeeping"
+                placeholder={isExisting ? "e.g. I do bookkeeping for small business owners" : "e.g. I'm good at bookkeeping. Been doing it on the side for years"}
                 rows={3}
                 style={{ ...inputStyle, resize: "none", lineHeight: 1.65, marginBottom: 20 }}
                 autoFocus
@@ -345,8 +393,8 @@ function WizardContent() {
                 <BackArrow /> Back
               </button>
               <p style={stepLabel}>{stepNum} / {stepTotal}</p>
-              <h2 style={headingStyle}>{isExisting ? "What's your business called?" : "What's it called?"}</h2>
-              <p style={subtitleStyle}>{isExisting ? "We'll set up your workspace around it." : "Don't have a name yet? We'll suggest some."}</p>
+              <h2 style={headingStyle}>{isExisting ? "What's your business called?" : "Name your business."}</h2>
+              <p style={subtitleStyle}>{isExisting ? "We'll set up your workspace around it." : "No idea yet? Hit \"Suggest names\" and we'll come up with a few."}</p>
 
               <input
                 type="text"
@@ -427,7 +475,7 @@ function WizardContent() {
                 }}
                 style={primaryBtn(bizName.trim().length === 0)}
               >
-                {isExisting ? "Set up my workspace" : "Build my workspace"}
+                {isExisting ? "Set up my workspace" : "Start my business"}
               </button>
             </motion.div>
           )}

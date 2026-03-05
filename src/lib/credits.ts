@@ -26,14 +26,18 @@ export const CREDIT_COSTS: Record<string, number> = {
   proposal_generation: 10,
   email_send: 1,
   email_template_generate: 3,
+  // Active Business OS actions
+  outreach: 1,       // per lead DM or cold email sent
+  ad_variant: 5,     // image + copy combined (new ad generation)
+  seo_cluster: 50,   // 10-post SEO cluster
 };
 
 // Monthly credit allocations per plan
 export const PLAN_CREDITS: Record<string, number> = {
   free: 0,
-  starter: 50,
-  growth: 200,
-  pro: 500,
+  starter: 500,
+  growth: 2500,
+  pro: 1000,
 };
 
 // Credit packs available for purchase
@@ -161,6 +165,24 @@ export async function addCredits(
   });
 
   return newBalance;
+}
+
+// Grant one-time launch credits to a new free user (15 credits, never repeats).
+// Guard: only fires when lifetime_earned is 0 on the balance row.
+export async function grantLaunchCredits(userId: string, businessId: string): Promise<void> {
+  const db = createServerClient();
+
+  const { data: balance } = await db
+    .from("credit_balances")
+    .select("lifetime_earned")
+    .eq("user_id", userId)
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  // If no row yet or lifetime_earned is 0, grant the one-time 15-credit bonus
+  if (!balance || balance.lifetime_earned === 0) {
+    await addCredits(userId, businessId, 15, "bonus", { reason: "launch_grant" });
+  }
 }
 
 // Refill credits for all businesses owned by a user (monthly subscription refill)

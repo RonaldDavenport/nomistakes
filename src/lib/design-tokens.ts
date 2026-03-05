@@ -34,6 +34,9 @@ export const T = {
   mono: "'JetBrains Mono', monospace",
   // Compat aliases
   glass: "rgba(255,255,255,0.03)",
+  // Shared UI constants
+  rule: "#1E1E21",       // divider lines
+  subtitle: "#9CA3AF",  // secondary labels
 };
 
 export const CTA_GRAD = "linear-gradient(135deg, #C8A44E, #D4B65E)";

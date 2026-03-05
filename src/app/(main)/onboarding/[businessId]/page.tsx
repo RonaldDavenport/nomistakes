@@ -5,9 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/Navbar";
-import AvatarGuide from "@/components/onboarding/AvatarGuide";
-import SitePreview from "@/components/onboarding/SitePreview";
 const StripeConnectProvider = dynamic(() => import("@/components/StripeConnectProvider"), { ssr: false });
 import { supabase } from "@/lib/supabase";
 import {
@@ -61,6 +58,7 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
 
   // Step-specific state
   const [nameValue, setNameValue] = useState("");
@@ -68,14 +66,18 @@ export default function OnboardingPage() {
   const [altNames, setAltNames] = useState<{ name: string; slug: string; why: string }[]>([]);
   const [generatingNames, setGeneratingNames] = useState(false);
   const [selectedColors, setSelectedColors] = useState<ColorPreset["colors"] | null>(null);
-  const selectedLayout = "default";
-  const [calendlyUrl, setCalendlyUrl] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
-  const [domainInput, setDomainInput] = useState("");
-  const [logoMode, setLogoMode] = useState<"text" | "upload" | null>(null);
   const [stripeConnecting, setStripeConnecting] = useState(false);
   const [showStripeModal, setShowStripeModal] = useState(false);
-  const [showUpsellModal, setShowUpsellModal] = useState(false);
+  const [calendlyUrl, setCalendlyUrl] = useState("");
+  // Lead Engine step state
+  const [leadTitles, setLeadTitles] = useState("");
+  const [leadIndustries, setLeadIndustries] = useState("");
+  const [leadLocations, setLeadLocations] = useState("");
+  // Satellite domain step state
+  const [satelliteSubdomain, setSatelliteSubdomain] = useState("");
+  const [provisioningInfra, setProvisioningInfra] = useState(false);
+  const [infraResult, setInfraResult] = useState<{ satellite_domain?: string; workspace_email?: string } | null>(null);
 
   // Fetch business data
   useEffect(() => {
@@ -88,11 +90,12 @@ export default function OnboardingPage() {
         setNameValue(biz.name);
         setSlugValue(biz.slug);
         if (biz.brand?.colors) setSelectedColors(biz.brand.colors);
-        if (biz.calendly_url) setCalendlyUrl(biz.calendly_url);
         if (biz.business_email) setBusinessEmail(biz.business_email);
+        if (biz.calendly_url) setCalendlyUrl(biz.calendly_url);
         // Map old 8-step index to new 5-step range
         if (biz.onboarding_step > 0 && biz.onboarding_step < ONBOARDING_STEPS.length) {
           setCurrentStep(Math.min(biz.onboarding_step, ONBOARDING_STEPS.length - 1));
+          setShowIntro(false); // returning user — skip intro
         }
 
         // Auto-claim: if user is authed but business has no user_id, claim it
@@ -214,721 +217,1007 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <>
-        <Navbar />
-        <div style={{ minHeight: "100vh", paddingTop: 96, display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
-          <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid transparent", borderTopColor: T.purple, animation: "spin 0.8s linear infinite" }} />
-        </div>
-      </>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", border: "2px solid transparent", borderTopColor: T.gold, animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
     );
   }
 
   if (!business) {
     return (
-      <>
-        <Navbar />
-        <div style={{ minHeight: "100vh", paddingTop: 96, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: T.bg }}>
-          <p style={{ color: T.text3, marginBottom: 16 }}>Business not found</p>
-          <Link href="/dashboard" style={{ color: T.purple }}>Back to Dashboard</Link>
-        </div>
-      </>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: T.bg }}>
+        <p style={{ color: T.text3, marginBottom: 16 }}>Business not found</p>
+        <Link href="/dashboard" style={{ color: T.purple }}>Back to Dashboard</Link>
+      </div>
+    );
+  }
+
+  // ── Welcome intro ── shown once, before step 1, on fresh builds
+  if (showIntro) {
+    const builtItems = [
+      { label: "Website", detail: business.deployed_url || `kovra-${business.slug}.vercel.app` },
+      { label: "Booking system", detail: "Ready to take appointments" },
+      { label: "Invoicing", detail: "Send and track paid invoices" },
+      { label: "CRM", detail: "Manage clients and leads" },
+    ];
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: T.bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "64px 24px",
+      }}>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ maxWidth: 480, width: "100%" }}
+          >
+            {/* Check icon */}
+            <div style={{
+              width: 52, height: 52, borderRadius: 14,
+              background: "rgba(34,197,94,0.08)",
+              border: "1px solid rgba(34,197,94,0.18)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: 28,
+            }}>
+              <svg width="22" height="22" fill="none" stroke={T.green} viewBox="0 0 24 24" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+
+            <h1 style={{
+              fontFamily: T.h,
+              fontSize: "clamp(1.8rem, 4vw, 2.4rem)",
+              fontWeight: 700,
+              color: T.text,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              marginBottom: 10,
+            }}>
+              {business.name} is built.
+            </h1>
+            <p style={{ color: T.text2, fontSize: "0.95rem", lineHeight: 1.65, marginBottom: 36 }}>
+              Your workspace is ready. Now let&apos;s spend 2 minutes finishing the setup so you can start working.
+            </p>
+
+            {/* What was built */}
+            <div style={{
+              borderRadius: 12,
+              border: `1px solid ${T.border}`,
+              background: T.bgEl,
+              marginBottom: 32,
+              overflow: "hidden",
+            }}>
+              {builtItems.map((item, i) => (
+                <div key={item.label} style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  padding: "14px 18px",
+                  borderBottom: i < builtItems.length - 1 ? `1px solid ${T.border}` : "none",
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                    background: "rgba(34,197,94,0.08)",
+                    border: "1px solid rgba(34,197,94,0.15)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <svg width="11" height="11" fill="none" stroke={T.green} viewBox="0 0 24 24" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: T.text, fontWeight: 500, fontSize: "0.88rem", fontFamily: T.h }}>{item.label}</p>
+                    <p style={{ color: T.text3, fontSize: "0.75rem", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowIntro(false)}
+              style={{
+                width: "100%",
+                padding: "14px 28px",
+                borderRadius: 10,
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                fontFamily: T.h,
+                border: "none",
+                cursor: "pointer",
+                background: CTA_GRAD,
+                color: "#09090B",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Finish setup
+            </button>
+          </motion.div>
+      </div>
     );
   }
 
   const stepDef = ONBOARDING_STEPS[currentStep];
-  const previewColors = selectedColors || business.brand?.colors || {
-    primary: "#7B39FC",
-    secondary: "#0A0A0F",
-    accent: "#A855F7",
-    background: "#000000",
-    text: "#FAFAFA",
-  };
-
-  const pageTransition = {
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -8 },
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
-  };
-
-  // Shared card style helper — purple glassmorphic
-  const cardStyle = (active: boolean): React.CSSProperties => ({
-    padding: 20,
-    borderRadius: 12,
-    textAlign: "left" as const,
-    transition: "all 0.2s ease",
-    border: active ? "1px solid rgba(123,57,252,0.3)" : `1px solid ${T.border}`,
-    background: active ? "rgba(123,57,252,0.1)" : T.glass,
-    borderLeft: active ? "3px solid #7B39FC" : "3px solid transparent",
-    cursor: "pointer",
-    backdropFilter: "blur(12px)",
-  });
+  const progress = ((currentStep + 1) / ONBOARDING_STEPS.length) * 100;
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "14px 16px",
-    height: 48,
-    borderRadius: 12,
+    borderRadius: 10,
     background: T.bgEl,
     border: `1px solid ${T.border}`,
     color: T.text,
     fontSize: "1rem",
     outline: "none",
-    transition: "box-shadow 0.2s, border-color 0.2s",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: "0.75rem",
-    color: T.text3,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    marginBottom: 8,
-    display: "block",
+    transition: "border-color 0.2s",
+    boxSizing: "border-box",
   };
 
   return (
-    <>
-      <Navbar />
-      <div style={{ minHeight: "100vh", paddingTop: 80, paddingBottom: 64, paddingLeft: 16, paddingRight: 16, background: T.bg }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", background: T.bg }}>
+      {/* Gold progress bar */}
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, background: "rgba(255,255,255,0.05)", zIndex: 100 }}>
+        <motion.div
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{ height: "100%", background: T.gold }}
+        />
+      </div>
 
-          {/* Progress indicator + social proof */}
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              {/* Segmented dots */}
-              <div style={{ display: "flex", gap: 6 }}>
-                {ONBOARDING_STEPS.map((s, i) => (
-                  <div
-                    key={s.id}
-                    style={{
-                      height: 4,
-                      borderRadius: 100,
-                      transition: "all 0.3s ease",
-                      width: i === currentStep ? 32 : 24,
-                      background: i < currentStep ? T.gold : i === currentStep ? T.gold : T.border,
-                    }}
-                  />
-                ))}
-              </div>
-              <span style={{ fontSize: "0.8rem", color: T.text3 }}>Step {currentStep + 1} of {ONBOARDING_STEPS.length}</span>
-            </div>
-          </div>
+      {/* Top bar */}
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 52,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        zIndex: 99,
+        background: T.bg,
+        borderBottom: `1px solid ${T.border}`,
+      }}>
+        <span style={{ fontFamily: T.h, fontSize: "1.05rem", fontWeight: 700, color: T.text, letterSpacing: "-0.03em" }}>kovra</span>
+        <span style={{ fontSize: "0.78rem", color: T.text3 }}>Step {currentStep + 1} of {ONBOARDING_STEPS.length}</span>
+      </div>
 
-          {/* Mobile-only preview */}
-          <div className="lg:hidden">
-            <SitePreview
-              businessName={nameValue || business.name}
-              tagline={business.tagline}
-              type={business.type}
-              colors={previewColors}
-              layout={selectedLayout as "default" | "minimal" | "creator"}
-              slug={slugValue || business.slug}
+      {/* Main content */}
+      <div style={{
+        minHeight: "100vh",
+        paddingTop: 72,
+        paddingBottom: 64,
+        paddingLeft: 24,
+        paddingRight: 24,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+      }}>
+        <div style={{ maxWidth: 480, width: "100%", paddingTop: 48 }}>
+          <AnimatePresence mode="wait">
 
-              siteContent={business.site_content}
-            />
-          </div>
-
-          {/* Split layout */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 32 }} className="lg:!grid-cols-[1fr_440px]">
-            {/* Left: Step form */}
-            <div>
-              {/* Step header */}
-              <AnimatePresence mode="wait">
-                <motion.div key={stepDef.id + "-header"} {...pageTransition} style={{ marginBottom: 20 }}>
-                  <h2 style={{
-                    fontFamily: T.h,
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: T.text,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.1,
-                    marginBottom: 4,
-                  }}>
-                    {stepDef.title}
+            {/* ── Step 1: your-site ── */}
+            {stepDef.id === "your-site" && (
+              <motion.div
+                key="your-site"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Confirm your name.
                   </h2>
-                  <p style={{ fontSize: "0.9rem", color: T.text2 }}>{stepDef.subtitle}</p>
-                </motion.div>
-              </AnimatePresence>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    This appears on your site, invoices, and booking pages.
+                  </p>
+                </div>
 
-              <AnimatePresence mode="wait">
-                {/* ═══ STEP 1: Your Site (name + domain + layout) ═══ */}
-                {stepDef.id === "your-site" && (
-                  <motion.div key="your-site" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    {/* Business name */}
-                    <div>
-                      <label style={labelStyle}>Business Name</label>
-                      <input
-                        type="text"
-                        value={nameValue}
-                        onChange={(e) => {
-                          setNameValue(e.target.value);
-                          setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
-                          trackOnboardingNameEdit("manual");
-                        }}
-                        style={{ ...inputStyle, fontSize: "1.1rem" }}
-                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
-                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-                      />
-                    </div>
+                <div>
+                  <input
+                    type="text"
+                    value={nameValue}
+                    onChange={(e) => {
+                      setNameValue(e.target.value);
+                      setSlugValue(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
+                      trackOnboardingNameEdit("manual");
+                    }}
+                    style={{ ...inputStyle, fontSize: "1.1rem", fontWeight: 500 }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = T.gold; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
+                  />
+                  <p style={{ color: T.text3, fontSize: "0.75rem", marginTop: 8, fontFamily: T.mono }}>
+                    {business.deployed_url || `kovra-${slugValue || business.slug}.vercel.app`}
+                  </p>
+                </div>
 
-                    {/* AI name suggestions */}
-                    <button
-                      onClick={regenerateNames}
-                      disabled={generatingNames}
-                      style={{ fontSize: "0.875rem", color: T.purple, background: "none", border: "none", cursor: "pointer", textAlign: "left", opacity: generatingNames ? 0.5 : 1 }}
-                    >
-                      {generatingNames ? "Generating..." : "Suggest 5 AI alternatives"}
-                    </button>
-
-                    {altNames.length > 0 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {altNames.map((alt) => (
-                          <button
-                            key={alt.slug}
-                            onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); trackOnboardingNameEdit("ai_suggestion"); }}
-                            style={cardStyle(nameValue === alt.name)}
-                          >
-                            <span style={{ color: T.text, fontWeight: 500 }}>{alt.name}</span>
-                            <span style={{ color: T.text3, fontSize: "0.85rem", marginLeft: 8 }}>{alt.why}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Domain / Slug — reveals once name is set */}
-                    <AnimatePresence>
-                      {nameValue.trim().length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3, ease: "easeOut" }}
-                          style={{ overflow: "hidden", display: "flex", flexDirection: "column", gap: 24 }}
+                <div>
+                  <button
+                    onClick={regenerateNames}
+                    disabled={generatingNames}
+                    style={{ fontSize: "0.875rem", color: T.text3, background: "none", border: "none", cursor: "pointer", padding: 0, opacity: generatingNames ? 0.5 : 1, textDecoration: "underline", textUnderlineOffset: 3 }}
+                  >
+                    {generatingNames ? "Generating names..." : "Suggest alternative names"}
+                  </button>
+                  {altNames.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+                      {altNames.map((alt) => (
+                        <button
+                          key={alt.slug}
+                          onClick={() => { setNameValue(alt.name); setSlugValue(alt.slug); trackOnboardingNameEdit("ai_suggestion"); }}
+                          style={{
+                            padding: "12px 16px",
+                            borderRadius: 10,
+                            border: nameValue === alt.name ? `1px solid ${T.gold}` : `1px solid ${T.border}`,
+                            background: nameValue === alt.name ? "rgba(212,175,55,0.06)" : T.bgEl,
+                            cursor: "pointer",
+                            textAlign: "left",
+                            transition: "border-color 0.2s, background 0.2s",
+                          }}
                         >
-                          <div style={{ padding: 20, borderRadius: 16, background: T.glass, border: `1px solid ${T.border}`, backdropFilter: "blur(12px)" }}>
-                            <label style={labelStyle}>Your URL</label>
-                            <p style={{ color: T.text, fontFamily: T.mono, fontSize: "0.9rem", marginBottom: 12 }}>
-                              {business.deployed_url || `nm-${slugValue || business.slug}.vercel.app`}
-                            </p>
-                            <label style={{ ...labelStyle, marginTop: 12 }}>Already own a domain?</label>
-                            <input
-                              type="text"
-                              value={domainInput}
-                              onChange={(e) => setDomainInput(e.target.value)}
-                              placeholder="mybusiness.com"
-                              style={inputStyle}
-                              onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
-                              onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-                            />
-                            {domainInput && (
-                              <p style={{ fontSize: "0.75rem", color: T.text3, marginTop: 8 }}>
-                                After connecting, you&apos;ll need to update your DNS settings. We&apos;ll show you how.
-                              </p>
-                            )}
-                          </div>
-
-                          <AffiliateCard step="domain" businessId={businessId} />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <StepActions
-                      saving={saving}
-                      skippable={false}
-                      onContinue={async () => {
-                        await saveStep("name", { name: nameValue, slug: slugValue });
-                        if (domainInput) await saveStep("domain", { customDomain: domainInput });
-                        nextStep();
-                      }}
-                      onSkip={skipStep}
-                    />
-                  </motion.div>
-                )}
-
-                {/* ═══ STEP 2: Your Brand (colors + logo) ═══ */}
-                {stepDef.id === "your-brand" && (
-                  <motion.div key="your-brand" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    {/* Current selection preview */}
-                    {selectedColors && (
-                      <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-                        {Object.entries(selectedColors).map(([key, val]) => (
-                          <div key={key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                            <div style={{ width: 48, height: 48, borderRadius: 8, border: `1px solid ${T.border}`, background: val }} />
-                            <span style={{ fontSize: "0.6rem", color: T.text3, textTransform: "capitalize" }}>{key}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Color presets */}
-                    <div>
-                      <label style={labelStyle}>Color Palette</label>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 10 }}>
-                        {COLOR_PRESETS.map((preset, i) => {
-                          const isActive = selectedColors?.primary === preset.colors.primary;
-                          return (
-                            <motion.button
-                              key={preset.id}
-                              initial={{ opacity: 0, y: 12 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.04 }}
-                              onClick={() => { setSelectedColors(preset.colors); trackOnboardingColorSelect(preset.id); }}
-                              style={cardStyle(isActive)}
-                            >
-                              <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
-                                {[preset.colors.primary, preset.colors.secondary, preset.colors.accent].map((c, idx) => (
-                                  <div key={idx} style={{ width: 24, height: 24, borderRadius: "50%", background: c }} />
-                                ))}
-                              </div>
-                              <span style={{ fontSize: "0.875rem", fontWeight: 500, color: T.text }}>{preset.name}</span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
+                          <span style={{ color: T.text, fontWeight: 500, fontSize: "0.9rem" }}>{alt.name}</span>
+                          {alt.why && <span style={{ color: T.text3, fontSize: "0.78rem", display: "block", marginTop: 2 }}>{alt.why}</span>}
+                        </button>
+                      ))}
                     </div>
+                  )}
+                </div>
 
-                    {business.brand?.colors && (
+                <button
+                  onClick={async () => {
+                    await saveStep("name", { name: nameValue, slug: slugValue });
+                    nextStep();
+                  }}
+                  disabled={saving || !nameValue.trim()}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: CTA_GRAD,
+                    color: "#09090B",
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    fontFamily: T.h,
+                    cursor: saving || !nameValue.trim() ? "not-allowed" : "pointer",
+                    opacity: saving || !nameValue.trim() ? 0.5 : 1,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {saving ? "Saving..." : "Continue"}
+                </button>
+              </motion.div>
+            )}
+
+            {/* ── Step 2: your-brand ── */}
+            {stepDef.id === "your-brand" && (
+              <motion.div
+                key="your-brand"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Pick your colors.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    These show up on your site and proposals.
+                  </p>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                  {business.brand?.colors && (() => {
+                    const c = business.brand.colors!;
+                    const isActive = selectedColors?.primary === c.primary && !COLOR_PRESETS.some((p) => p.colors.primary === c.primary);
+                    return (
                       <button
-                        onClick={() => setSelectedColors(business.brand.colors!)}
-                        style={cardStyle(
-                          selectedColors?.primary === business.brand.colors.primary &&
-                          !COLOR_PRESETS.some((p) => p.colors.primary === selectedColors?.primary)
-                        )}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ display: "flex", gap: 4 }}>
-                            {[business.brand.colors.primary, business.brand.colors.secondary, business.brand.colors.accent].map((c, i) => (
-                              <div key={i} style={{ width: 24, height: 24, borderRadius: "50%", background: c }} />
-                            ))}
-                          </div>
-                          <div>
-                            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: T.text }}>AI Generated</span>
-                            <span style={{ fontSize: "0.75rem", color: T.text3, marginLeft: 8 }}>Custom palette for {business.name}</span>
-                          </div>
-                        </div>
-                      </button>
-                    )}
-
-                    {/* Logo section — reveals after colors are selected */}
-                    <AnimatePresence>
-                      {selectedColors && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.35, ease: "easeOut" }}
-                          style={{ overflow: "hidden" }}
-                        >
-                          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 24 }}>
-                            <label style={labelStyle}>Logo</label>
-                            <div style={{
-                              padding: 32,
-                              borderRadius: 16,
-                              background: T.glass,
-                              border: `1px solid ${T.border}`,
-                              backdropFilter: "blur(12px)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              marginBottom: 16,
-                            }}>
-                              <div style={{
-                                fontFamily: T.h,
-                                fontSize: "2.5rem",
-                                fontWeight: 700,
-                                color: selectedColors?.primary || T.purple,
-                              }}>
-                                {nameValue || business.name}
-                              </div>
-                            </div>
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                              <button onClick={() => setLogoMode("text")} style={cardStyle(logoMode === "text")}>
-                                <p style={{ color: T.text, fontWeight: 500, marginBottom: 4 }}>Use Text Mark</p>
-                                <p style={{ color: T.text3, fontSize: "0.85rem" }}>Clean text logo</p>
-                              </button>
-                              <button onClick={() => setLogoMode("upload")} style={cardStyle(logoMode === "upload")}>
-                                <p style={{ color: T.text, fontWeight: 500, marginBottom: 4 }}>Upload Your Own</p>
-                                <p style={{ color: T.text3, fontSize: "0.85rem" }}>PNG, SVG, or JPEG</p>
-                              </button>
-                            </div>
-
-                            {logoMode === "upload" && (
-                              <div style={{
-                                padding: 24,
-                                borderRadius: 12,
-                                border: `1px dashed rgba(123,57,252,0.25)`,
-                                background: "rgba(123,57,252,0.04)",
-                                textAlign: "center",
-                                marginTop: 12,
-                              }}>
-                                <input
-                                  type="file"
-                                  accept="image/png,image/svg+xml,image/jpeg"
-                                  style={{ display: "none" }}
-                                  id="logo-upload"
-                                  onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-                                    const { data, error } = await supabase.storage
-                                      .from("logos")
-                                      .upload(`${businessId}/${file.name}`, file, { upsert: true });
-                                    if (!error && data) {
-                                      const { data: { publicUrl } } = supabase.storage
-                                        .from("logos")
-                                        .getPublicUrl(data.path);
-                                      await saveStep("logo", { logoUrl: publicUrl });
-                                    }
-                                  }}
-                                />
-                                <label htmlFor="logo-upload" style={{ cursor: "pointer" }}>
-                                  <p style={{ color: T.text2, marginBottom: 4 }}>Click to upload</p>
-                                  <p style={{ fontSize: "0.75rem", color: T.text3 }}>PNG, SVG, or JPEG. Max 2MB.</p>
-                                </label>
-                              </div>
-                            )}
-
-                            <div style={{ marginTop: 12 }}>
-                              <AffiliateCard step="logo" businessId={businessId} />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    <StepActions
-                      saving={saving}
-                      skippable={false}
-                      onContinue={async () => {
-                        if (selectedColors) await saveStep("colors", { colors: selectedColors });
-                        if (logoMode === "text") await saveStep("logo", {});
-                        nextStep();
-                      }}
-                      onSkip={skipStep}
-                    />
-                  </motion.div>
-                )}
-
-                {/* ═══ STEP 3: Payments (Stripe Connect) ═══ */}
-                {stepDef.id === "payments" && (
-                  <motion.div key="payments" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    <div style={{
-                      padding: 20,
-                      borderRadius: 16,
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      backdropFilter: "blur(12px)",
-                    }}>
-                      <p style={{ color: T.text2, fontSize: "0.9rem" }}>
-                        Connect Stripe to accept payments for your {business.type === "services" ? "services" : "digital products"} directly through your website.
-                        Customers can pay via credit card, Apple Pay, and more.
-                      </p>
-                    </div>
-
-                    {business.stripe_account_id ? (
-                      <>
-                        <div style={{
-                          padding: 16,
-                          borderRadius: 12,
-                          background: "rgba(34,197,94,0.04)",
-                          border: "1px solid rgba(34,197,94,0.2)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                        }}>
-                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.green }} />
-                          <div style={{ flex: 1 }}>
-                            <p style={{ color: "#4ade80", fontSize: "0.875rem", fontWeight: 500 }}>Stripe account created</p>
-                            <p style={{ color: T.text3, fontSize: "0.75rem" }}>Complete onboarding to start accepting payments</p>
-                          </div>
-                          <button
-                            onClick={() => setShowStripeModal(true)}
-                            style={{
-                              padding: "8px 16px",
-                              borderRadius: 8,
-                              background: CTA_GRAD,
-                              color: "#fff",
-                              fontSize: "0.85rem",
-                              fontWeight: 500,
-                              border: "none",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Continue Setup
-                          </button>
-                        </div>
-                        {showStripeModal && (
-                          <StripeOnboardingModal
-                            businessId={businessId}
-                            onComplete={async () => {
-                              setShowStripeModal(false);
-                              await saveStep("payments", { stripeAccountId: business.stripe_account_id });
-                              nextStep();
-                            }}
-                            onClose={() => setShowStripeModal(false)}
-                          />
-                        )}
-                      </>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          const ok = await connectStripe();
-                          if (ok) setShowStripeModal(true);
-                        }}
-                        disabled={stripeConnecting}
+                        key="ai-generated"
+                        onClick={() => { setSelectedColors(c); trackOnboardingColorSelect("ai-generated"); }}
                         style={{
-                          width: "100%",
-                          padding: 20,
-                          borderRadius: 16,
-                          border: `1px solid ${T.border}`,
-                          background: T.glass,
-                          backdropFilter: "blur(12px)",
+                          padding: 14,
+                          borderRadius: 10,
+                          border: isActive ? `1px solid ${T.gold}` : `1px solid ${T.border}`,
+                          background: isActive ? "rgba(212,175,55,0.06)" : T.bgEl,
                           cursor: "pointer",
+                          transition: "border-color 0.2s, background 0.2s",
                           textAlign: "left",
-                          transition: "border-color 0.2s",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                          <div style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 12,
-                            background: "rgba(123,57,252,0.1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: T.purple,
-                            fontWeight: 700,
-                            fontSize: "1.1rem",
-                          }}>
-                            S
-                          </div>
-                          <div>
-                            <p style={{ color: T.text, fontWeight: 500 }}>
-                              {stripeConnecting ? "Connecting..." : "Set Up Stripe"}
-                            </p>
-                            <p style={{ color: T.text3, fontSize: "0.85rem" }}>Set up in 2 minutes. No monthly fees.</p>
-                          </div>
+                        <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                          {[c.primary, c.secondary, c.accent].map((col, i) => (
+                            <div key={i} style={{ width: 18, height: 18, borderRadius: "50%", background: col }} />
+                          ))}
                         </div>
+                        <span style={{ fontSize: "0.75rem", color: T.text2 }}>AI Pick</span>
                       </button>
-                    )}
-
-                    <StepActions
-                      saving={saving}
-                      skippable
-                      onContinue={async () => {
-                        await saveStep("payments", { stripeAccountId: business.stripe_account_id || undefined });
-                        nextStep();
-                      }}
-                      onSkip={skipStep}
-                    />
-                  </motion.div>
-                )}
-
-                {/* ═══ STEP 4: Go Live (email + launch) ═══ */}
-                {stepDef.id === "go-live" && (
-                  <motion.div key="go-live" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    <AffiliateCard step="email" businessId={businessId} />
-
-                    <div>
-                      <label style={labelStyle}>Your business email</label>
-                      <input
-                        type="email"
-                        value={businessEmail}
-                        onChange={(e) => setBusinessEmail(e.target.value)}
-                        placeholder={`hello@${slugValue || business.slug}.com`}
-                        style={inputStyle}
-                        onFocus={(e) => { e.currentTarget.style.boxShadow = "0 0 0 2px #7B39FC"; }}
-                        onBlur={(e) => { e.currentTarget.style.boxShadow = "none"; }}
-                      />
-                      <p style={{ fontSize: "0.75rem", color: T.text3, marginTop: 8 }}>
-                        This will be shown as the contact email on your website.
-                      </p>
-                    </div>
-
-                    <StepActions
-                      saving={saving}
-                      skippable
-                      onContinue={async () => {
-                        await saveStep("email", { businessEmail: businessEmail || undefined });
-                        nextStep();
-                      }}
-                      onSkip={skipStep}
-                    />
-                  </motion.div>
-                )}
-
-                {/* ═══ STEP 6: Meet Your Coach (summary + upsell) ═══ */}
-                {stepDef.id === "meet-your-coach" && (
-                  <motion.div key="meet-your-coach" {...pageTransition} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                    {/* Summary card */}
-                    <div style={{
-                      padding: 24,
-                      borderRadius: 16,
-                      background: T.glass,
-                      border: `1px solid ${T.border}`,
-                      backdropFilter: "blur(12px)",
-                    }}>
-                      <h3 style={{ fontFamily: T.h, fontSize: "1.1rem", fontWeight: 700, color: T.text, marginBottom: 16 }}>
-                        Here&apos;s what we built
-                      </h3>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
-                          <div>
-                            <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Business Name</p>
-                            <p style={{ color: T.text, fontWeight: 600 }}>{business.name}</p>
-                          </div>
-                        </div>
-                        {(() => {
-                          const siteUrl = business.deployed_url || business.live_url || `nm-${slugValue || business.slug}.vercel.app`;
-                          return (
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
-                              <div>
-                                <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Website</p>
-                                <a
-                                  href={siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ color: T.purple, fontWeight: 600, fontFamily: T.mono, fontSize: "0.9rem", textDecoration: "none" }}
-                                >
-                                  {siteUrl}
-                                </a>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
-                          <div>
-                            <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Business Type</p>
-                            <p style={{ color: T.text, fontWeight: 600, textTransform: "capitalize" }}>{business.type?.replace(/-/g, " ") || "Service Business"}</p>
-                          </div>
-                        </div>
-                        {business.stripe_account_id && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: T.green, fontSize: 16 }}>&#10003;</div>
-                            <div>
-                              <p style={{ color: T.text3, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.06em" }}>Payments</p>
-                              <p style={{ color: T.text, fontWeight: 600 }}>Stripe Connected</p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Meet your coach CTA */}
-                    <div style={{
-                      padding: 32,
-                      borderRadius: 16,
-                      background: "rgba(123,57,252,0.06)",
-                      border: "1px solid rgba(123,57,252,0.18)",
-                      backdropFilter: "blur(12px)",
-                      textAlign: "center",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}>
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: CTA_GRAD }} />
-                      <div style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: "50%",
-                        background: CTA_GRAD,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 28,
-                        margin: "0 auto 16px",
-                      }}>
-                        <span role="img" aria-label="robot">&#129302;</span>
-                      </div>
-                      <h3 style={{ fontFamily: T.h, fontSize: "1.4rem", fontWeight: 700, color: T.text, marginBottom: 8 }}>
-                        Meet Your AI Coach
-                      </h3>
-                      <p style={{ color: T.text2, fontSize: "0.9rem", maxWidth: 380, margin: "0 auto 20px", lineHeight: 1.6 }}>
-                        Your AI coach can answer questions, write content, and help you figure out your next steps to get customers.
-                      </p>
+                    );
+                  })()}
+                  {COLOR_PRESETS.map((preset) => {
+                    const isActive = selectedColors?.primary === preset.colors.primary;
+                    return (
                       <button
-                        onClick={() => setShowUpsellModal(true)}
+                        key={preset.id}
+                        onClick={() => { setSelectedColors(preset.colors); trackOnboardingColorSelect(preset.id); }}
                         style={{
-                          padding: "14px 36px",
-                          borderRadius: 12,
-                          fontSize: "1rem",
-                          fontWeight: 600,
-                          color: "#fff",
-                          background: CTA_GRAD,
-                          border: "none",
+                          padding: 14,
+                          borderRadius: 10,
+                          border: isActive ? `1px solid ${T.gold}` : `1px solid ${T.border}`,
+                          background: isActive ? "rgba(212,175,55,0.06)" : T.bgEl,
                           cursor: "pointer",
-                          transition: "transform 0.15s, box-shadow 0.15s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow = "0 8px 30px rgba(123,57,252,0.35)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "none";
+                          transition: "border-color 0.2s, background 0.2s",
+                          textAlign: "left",
                         }}
                       >
-                        Chat With My Coach
+                        <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                          {[preset.colors.primary, preset.colors.secondary, preset.colors.accent].map((c, i) => (
+                            <div key={i} style={{ width: 18, height: 18, borderRadius: "50%", background: c }} />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: "0.75rem", color: T.text2 }}>{preset.name}</span>
                       </button>
-                    </div>
+                    );
+                  })}
+                </div>
 
-                    {/* Skip to dashboard */}
-                    <div style={{ textAlign: "center" }}>
-                      <button
-                        onClick={() => router.push(`/dashboard/${businessId}`)}
-                        style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer" }}
-                      >
-                        Skip for now — go to dashboard
-                      </button>
-                    </div>
+                <button
+                  onClick={async () => {
+                    if (selectedColors) await saveStep("colors", { colors: selectedColors });
+                    nextStep();
+                  }}
+                  disabled={saving}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 10,
+                    border: "none",
+                    background: CTA_GRAD,
+                    color: "#09090B",
+                    fontSize: "0.95rem",
+                    fontWeight: 600,
+                    fontFamily: T.h,
+                    cursor: saving ? "not-allowed" : "pointer",
+                    opacity: saving ? 0.5 : 1,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {saving ? "Saving..." : "Continue"}
+                </button>
+              </motion.div>
+            )}
 
-                    {/* Upsell modal */}
-                    {showUpsellModal && (
-                      <UpsellModal
-                        businessId={businessId}
-                        onClose={() => setShowUpsellModal(false)}
-                        onSkip={() => {
-                          const msg = encodeURIComponent("I just finished setting up. What should I focus on first?");
-                          router.push(`/dashboard/${businessId}/chat?msg=${msg}`);
-                        }}
-                      />
-                    )}
-                  </motion.div>
+            {/* ── Step 3: payments ── */}
+            {stepDef.id === "payments" && (
+              <motion.div
+                key="payments"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Connect Stripe.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    Send invoices and get paid directly from your dashboard. Stripe handles the money movement.
+                  </p>
+                </div>
+
+                {business.stripe_account_id ? (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "16px 18px",
+                    borderRadius: 10,
+                    background: "rgba(34,197,94,0.04)",
+                    border: "1px solid rgba(34,197,94,0.2)",
+                  }}>
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.green, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <p style={{ color: T.text, fontWeight: 500, fontSize: "0.9rem" }}>Stripe connected</p>
+                      <p style={{ color: T.text3, fontSize: "0.78rem", marginTop: 2 }}>Complete setup to start accepting payments</p>
+                    </div>
+                    <button
+                      onClick={() => setShowStripeModal(true)}
+                      style={{ padding: "8px 14px", borderRadius: 8, background: CTA_GRAD, color: "#09090B", fontSize: "0.82rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+                    >
+                      Finish setup
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      const ok = await connectStripe();
+                      if (ok) setShowStripeModal(true);
+                    }}
+                    disabled={stripeConnecting}
+                    style={{
+                      width: "100%",
+                      padding: "18px 20px",
+                      borderRadius: 10,
+                      border: `1px solid ${T.border}`,
+                      background: T.bgEl,
+                      cursor: stripeConnecting ? "not-allowed" : "pointer",
+                      textAlign: "left",
+                      opacity: stripeConnecting ? 0.6 : 1,
+                      transition: "border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => { if (!stripeConnecting) e.currentTarget.style.borderColor = T.gold; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(99,91,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "1rem", color: "#635bff", flexShrink: 0 }}>
+                        S
+                      </div>
+                      <div>
+                        <p style={{ color: T.text, fontWeight: 500, fontSize: "0.9rem" }}>
+                          {stripeConnecting ? "Connecting..." : "Connect Stripe"}
+                        </p>
+                        <p style={{ color: T.text3, fontSize: "0.78rem", marginTop: 2 }}>For invoicing and getting paid. Takes 2 minutes.</p>
+                      </div>
+                    </div>
+                  </button>
                 )}
-              </AnimatePresence>
-            </div>
 
-            {/* Right: Desktop site preview */}
-            <div className="hidden lg:block">
-              <div style={{ position: "sticky", top: 96 }}>
-                <SitePreview
-                  businessName={nameValue || business.name}
-                  tagline={business.tagline}
-                  type={business.type}
-                  colors={previewColors}
-                  layout={selectedLayout as "default" | "minimal" | "creator"}
-                  slug={slugValue || business.slug}
-    
-                  siteContent={business.site_content}
+                {showStripeModal && (
+                  <StripeOnboardingModal
+                    businessId={businessId}
+                    onComplete={async () => {
+                      setShowStripeModal(false);
+                      await saveStep("payments", { stripeAccountId: business.stripe_account_id });
+                      nextStep();
+                    }}
+                    onClose={() => setShowStripeModal(false)}
+                  />
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      await saveStep("payments", { stripeAccountId: business.stripe_account_id || undefined });
+                      nextStep();
+                    }}
+                    disabled={saving}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: CTA_GRAD,
+                      color: "#09090B",
+                      fontSize: "0.95rem",
+                      fontWeight: 600,
+                      fontFamily: T.h,
+                      cursor: saving ? "not-allowed" : "pointer",
+                      opacity: saving ? 0.5 : 1,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    Continue
+                  </button>
+                  <button
+                    onClick={skipStep}
+                    style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 4: booking ── */}
+            {stepDef.id === "booking" && (
+              <motion.div
+                key="booking"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Add a booking link.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    Paste your Calendly, Cal.com, or any scheduling URL. It gets embedded on your site so clients can book you without a back-and-forth.
+                  </p>
+                </div>
+
+                <div>
+                  <input
+                    type="url"
+                    value={calendlyUrl}
+                    onChange={(e) => setCalendlyUrl(e.target.value)}
+                    placeholder="https://calendly.com/yourname"
+                    style={inputStyle}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = T.gold; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
+                  />
+                  <p style={{ color: T.text3, fontSize: "0.75rem", marginTop: 8 }}>
+                    Works with Calendly, Cal.com, Acuity, TidyCal, or any embeddable link.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      if (calendlyUrl.trim()) {
+                        await saveStep("scheduling", { calendlyUrl: calendlyUrl.trim() });
+                      }
+                      nextStep();
+                    }}
+                    disabled={saving}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: CTA_GRAD,
+                      color: "#09090B",
+                      fontSize: "0.95rem",
+                      fontWeight: 600,
+                      fontFamily: T.h,
+                      cursor: saving ? "not-allowed" : "pointer",
+                      opacity: saving ? 0.5 : 1,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {saving ? "Saving..." : "Continue"}
+                  </button>
+                  <button
+                    onClick={skipStep}
+                    style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 5: go-live ── */}
+            {stepDef.id === "go-live" && (
+              <motion.div
+                key="go-live"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Add a contact email.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    This shows on your website so clients can reach you.
+                  </p>
+                </div>
+
+                <input
+                  type="email"
+                  value={businessEmail}
+                  onChange={(e) => setBusinessEmail(e.target.value)}
+                  placeholder={`hello@${slugValue || business.slug}.com`}
+                  style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = T.gold; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = T.border; }}
                 />
-              </div>
-            </div>
-          </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      await saveStep("email", { businessEmail: businessEmail || undefined });
+                      nextStep();
+                    }}
+                    disabled={saving}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: CTA_GRAD,
+                      color: "#09090B",
+                      fontSize: "0.95rem",
+                      fontWeight: 600,
+                      fontFamily: T.h,
+                      cursor: saving ? "not-allowed" : "pointer",
+                      opacity: saving ? 0.5 : 1,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {saving ? "Saving..." : "Finish setup"}
+                  </button>
+                  <button
+                    onClick={skipStep}
+                    style={{ fontSize: "0.85rem", color: T.text3, background: "none", border: "none", cursor: "pointer", padding: "8px 0" }}
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 6: Lead Engine ── */}
+            {stepDef.id === "lead-engine" && (
+              <motion.div
+                key="lead-engine"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.5rem, 4vw, 1.9rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Who do you want to reach?
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    Tell Kovra your ideal client profile. We use this to find prospects in Apollo.io.
+                  </p>
+                </div>
+
+                {[
+                  { label: "Job Titles", value: leadTitles, set: setLeadTitles, placeholder: "CEO, Founder, VP of Sales" },
+                  { label: "Industries", value: leadIndustries, set: setLeadIndustries, placeholder: "SaaS, E-commerce, Healthcare" },
+                  { label: "Locations", value: leadLocations, set: setLeadLocations, placeholder: "United States, New York, Remote" },
+                ].map(({ label, value, set, placeholder }) => (
+                  <div key={label}>
+                    <label style={{ fontSize: "0.78rem", fontWeight: 500, color: T.text3, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {label}
+                    </label>
+                    <input
+                      value={value}
+                      onChange={(e) => set(e.target.value)}
+                      placeholder={placeholder}
+                      style={{
+                        width: "100%", padding: "10px 14px",
+                        background: T.bgEl,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 10, fontSize: "0.9rem", color: T.text,
+                        outline: "none", boxSizing: "border-box",
+                        fontFamily: T.h,
+                      }}
+                    />
+                    <p style={{ fontSize: "0.75rem", color: T.text3, marginTop: 4 }}>Comma-separated</p>
+                  </div>
+                ))}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      await saveStep("lead-engine", {
+                        leadTitles: leadTitles.split(",").map((t) => t.trim()).filter(Boolean),
+                        leadIndustries: leadIndustries.split(",").map((i) => i.trim()).filter(Boolean),
+                        leadLocations: leadLocations.split(",").map((l) => l.trim()).filter(Boolean),
+                      });
+                      nextStep();
+                    }}
+                    disabled={saving}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 10, border: "none",
+                      background: CTA_GRAD, color: "#09090B",
+                      fontSize: "0.95rem", fontWeight: 600, fontFamily: T.h,
+                      cursor: saving ? "not-allowed" : "pointer", letterSpacing: "-0.01em",
+                      opacity: saving ? 0.7 : 1,
+                    }}
+                  >
+                    {saving ? "Saving..." : "Save and continue"}
+                  </button>
+                  <button
+                    onClick={skipStep}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 10,
+                      border: `1px solid ${T.border}`, background: T.bgEl, color: T.text3,
+                      fontSize: "0.9rem", fontWeight: 500, cursor: "pointer",
+                    }}
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 7: Satellite Domain ── */}
+            {stepDef.id === "satellite-domain" && (
+              <motion.div
+                key="satellite-domain"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.5rem, 4vw, 1.9rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Set up your outreach domain.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    A dedicated subdomain keeps your main domain healthy. Cold emails come from here, not your primary address.
+                  </p>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: 500, color: T.text3, display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Subdomain
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                    <input
+                      value={satelliteSubdomain}
+                      onChange={(e) => setSatelliteSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                      placeholder="acme-outreach"
+                      style={{
+                        flex: 1, padding: "10px 14px",
+                        background: T.bgEl, border: `1px solid ${T.border}`,
+                        borderRadius: "10px 0 0 10px", fontSize: "0.9rem", color: T.text,
+                        outline: "none", fontFamily: T.mono,
+                      }}
+                    />
+                    <span style={{
+                      padding: "10px 14px", background: "rgba(255,255,255,0.04)",
+                      border: `1px solid ${T.border}`, borderLeft: "none",
+                      borderRadius: "0 10px 10px 0", fontSize: "0.9rem", color: T.text3,
+                      fontFamily: T.mono, whiteSpace: "nowrap",
+                    }}>
+                      .kovra.io
+                    </span>
+                  </div>
+                </div>
+
+                {infraResult && (
+                  <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                    <p style={{ fontSize: "0.82rem", color: T.text2, fontWeight: 500 }}>Domain provisioned</p>
+                    {infraResult.workspace_email && (
+                      <p style={{ fontSize: "0.8rem", color: T.text3, marginTop: 4 }}>
+                        Outreach email: <span style={{ fontFamily: T.mono, color: T.text }}>{infraResult.workspace_email}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={async () => {
+                      if (!satelliteSubdomain.trim()) { nextStep(); return; }
+                      setProvisioningInfra(true);
+                      const { data: { user } } = await supabase.auth.getUser();
+                      const res = await fetch("/api/infrastructure", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          businessId,
+                          userId: user?.id,
+                          subdomain: satelliteSubdomain.trim(),
+                          firstName: business.name.split(" ")[0] || "Business",
+                          lastName: business.name.split(" ")[1] || "Owner",
+                        }),
+                      });
+                      const data = await res.json();
+                      setProvisioningInfra(false);
+                      if (data.infrastructure) setInfraResult(data.infrastructure);
+                      nextStep();
+                    }}
+                    disabled={provisioningInfra}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 10, border: "none",
+                      background: CTA_GRAD, color: "#09090B",
+                      fontSize: "0.95rem", fontWeight: 600, fontFamily: T.h,
+                      cursor: provisioningInfra ? "not-allowed" : "pointer", letterSpacing: "-0.01em",
+                      opacity: provisioningInfra ? 0.7 : 1,
+                    }}
+                  >
+                    {provisioningInfra ? "Provisioning..." : satelliteSubdomain.trim() ? "Set up domain" : "Skip"}
+                  </button>
+                  {!provisioningInfra && (
+                    <button
+                      onClick={skipStep}
+                      style={{
+                        width: "100%", padding: "14px", borderRadius: 10,
+                        border: `1px solid ${T.border}`, background: T.bgEl, color: T.text3,
+                        fontSize: "0.9rem", fontWeight: 500, cursor: "pointer",
+                      }}
+                    >
+                      Skip for now
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 8: Inbox Connect ── */}
+            {stepDef.id === "inbox-connect" && (
+              <motion.div
+                key="inbox-connect"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.5rem, 4vw, 1.9rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    Connect your inbox.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    Replies from LinkedIn, X, and email all land in one place. Connect your accounts to activate the unified inbox.
+                  </p>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    { label: "LinkedIn", icon: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z", color: "#0077b5" },
+                    { label: "Email (Nylas)", icon: "M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75", color: "#3b82f6" },
+                    { label: "X / Twitter", icon: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.632L18.244 2.25z", color: "#1da1f2" },
+                  ].map(({ label, icon, color }) => (
+                    <div
+                      key={label}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "14px 16px", borderRadius: 10,
+                        background: T.bgEl, border: `1px solid ${T.border}`,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill={color}>
+                            <path d={icon} />
+                          </svg>
+                        </div>
+                        <span style={{ fontSize: "0.9rem", fontWeight: 500, color: T.text }}>{label}</span>
+                      </div>
+                      <span style={{ fontSize: "0.78rem", color: T.text3, padding: "4px 10px", borderRadius: 6, border: `1px solid ${T.border}` }}>
+                        Coming soon
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <p style={{ fontSize: "0.78rem", color: T.text3, lineHeight: 1.6 }}>
+                  Native integrations with LinkedIn (Unipile) and email (Nylas) are in beta. You can skip this and connect later from your Inbox settings.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={nextStep}
+                    style={{
+                      width: "100%", padding: "14px", borderRadius: 10, border: "none",
+                      background: CTA_GRAD, color: "#09090B",
+                      fontSize: "0.95rem", fontWeight: 600, fontFamily: T.h,
+                      cursor: "pointer", letterSpacing: "-0.01em",
+                    }}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── Step 9: done screen ── */}
+            {stepDef.id === "meet-your-coach" && (
+              <motion.div
+                key="meet-your-coach"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: "flex", flexDirection: "column", gap: 28 }}
+              >
+                <div style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: "rgba(34,197,94,0.08)",
+                  border: "1px solid rgba(34,197,94,0.18)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <svg width="22" height="22" fill="none" stroke={T.green} viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+
+                <div>
+                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                    {business.name} is ready.
+                  </h2>
+                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                    Your workspace is live. Start booking clients, sending invoices, and growing.
+                  </p>
+                </div>
+
+                {(() => {
+                  const siteUrl = business.deployed_url || business.live_url || `kovra-${slugValue || business.slug}.vercel.app`;
+                  const href = siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`;
+                  return (
+                    <div style={{ padding: "14px 16px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+                      <p style={{ color: T.text3, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Your site</p>
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: T.text, fontFamily: T.mono, fontSize: "0.85rem", textDecoration: "none", wordBreak: "break-all" }}
+                      >
+                        {siteUrl}
+                      </a>
+                    </div>
+                  );
+                })()}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={() => {
+                      trackOnboardingComplete(businessId);
+                      router.push(`/dashboard/${businessId}`);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 10,
+                      border: "none",
+                      background: CTA_GRAD,
+                      color: "#09090B",
+                      fontSize: "0.95rem",
+                      fontWeight: 600,
+                      fontFamily: T.h,
+                      cursor: "pointer",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    Go to dashboard
+                  </button>
+                  {(() => {
+                    const siteUrl = business.deployed_url || business.live_url;
+                    if (!siteUrl) return null;
+                    const href = siteUrl.startsWith("http") ? siteUrl : `https://${siteUrl}`;
+                    return (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "block",
+                          padding: "14px",
+                          borderRadius: 10,
+                          border: `1px solid ${T.border}`,
+                          background: T.bgEl,
+                          color: T.text,
+                          fontSize: "0.95rem",
+                          fontWeight: 600,
+                          fontFamily: T.h,
+                          cursor: "pointer",
+                          letterSpacing: "-0.01em",
+                          textDecoration: "none",
+                          textAlign: "center",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        View site
+                      </a>
+                    );
+                  })()}
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Avatar guide */}
-      <AvatarGuide stepId={stepDef.id} businessName={business.name} />
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
 }
 
@@ -1163,24 +1452,23 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
             }}>
               <p style={{ fontSize: "0.7rem", color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Starter</p>
               <p style={{ fontFamily: T.h, fontSize: "2rem", fontWeight: 700, color: T.text, marginBottom: 4 }}>
-                $19<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
+                $79<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
               </p>
               <p style={{ color: T.text2, fontSize: "0.8rem", marginBottom: 20, lineHeight: 1.5 }}>
-                Everything you need to look professional and start earning.
+                Everything you need to find clients and start closing.
               </p>
 
               <div style={{ flex: 1, marginBottom: 20 }}>
                 {featureCheck("3 businesses", true)}
                 {featureCheck("AI Coach (50 messages/day)", true)}
-                {featureCheck("10 blog posts/month", true)}
-                {featureCheck("5 AI images per business", true)}
+                {featureCheck("Lead Engine (Apollo.io search)", true)}
+                {featureCheck("500 outreach credits/mo", true)}
+                {featureCheck("Satellite email domain", true)}
                 {featureCheck("Custom domain", true)}
                 {featureCheck("Remove Kovra branding", true)}
-                {featureCheck("SEO tools", true)}
-                {featureCheck("Cold email + outreach scripts", true)}
-                {featureCheck("Lead magnets + proposals", true)}
-                {featureCheck("UGC ad creation", false)}
-                {featureCheck("Ad copy + ad images", false)}
+                {featureCheck("SEO + blog tools", true)}
+                {featureCheck("Multi-channel inbox", false)}
+                {featureCheck("Ad creative generation", false)}
                 {featureCheck("Priority support", false)}
               </div>
 
@@ -1239,23 +1527,21 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </div>
               <p style={{ fontSize: "0.7rem", color: T.purpleLight, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Growth</p>
               <p style={{ fontFamily: T.h, fontSize: "2rem", fontWeight: 700, color: T.text, marginBottom: 4 }}>
-                $49<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
+                $199<span style={{ fontSize: "0.85rem", fontWeight: 400, color: T.text3 }}>/mo</span>
               </p>
               <p style={{ color: T.text2, fontSize: "0.8rem", marginBottom: 20, lineHeight: 1.5 }}>
-                The full toolkit to grow, convert, and scale your business.
+                The full Active Business OS — leads, outreach, ads, and closing on autopilot.
               </p>
 
               <div style={{ flex: 1, marginBottom: 20 }}>
                 {featureCheck("Everything in Starter", true)}
                 {featureCheck("10 businesses", true)}
+                {featureCheck("2,500 outreach credits/mo", true)}
+                {featureCheck("Multi-channel inbox", true)}
+                {featureCheck("Ad creative generation", true)}
+                {featureCheck("AI proposals + auto-invoicing", true)}
+                {featureCheck("UGC video ad creation", true)}
                 {featureCheck("AI Coach (200 messages/day)", true)}
-                {featureCheck("50 blog posts/month", true)}
-                {featureCheck("10 AI images per business", true)}
-                {featureCheck("UGC ad creation", true)}
-                {featureCheck("Ad copy + ad images", true)}
-                {featureCheck("Video + webinar scripts", true)}
-                {featureCheck("Course + ebook content", true)}
-                {featureCheck("Contracts + SOPs", true)}
                 {featureCheck("Priority support", true)}
               </div>
 

@@ -6,6 +6,13 @@ import { T, CTA_GRAD } from "@/lib/design-tokens";
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 
+interface IntakeField {
+  label: string;
+  type: "text" | "textarea" | "select";
+  options?: string; // comma-separated for select
+  required: boolean;
+}
+
 interface Call {
   id: string;
   name: string;
@@ -29,7 +36,7 @@ interface AvailabilitySettings {
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const RULE = { borderBottom: "1px solid #1E1E21" } as const;
+const RULE = { borderBottom: `1px solid ${T.rule}` } as const;
 
 function statusStyle(status: string) {
   const map: Record<string, { bg: string; color: string }> = {
@@ -50,6 +57,13 @@ export default function CallsPage() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+
+  // Intake form
+  const [intakeFields, setIntakeFields] = useState<IntakeField[]>(
+    (business?.intake_form_fields as IntakeField[] | undefined) || []
+  );
+  const [savingIntake, setSavingIntake] = useState(false);
+  const [calendarCopied, setCalendarCopied] = useState(false);
 
   // Availability settings
   const availability = (business?.availability_settings || {}) as AvailabilitySettings;
@@ -118,6 +132,32 @@ export default function CallsPage() {
   const bookingUrl = typeof window !== "undefined"
     ? `${window.location.origin}/book/${businessId}`
     : `/book/${businessId}`;
+
+  const calendarFeedUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/api/calendar/${businessId}/feed.ics`
+    : `/api/calendar/${businessId}/feed.ics`;
+
+  const saveIntakeForm = async () => {
+    setSavingIntake(true);
+    await fetch("/api/businesses/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ businessId, intake_form_fields: intakeFields }),
+    });
+    setSavingIntake(false);
+  };
+
+  const addIntakeField = () => {
+    setIntakeFields([...intakeFields, { label: "", type: "text", required: false }]);
+  };
+
+  const updateIntakeField = (idx: number, patch: Partial<IntakeField>) => {
+    setIntakeFields(intakeFields.map((f, i) => i === idx ? { ...f, ...patch } : f));
+  };
+
+  const removeIntakeField = (idx: number) => {
+    setIntakeFields(intakeFields.filter((_, i) => i !== idx));
+  };
 
   return (
     <PaywallGate
@@ -276,6 +316,92 @@ export default function CallsPage() {
             </div>
           </div>
         )}
+
+        {/* Intake Form Builder */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: T.text, margin: 0 }}>Intake Form</h3>
+              <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>Fields shown to clients during booking after they select a time slot.</p>
+            </div>
+            <button
+              onClick={addIntakeField}
+              style={{ fontSize: 12, color: T.gold, background: "none", border: `1px solid ${T.border}`, borderRadius: 6, padding: "6px 12px", cursor: "pointer" }}
+            >
+              + Add field
+            </button>
+          </div>
+
+          {intakeFields.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#52525B" }}>No intake fields yet. Add fields to collect info before the call.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+              {intakeFields.map((field, idx) => (
+                <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 120px 80px 32px", gap: 8, alignItems: "center" }}>
+                  <input
+                    value={field.label}
+                    onChange={(e) => updateIntakeField(idx, { label: e.target.value })}
+                    placeholder="Field label"
+                    style={{ padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.text, fontSize: 12, outline: "none" }}
+                  />
+                  <select
+                    value={field.type}
+                    onChange={(e) => updateIntakeField(idx, { type: e.target.value as IntakeField["type"] })}
+                    style={{ padding: "8px 10px", borderRadius: 7, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.text, fontSize: 12, outline: "none" }}
+                  >
+                    <option value="text">Text</option>
+                    <option value="textarea">Long text</option>
+                    <option value="select">Dropdown</option>
+                  </select>
+                  <button
+                    onClick={() => updateIntakeField(idx, { required: !field.required })}
+                    style={{ fontSize: 11, padding: "6px 8px", borderRadius: 6, background: field.required ? "rgba(200,164,78,0.1)" : "rgba(255,255,255,0.03)", border: `1px solid ${field.required ? T.gold : T.border}`, color: field.required ? T.gold : "#9CA3AF", cursor: "pointer" }}
+                  >
+                    {field.required ? "Required" : "Optional"}
+                  </button>
+                  <button
+                    onClick={() => removeIntakeField(idx)}
+                    style={{ fontSize: 16, color: "#52525B", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {intakeFields.length > 0 && (
+            <button
+              onClick={saveIntakeForm}
+              disabled={savingIntake}
+              style={{ fontSize: 12, fontWeight: 500, padding: "7px 16px", borderRadius: 7, background: CTA_GRAD, border: "none", color: "#09090B", cursor: "pointer", opacity: savingIntake ? 0.6 : 1 }}
+            >
+              {savingIntake ? "Saving..." : "Save form"}
+            </button>
+          )}
+        </div>
+
+        <div style={{ height: 1, background: "#1E1E21", marginBottom: 24 }} />
+
+        {/* Calendar Feed */}
+        <div style={{ marginBottom: 28 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: T.text, margin: 0, marginBottom: 4 }}>Calendar Feed</h3>
+          <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 12 }}>Subscribe to this ICS feed in Google Calendar, Apple Calendar, or Outlook to see your calls.</p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text" value={calendarFeedUrl} readOnly
+              style={{ flex: 1, padding: "8px 12px", borderRadius: 8, background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`, color: T.text2, fontSize: 12, fontFamily: T.mono, outline: "none" }}
+            />
+            <button
+              onClick={() => { navigator.clipboard.writeText(calendarFeedUrl); setCalendarCopied(true); setTimeout(() => setCalendarCopied(false), 2000); }}
+              style={{ padding: "8px 16px", borderRadius: 8, background: calendarCopied ? T.goldDim : "rgba(255,255,255,0.06)", border: `1px solid ${calendarCopied ? T.gold : T.border}`, color: calendarCopied ? T.gold : T.text2, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}
+            >
+              {calendarCopied ? "Copied!" : "Copy URL"}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: "#1E1E21", marginBottom: 24 }} />
 
         {loading ? (
           <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF" }}>Loading...</div>

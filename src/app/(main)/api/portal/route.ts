@@ -66,11 +66,33 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Fetch files for this contact's projects (scoped by project_id or contact_id)
+  let files: { id: string; filename: string; size_bytes: number | null; mime_type: string | null; created_at: string; storage_path: string; project_id: string | null }[] = [];
+  if (projectIds.length > 0) {
+    const { data: rawFiles } = await db
+      .from("file_attachments")
+      .select("id, filename, size_bytes, mime_type, created_at, storage_path, project_id")
+      .eq("business_id", businessId)
+      .in("project_id", projectIds)
+      .order("created_at", { ascending: false });
+    files = rawFiles || [];
+  }
+
+  // Generate signed URLs for each file (1 hour expiry)
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET || "attachments";
+  const filesWithUrls = await Promise.all(
+    files.map(async (f) => {
+      const { data } = await db.storage.from(bucket).createSignedUrl(f.storage_path, 3600);
+      return { ...f, signedUrl: data?.signedUrl || null };
+    })
+  );
+
   return NextResponse.json({
     contact: { name: contact.name, email: contact.email, company: contact.company },
     business: business || { name: "Business", slug: "" },
     proposals: proposals || [],
     invoices: invoices || [],
     projects: (projects || []).map((p) => ({ ...p, deliverables: deliverables[p.id] || [] })),
+    files: filesWithUrls,
   });
 }

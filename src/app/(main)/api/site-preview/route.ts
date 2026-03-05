@@ -220,6 +220,33 @@ h1, h2, h3, h4, h5, h6 { font-family: "${headingFont}", system-ui, sans-serif; }
   .grid-2 { gap: 24px; }
   .grid-3 { gap: 24px; }
 }
+
+/* ── Entrance animations ────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.hero-animate     { animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero-animate-sub { animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both; }
+.hero-animate-cta { animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both; }
+.hero-animate-img { animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both; }
+
+/* ── Scroll reveal ──────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.08s; }
+.reveal-d2 { transition-delay: 0.16s; }
+.reveal-d3 { transition-delay: 0.24s; }
+.reveal-d4 { transition-delay: 0.32s; }
+.reveal-d5 { transition-delay: 0.40s; }
 ${extraCSS}`;
 }
 
@@ -396,7 +423,7 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     const featureCards = features
       .map(
         (f: { title: string; desc: string }, i: number) => `
-              <div class="card">
+              <div class="card reveal reveal-d${Math.min(i + 1, 5)}">
                 <div style="width:40px;height:40px;border-radius:10px;background:${primary}12;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:18px">
                   ${featureEmojis[i % 6]}
                 </div>
@@ -409,12 +436,12 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     featuresSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
-          <div style="text-align:center;margin-bottom:56px">
+          <div class="reveal" style="text-align:center;margin-bottom:56px">
             <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
-              Why Choose Us
+              ${isServices ? "How we work" : "Features"}
             </p>
             <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              Built different.
+              ${isServices ? "What makes us different" : "Why it works"}
             </h2>
           </div>
           <div class="grid-3">
@@ -451,15 +478,17 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     videoSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
-          <div style="text-align:center;margin-bottom:48px">
+          <div class="reveal" style="text-align:center;margin-bottom:48px">
             <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
-              See It In Action
+              ${isServices ? "Results" : "In action"}
             </p>
             <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              ${isServices ? "How we deliver results" : "Watch how it works"}
+              ${isServices ? "How we deliver" : "Watch how it works"}
             </h2>
           </div>
-          ${videoInner}
+          <div class="reveal reveal-d1">
+            ${videoInner}
+          </div>
         </div>
       </section>`;
   }
@@ -534,12 +563,12 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     productsSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
-          <div style="text-align:center;margin-bottom:48px">
+          <div class="reveal" style="text-align:center;margin-bottom:48px">
             <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
-              ${isServices ? "Our Services" : "Featured Products"}
+              ${isServices ? "Services" : "Products"}
             </p>
             <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              ${isServices ? "Choose your path" : "What we offer"}
+              ${isServices ? "Work with us" : "What we make"}
             </h2>
           </div>
           <div class="grid-3">
@@ -561,7 +590,7 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
             : "";
 
           return `
-              <div class="card" style="display:flex;flex-direction:column">
+              <div class="card reveal" style="display:flex;flex-direction:column">
                 ${ratingHtml}
                 <p style="color:rgba(${tb},0.6);font-size:14px;line-height:1.7;flex:1;margin-bottom:20px">
                   &ldquo;${esc(t.text)}&rdquo;
@@ -583,12 +612,12 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     testimonialsSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
-          <div style="text-align:center;margin-bottom:56px">
+          <div class="reveal" style="text-align:center;margin-bottom:56px">
             <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
               Testimonials
             </p>
             <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              What people are saying
+              ${isServices ? "What clients say" : "Real feedback"}
             </h2>
           </div>
           <div class="grid-3">
@@ -620,12 +649,12 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
     processSection = `
       <section class="section" style="border-top:1px solid rgba(${tb},0.05)">
         <div class="container">
-          <div style="text-align:center;margin-bottom:56px">
+          <div class="reveal" style="text-align:center;margin-bottom:56px">
             <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:${primary};margin-bottom:12px">
-              How It Works
+              How it works
             </p>
             <h2 style="font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;letter-spacing:-0.02em">
-              ${esc(processData.title || "Simple. Effective. Done.")}
+              ${esc(processData.title || "The process")}
             </h2>
           </div>
           <div style="display:flex;flex-direction:column;gap:0;max-width:700px;margin:0 auto">
@@ -670,9 +699,9 @@ function buildPageContent(site: SiteData, theme: SiteTheme, v: ThemeVars): strin
   const ctaSection = `
       <section style="padding:80px 24px;border-top:1px solid rgba(${tb},0.05);text-align:center;position:relative;overflow:hidden">
         <div style="position:absolute;bottom:-50%;left:50%;transform:translateX(-50%);width:90%;max-width:800px;height:400px;background:radial-gradient(ellipse,${primary}10 0%,transparent 70%);filter:blur(80px);pointer-events:none"></div>
-        <div style="position:relative;max-width:550px;margin:0 auto">
+        <div class="reveal" style="position:relative;max-width:550px;margin:0 auto">
           <h2 style="font-size:clamp(1.75rem,4vw,2.5rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:16px">
-            ${esc(cta.headline || "Ready to get started?")}
+            ${esc(cta.headline || (isServices ? "Let&apos;s work together." : "Start today."))}
           </h2>
           <p style="color:rgba(${tb},0.5);font-size:16px;line-height:1.7;margin-bottom:32px">
             ${esc(cta.subheadline || site.tagline)}
@@ -749,6 +778,18 @@ function buildFullHTML(site: SiteData): string {
   ${buildPageContent(site, theme, v)}
   ${buildCalendly(site, v)}
   ${buildFooter(site, v)}
+  <script>
+    (function() {
+      var els = document.querySelectorAll('.reveal');
+      if (!els.length) return;
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+          if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(function(el) { io.observe(el); });
+    })();
+  </script>
 </body>
 </html>`;
 }

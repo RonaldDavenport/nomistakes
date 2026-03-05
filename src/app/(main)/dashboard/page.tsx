@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { getPlan } from "@/lib/plans";
+import { getPlan, hasFeature } from "@/lib/plans";
 
 interface Business {
   id: string;
@@ -27,6 +27,7 @@ export default function DashboardOverview() {
   const [userName, setUserName] = useState("");
   const [userPlan, setUserPlan] = useState("free");
   const [upgradeBanner, setUpgradeBanner] = useState<string | null>(null);
+  const [leadsCount, setLeadsCount] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -75,7 +76,20 @@ export default function DashboardOverview() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      setBusinesses((data as Business[]) || []);
+      const bizList = (data as Business[]) || [];
+      setBusinesses(bizList);
+
+      // Fetch lead count if plan has lead_engine feature
+      const planId = profile?.plan ?? "free";
+      if (hasFeature(planId, "lead_engine") && bizList.length > 0) {
+        const bizIds = bizList.map((b) => b.id);
+        const { count } = await supabase
+          .from("leads")
+          .select("*", { count: "exact", head: true })
+          .in("business_id", bizIds);
+        setLeadsCount(count ?? 0);
+      }
+
       setLoading(false);
     }
     load();
@@ -136,7 +150,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className={`grid grid-cols-2 ${leadsCount !== null ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-3 sm:gap-4 mb-6 sm:mb-8`}>
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
           <p className="text-zinc-500 text-xs font-medium mb-1">Businesses</p>
           <p className="text-2xl font-bold text-white">{businesses.length}</p>
@@ -145,6 +159,15 @@ export default function DashboardOverview() {
           <p className="text-zinc-500 text-xs font-medium mb-1">Live Sites</p>
           <p className="text-2xl font-bold text-white">{businesses.filter((b) => b.status === "live").length}</p>
         </div>
+        {leadsCount !== null && (
+          <Link
+            href={businesses[0] ? `/dashboard/${businesses[0].id}/leads` : "/dashboard"}
+            className="p-5 rounded-xl border border-white/5 bg-surface/50 hover:border-brand-600/30 transition-all block"
+          >
+            <p className="text-zinc-500 text-xs font-medium mb-1">Prospects</p>
+            <p className="text-2xl font-bold text-white">{leadsCount}</p>
+          </Link>
+        )}
         <div className="p-5 rounded-xl border border-white/5 bg-surface/50">
           <p className="text-zinc-500 text-xs font-medium mb-1">Plan</p>
           <p className="text-2xl font-bold text-white">{plan.name}</p>

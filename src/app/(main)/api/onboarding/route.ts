@@ -68,6 +68,35 @@ export async function PATCH(req: Request) {
         update.onboarding_completed = true;
         break;
       }
+      case "lead-engine": {
+        // Store ICP filter preferences in brand.icp
+        const { data: biz } = await db
+          .from("businesses")
+          .select("brand")
+          .eq("id", businessId)
+          .single();
+        update.brand = {
+          ...(biz?.brand || {}),
+          icp: {
+            titles: data.leadTitles || [],
+            industries: data.leadIndustries || [],
+            locations: data.leadLocations || [],
+          },
+        };
+        break;
+      }
+      case "satellite-domain": {
+        // Infrastructure is provisioned via /api/infrastructure; just advance the step
+        break;
+      }
+      case "inbox-connect": {
+        // Channel connections are external OAuth; just advance the step
+        break;
+      }
+      case "meet-your-coach": {
+        update.onboarding_completed = true;
+        break;
+      }
       case "claim": {
         // Associate an unowned business with a user after auth gate
         if (!data.userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
@@ -121,6 +150,10 @@ export async function GET(req: Request) {
 }
 
 function stepIndex(step: string): number {
-  const steps = ["name", "colors", "logo", "layout", "domain", "scheduling", "payments", "email"];
-  return steps.indexOf(step) + 1;
+  const steps = [
+    "name", "colors", "logo", "layout", "domain", "scheduling", "payments",
+    "lead-engine", "satellite-domain", "inbox-connect", "meet-your-coach", "email",
+  ];
+  const idx = steps.indexOf(step);
+  return idx >= 0 ? idx + 1 : 0;
 }

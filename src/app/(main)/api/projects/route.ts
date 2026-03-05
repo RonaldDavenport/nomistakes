@@ -6,10 +6,16 @@ export async function GET(req: NextRequest) {
   const businessId = req.nextUrl.searchParams.get("businessId");
   if (!businessId) return NextResponse.json({ error: "businessId required" }, { status: 400 });
 
+  const db = createServerClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data: biz } = await db.from("businesses").select("id").eq("id", businessId).eq("user_id", user.id).maybeSingle();
+  if (!biz) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const status = req.nextUrl.searchParams.get("status");
   const contactId = req.nextUrl.searchParams.get("contactId");
 
-  const db = createServerClient();
   let query = db
     .from("projects")
     .select("*, contacts:contact_id(name, email), deliverables(*)")
@@ -26,15 +32,20 @@ export async function GET(req: NextRequest) {
 
 // POST /api/projects
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { businessId, userId, contactId, proposalId, invoiceId, name, description, startDate, dueDate, deliverables } = body;
-  if (!businessId || !userId || !name) return NextResponse.json({ error: "businessId, userId, name required" }, { status: 400 });
-
   const db = createServerClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const { businessId, contactId, proposalId, invoiceId, name, description, startDate, dueDate, deliverables } = body;
+  if (!businessId || !name) return NextResponse.json({ error: "businessId and name required" }, { status: 400 });
+
+  const { data: biz } = await db.from("businesses").select("id").eq("id", businessId).eq("user_id", user.id).maybeSingle();
+  if (!biz) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const { data: project, error } = await db.from("projects").insert({
     business_id: businessId,
-    user_id: userId,
+    user_id: user.id,
     contact_id: contactId || null,
     proposal_id: proposalId || null,
     invoice_id: invoiceId || null,
@@ -59,7 +70,6 @@ export async function POST(req: NextRequest) {
     await db.from("deliverables").insert(rows);
   }
 
-  // Re-fetch with deliverables
   const { data: full } = await db
     .from("projects")
     .select("*, deliverables(*)")
@@ -71,16 +81,25 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/projects
 export async function PATCH(req: NextRequest) {
+  const db = createServerClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
   const { projectId, ...updates } = body;
   if (!projectId) return NextResponse.json({ error: "projectId required" }, { status: 400 });
+
+  // Verify ownership through business
+  const { data: project } = await db.from("projects").select("business_id").eq("id", projectId).maybeSingle();
+  if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { data: biz } = await db.from("businesses").select("id").eq("id", project.business_id).eq("user_id", user.id).maybeSingle();
+  if (!biz) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   if (updates.status === "completed") {
     updates.completed_at = new Date().toISOString();
   }
   updates.updated_at = new Date().toISOString();
 
-  const db = createServerClient();
   const { data, error } = await db.from("projects").update(updates).eq("id", projectId).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ project: data });
@@ -88,10 +107,18 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE /api/projects
 export async function DELETE(req: NextRequest) {
+  const db = createServerClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { projectId } = await req.json();
   if (!projectId) return NextResponse.json({ error: "projectId required" }, { status: 400 });
 
-  const db = createServerClient();
+  const { data: project } = await db.from("projects").select("business_id").eq("id", projectId).maybeSingle();
+  if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { data: biz } = await db.from("businesses").select("id").eq("id", project.business_id).eq("user_id", user.id).maybeSingle();
+  if (!biz) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const { error } = await db.from("projects").delete().eq("id", projectId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

@@ -11,12 +11,20 @@ interface AvailabilitySettings {
   timezone?: string;
 }
 
+interface IntakeField {
+  label: string;
+  type: "text" | "textarea" | "select";
+  options?: string;
+  required: boolean;
+}
+
 interface Business {
   id: string;
   name: string;
   tagline: string;
   brand: { colors?: { primary?: string; accent?: string; background?: string; text?: string }; tone?: string } | null;
   availability_settings: AvailabilitySettings;
+  intake_form_fields?: IntakeField[];
 }
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -50,7 +58,8 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-  const [step, setStep] = useState<"date" | "form" | "success">("date");
+  const [step, setStep] = useState<"date" | "intake" | "form" | "success">("date");
+  const [intakeAnswers, setIntakeAnswers] = useState<Record<string, string>>({});
 
   // Form
   const [name, setName] = useState("");
@@ -119,6 +128,7 @@ export default function BookingPage() {
         notes: notes || undefined,
         scheduledAt: scheduledAt.toISOString(),
         durationMinutes: duration,
+        intakeResponses: Object.keys(intakeAnswers).length > 0 ? intakeAnswers : undefined,
       }),
     });
 
@@ -223,6 +233,68 @@ export default function BookingPage() {
                 <p style={{ fontSize: 14, color: `${text}88`, marginTop: 4 }}>{formatTime(selectedTime)}</p>
               </div>
             )}
+          </div>
+        ) : step === "intake" ? (
+          <div
+            style={{
+              background: `${text}06`,
+              border: `1px solid ${text}12`,
+              borderRadius: 16,
+              padding: "32px",
+            }}
+          >
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: text, marginBottom: 4 }}>A few quick questions</h2>
+            <p style={{ fontSize: 13, color: `${text}60`, marginBottom: 24 }}>
+              {selectedDate?.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} at {selectedTime && formatTime(selectedTime)}
+              <button onClick={() => { setStep("date"); setSelectedTime(null); }} style={{ color: primary, background: "none", border: "none", cursor: "pointer", marginLeft: 8, fontSize: 13 }}>Change</button>
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {(business?.intake_form_fields || []).map((field, idx) => (
+                <div key={idx}>
+                  <label style={{ fontSize: 12, color: `${text}60`, display: "block", marginBottom: 6 }}>
+                    {field.label}{field.required && " *"}
+                  </label>
+                  {field.type === "textarea" ? (
+                    <textarea
+                      rows={3}
+                      value={intakeAnswers[field.label] || ""}
+                      onChange={(e) => setIntakeAnswers({ ...intakeAnswers, [field.label]: e.target.value })}
+                      style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: `${text}06`, border: `1px solid ${text}15`, color: text, fontSize: 14, outline: "none", resize: "vertical" }}
+                    />
+                  ) : field.type === "select" ? (
+                    <select
+                      value={intakeAnswers[field.label] || ""}
+                      onChange={(e) => setIntakeAnswers({ ...intakeAnswers, [field.label]: e.target.value })}
+                      style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: `${text}06`, border: `1px solid ${text}15`, color: text, fontSize: 14, outline: "none" }}
+                    >
+                      <option value="">Select...</option>
+                      {(field.options || "").split(",").map((o) => o.trim()).filter(Boolean).map((o) => (
+                        <option key={o} value={o}>{o}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={intakeAnswers[field.label] || ""}
+                      onChange={(e) => setIntakeAnswers({ ...intakeAnswers, [field.label]: e.target.value })}
+                      style={{ width: "100%", padding: "12px 14px", borderRadius: 10, background: `${text}06`, border: `1px solid ${text}15`, color: text, fontSize: 14, outline: "none" }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setStep("form")}
+              disabled={(business?.intake_form_fields || []).some((f) => f.required && !intakeAnswers[f.label])}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 12, marginTop: 24,
+                background: primary, border: "none", color: "#fff",
+                fontSize: 15, fontWeight: 600, cursor: "pointer",
+                opacity: (business?.intake_form_fields || []).some((f) => f.required && !intakeAnswers[f.label]) ? 0.5 : 1,
+              }}
+            >
+              Continue
+            </button>
           </div>
         ) : step === "form" ? (
           <div
@@ -342,7 +414,11 @@ export default function BookingPage() {
                       return (
                         <button
                           key={t}
-                          onClick={() => { setSelectedTime(t); setStep("form"); }}
+                          onClick={() => {
+                            setSelectedTime(t);
+                            const fields = business?.intake_form_fields || [];
+                            setStep(fields.length > 0 ? "intake" : "form");
+                          }}
                           style={{
                             padding: "12px", borderRadius: 10,
                             background: isSelected ? primary : `${text}06`,

@@ -24,6 +24,10 @@ interface Invoice {
   created_at: string;
   line_items: LineItem[];
   contacts: { name: string; email: string; company: string | null } | null;
+  recurring?: boolean;
+  recurring_interval?: string | null;
+  deposit_amount?: number | null;
+  deposit_paid?: boolean;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -61,6 +65,10 @@ export default function InvoicesPage() {
   const [items, setItems] = useState<LineItem[]>([{ name: "", description: "", quantity: 1, unit_price_cents: 0 }]);
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [recurring, setRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState<"weekly" | "monthly" | "quarterly">("monthly");
+  const [depositEnabled, setDepositEnabled] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
@@ -95,14 +103,16 @@ export default function InvoicesPage() {
         lineItems: items.filter((i) => i.name),
         dueDate: dueDate || null,
         notes: notes || null,
+        recurring: recurring || null,
+        recurringInterval: recurring ? recurringInterval : null,
+        depositAmount: depositEnabled && depositAmount ? Math.round(parseFloat(depositAmount) * 100) : null,
       }),
     });
     if (res.ok) {
       setShowCreate(false);
       setItems([{ name: "", description: "", quantity: 1, unit_price_cents: 0 }]);
-      setContactId("");
-      setDueDate("");
-      setNotes("");
+      setContactId(""); setDueDate(""); setNotes("");
+      setRecurring(false); setDepositEnabled(false); setDepositAmount("");
       fetchInvoices();
     }
     setSaving(false);
@@ -410,9 +420,26 @@ export default function InvoicesPage() {
                   alignItems: "center",
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontVariantNumeric: "tabular-nums" }}>
-                  {inv.invoice_number}
-                </span>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontVariantNumeric: "tabular-nums" }}>
+                    {inv.invoice_number}
+                  </span>
+                  {inv.recurring && (
+                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 6, padding: "1px 6px", borderRadius: 4, background: "rgba(59,130,246,0.1)", color: T.blue }}>
+                      Recurring
+                    </span>
+                  )}
+                  {inv.deposit_amount && !inv.deposit_paid && (
+                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "rgba(245,158,11,0.1)", color: T.orange }}>
+                      Deposit due
+                    </span>
+                  )}
+                  {inv.deposit_amount && inv.deposit_paid && (
+                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "rgba(34,197,94,0.1)", color: T.green }}>
+                      Deposit paid
+                    </span>
+                  )}
+                </div>
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>
                     {inv.contacts?.name || "\u2014"}
@@ -572,6 +599,42 @@ export default function InvoicesPage() {
                 <span style={{ fontSize: 12, fontWeight: 500, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Notes (optional)</span>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
               </label>
+
+              {/* Recurring */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} style={{ width: 16, height: 16 }} />
+                  <span style={{ fontSize: 13, color: T.text }}>Recurring invoice</span>
+                </label>
+                {recurring && (
+                  <select
+                    value={recurringInterval}
+                    onChange={(e) => setRecurringInterval(e.target.value as typeof recurringInterval)}
+                    style={{ ...selectStyle, marginTop: 8 }}
+                  >
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                  </select>
+                )}
+              </div>
+
+              {/* Deposit */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <input type="checkbox" checked={depositEnabled} onChange={(e) => setDepositEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
+                  <span style={{ fontSize: 13, color: T.text }}>Require deposit</span>
+                </label>
+                {depositEnabled && (
+                  <input
+                    type="number"
+                    placeholder="Deposit amount ($)"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    style={{ ...inputStyle, marginTop: 8 }}
+                  />
+                )}
+              </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
                 <button

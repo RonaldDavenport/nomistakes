@@ -28,6 +28,11 @@ interface PortalData {
     due_date: string | null;
     deliverables: { id: string; name: string; status: string; due_date: string | null }[];
   }[];
+  files?: {
+    id: string; filename: string; size_bytes: number | null;
+    mime_type: string | null; created_at: string; signedUrl?: string;
+    project_id: string | null;
+  }[];
 }
 
 function fmt(cents: number) {
@@ -50,7 +55,7 @@ export default function ClientPortalPage() {
   const [data, setData] = useState<PortalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [tab, setTab] = useState<"overview" | "proposals" | "invoices" | "projects">("overview");
+  const [tab, setTab] = useState<"overview" | "proposals" | "invoices" | "projects" | "files">("overview");
 
   useEffect(() => {
     async function load() {
@@ -86,7 +91,7 @@ export default function ClientPortalPage() {
     );
   }
 
-  const { contact, business, proposals, invoices, projects } = data;
+  const { contact, business, proposals, invoices, projects, files = [] } = data;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
   const unpaidInvoices = invoices.filter((i) => i.status !== "paid");
   const totalOwed = unpaidInvoices.reduce((s, i) => s + i.total_cents, 0);
@@ -97,6 +102,7 @@ export default function ClientPortalPage() {
     { key: "proposals", label: "Proposals", count: proposals.length },
     { key: "invoices", label: "Invoices", count: invoices.length },
     { key: "projects", label: "Projects", count: projects.length },
+    { key: "files", label: "Files", count: files.length },
   ];
 
   return (
@@ -356,6 +362,43 @@ export default function ClientPortalPage() {
                   </div>
                 );
               })
+            )}
+          </div>
+        )}
+        {tab === "files" && (
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 600, color: T.text, marginBottom: 16 }}>Files</p>
+            {files.length === 0 ? (
+              <p style={{ fontSize: 13, color: T.text3 }}>No files shared yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {files.map((f) => {
+                  function formatBytes(bytes: number | null) {
+                    if (!bytes) return "";
+                    if (bytes < 1024) return `${bytes} B`;
+                    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+                    return `${(bytes / 1048576).toFixed(1)} MB`;
+                  }
+                  return (
+                    <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${T.border}` }}>
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{f.filename}</span>
+                        {f.size_bytes && <span style={{ fontSize: 11, color: T.text3, marginLeft: 8 }}>{formatBytes(f.size_bytes)}</span>}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <span style={{ fontSize: 11, color: T.text3 }}>
+                          {new Date(f.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                        {f.signedUrl && (
+                          <a href={f.signedUrl} download={f.filename} style={{ fontSize: 12, fontWeight: 600, color: T.gold, textDecoration: "none" }}>
+                            Download
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}

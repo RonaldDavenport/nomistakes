@@ -97,14 +97,14 @@ export function buildHero(
         <div style="position:absolute;top:-40%;left:50%;transform:translateX(-50%);width:80%;max-width:700px;height:500px;background:radial-gradient(ellipse,${v.primary}15 0%,transparent 70%);filter:blur(60px);pointer-events:none"></div>
         <div style="position:relative;max-width:720px;margin:0 auto">
           ${badgeHtml}
-          <h1 style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">${headline}</h1>
-          <p style="font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px;max-width:560px;margin-left:auto;margin-right:auto">${subheadline}</p>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:64px">
+          <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">${headline}</h1>
+          <p class="hero-animate-sub" style="font-size:clamp(1rem,2.5vw,1.2rem);color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px;max-width:560px;margin-left:auto;margin-right:auto">${subheadline}</p>
+          <div class="hero-animate-cta" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:64px">
             <a href="${ctaHref}" class="cta-btn">${ctaLabel} <span style="font-size:16px">&rarr;</span></a>
             <a href="/about" class="btn-secondary">Learn More</a>
           </div>
         </div>
-        <div style="position:relative;max-width:900px;width:100%;margin:0 auto;padding:0 24px">
+        <div class="hero-animate-img" style="position:relative;max-width:900px;width:100%;margin:0 auto;padding:0 24px">
           ${imageHtml}
         </div>
       </section>`;
@@ -116,10 +116,10 @@ export function buildHero(
         <div style="position:absolute;top:10%;left:-10%;width:600px;height:600px;background:radial-gradient(ellipse,${v.primary}10 0%,transparent 65%);filter:blur(80px);pointer-events:none"></div>
         <div style="position:relative;max-width:1100px;margin:0 auto;width:100%">
           ${badgeHtml}
-          <h1 style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:28px;max-width:800px">${headline}</h1>
-          <p style="font-size:clamp(1rem,2.5vw,1.15rem);color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px;max-width:520px">${subheadline}</p>
-          ${ctaBtns}
-          <div style="margin-top:72px;max-width:900px">${imageHtml}</div>
+          <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:28px;max-width:800px">${headline}</h1>
+          <p class="hero-animate-sub" style="font-size:clamp(1rem,2.5vw,1.15rem);color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px;max-width:520px">${subheadline}</p>
+          <div class="hero-animate-cta">${ctaBtns}</div>
+          <div class="hero-animate-img" style="margin-top:72px;max-width:900px">${imageHtml}</div>
         </div>
       </section>`;
   }
@@ -130,12 +130,12 @@ export function buildHero(
         <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 50%,${v.primary}0A 0%,transparent 60%);pointer-events:none"></div>
         <div style="position:relative;max-width:1200px;margin:0 auto;width:100%">
           ${badgeHtml}
-          <h1 style="font-size:${heroFontSize};font-weight:900;line-height:0.95;letter-spacing:-0.045em;margin-bottom:48px;max-width:1100px">${headline}</h1>
-          <div style="display:flex;align-items:flex-start;gap:64px;flex-wrap:wrap">
+          <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:900;line-height:0.95;letter-spacing:-0.045em;margin-bottom:48px;max-width:1100px">${headline}</h1>
+          <div class="hero-animate-cta" style="display:flex;align-items:flex-start;gap:64px;flex-wrap:wrap">
             <div>
               ${ctaBtns}
             </div>
-            <p style="font-size:1rem;color:rgba(${v.tb},0.45);line-height:1.8;max-width:380px;border-left:2px solid ${v.primary}44;padding-left:20px">${subheadline}</p>
+            <p class="hero-animate-sub" style="font-size:1rem;color:rgba(${v.tb},0.45);line-height:1.8;max-width:380px;border-left:2px solid ${v.primary}44;padding-left:20px">${subheadline}</p>
           </div>
         </div>
       </section>`;
@@ -147,11 +147,11 @@ export function buildHero(
         <div style="max-width:1100px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center">
           <div>
             ${badgeHtml}
-            <h1 style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">${headline}</h1>
-            <p style="font-size:1.1rem;color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px">${subheadline}</p>
-            ${ctaBtns}
+            <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:24px">${headline}</h1>
+            <p class="hero-animate-sub" style="font-size:1.1rem;color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:40px">${subheadline}</p>
+            <div class="hero-animate-cta">${ctaBtns}</div>
           </div>
-          <div style="position:relative">
+          <div class="hero-animate-img" style="position:relative">
             ${imageHtml}
           </div>
         </div>
@@ -163,14 +163,14 @@ export function buildHero(
     return `
       <section style="padding:120px 24px 80px;position:relative;border-bottom:1px solid rgba(${v.tb},0.08)">
         <div style="max-width:960px;margin:0 auto">
-          <p style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${v.primary};margin-bottom:20px">${badge || (v.isServices ? "Professional Services" : "Digital Products")}</p>
-          <h1 style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:0">${headline}</h1>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;border-top:1px solid rgba(${v.tb},0.1);border-bottom:1px solid rgba(${v.tb},0.1);padding:24px 0;margin:32px 0">
+          <p class="hero-animate" style="font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${v.primary};margin-bottom:20px">${badge || (v.isServices ? "Professional Services" : "Digital Products")}</p>
+          <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:800;line-height:1.08;letter-spacing:-0.03em;margin-bottom:0">${headline}</h1>
+          <div class="hero-animate-sub" style="display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;border-top:1px solid rgba(${v.tb},0.1);border-bottom:1px solid rgba(${v.tb},0.1);padding:24px 0;margin:32px 0">
             <p style="font-size:1.05rem;color:rgba(${v.tb},0.5);line-height:1.7;max-width:520px">${subheadline}</p>
-            ${ctaBtns}
+            <div class="hero-animate-cta">${ctaBtns}</div>
           </div>
         </div>
-        <div style="max-width:960px;margin:0 auto">${imageHtml}</div>
+        <div class="hero-animate-img" style="max-width:960px;margin:0 auto">${imageHtml}</div>
       </section>`;
   }
 
@@ -179,9 +179,9 @@ export function buildHero(
     <section style="min-height:85vh;display:flex;align-items:center;padding:80px 24px">
       <div style="max-width:680px;margin:0 auto;text-align:center">
         ${badgeHtml}
-        <h1 style="font-size:${heroFontSize};font-weight:700;line-height:1.1;letter-spacing:-0.025em;margin-bottom:24px">${headline}</h1>
-        <p style="font-size:1.1rem;color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:36px">${subheadline}</p>
-        ${ctaBtnSingle}
+        <h1 class="hero-animate" style="font-size:${heroFontSize};font-weight:700;line-height:1.1;letter-spacing:-0.025em;margin-bottom:24px">${headline}</h1>
+        <p class="hero-animate-sub" style="font-size:1.1rem;color:rgba(${v.tb},0.5);line-height:1.7;margin-bottom:36px">${subheadline}</p>
+        <div class="hero-animate-cta">${ctaBtnSingle}</div>
       </div>
     </section>`;
 }
@@ -212,6 +212,8 @@ body { background: #000 !important; color: #fff !important; }
 .section { padding: 110px 24px !important; }
 nav { background: #000 !important; }
 footer { background: #000 !important; }
+@keyframes obBreath { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+.hero-animate { animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both, obBreath 6s 0.7s ease-in-out infinite !important; }
 `,
   },
 
@@ -257,6 +259,8 @@ body { background: #0A0E1A !important; color: #E8EDFF !important; }
 .card:hover { border-color: rgba(99,149,255,0.28) !important; background: rgba(99,149,255,0.04) !important; transform: none !important; }
 nav { background: #0A0E1A !important; border-bottom: 1px solid rgba(99,149,255,0.1) !important; }
 .section { padding: 100px 24px !important; }
+@keyframes midScan { 0% { top: -2px; opacity: 0; } 5% { opacity: 1; } 95% { opacity: 0.6; } 100% { top: 100vh; opacity: 0; } }
+body::after { content: ''; position: fixed; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(99,149,255,0.5), transparent); animation: midScan 10s ease-in-out infinite; pointer-events: none; z-index: 9998; }
 `,
   },
 
@@ -279,6 +283,8 @@ body { background: #111 !important; color: #F0F0F0 !important; background-image:
 .card:hover { border-top-color: ${v.primary} !important; transform: none !important; }
 .section { padding: 100px 24px !important; }
 nav { background: #111 !important; }
+@keyframes carScan { 0% { background-position: 0 0, 0 0; } 100% { background-position: 0 40px, 0 40px; } }
+body { animation: carScan 3s linear infinite !important; }
 `,
   },
 
@@ -302,6 +308,8 @@ body { background: #0C0818 !important; color: #F0EEFF !important; }
 .card:hover { border-color: rgba(168,85,247,0.35) !important; background: rgba(123,57,252,0.07) !important; transform: none !important; }
 nav { background: #0C0818 !important; }
 .section { padding: 100px 24px !important; }
+@keyframes eclPulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
+.cta-btn { animation: eclPulse 3s ease-in-out infinite !important; }
 `,
   },
 
@@ -719,6 +727,8 @@ body > * { position: relative; z-index: 1; }
 .card { background: rgba(${v.tb},0.04) !important; border: 1px solid rgba(${v.tb},0.1) !important; border-radius: 14px !important; backdrop-filter: blur(12px) !important; }
 .card:hover { border-color: ${v.primary}44 !important; background: rgba(${v.tb},0.06) !important; transform: none !important; }
 nav { backdrop-filter: blur(24px) !important; }
+@keyframes meshDrift { 0% { transform: scale(1) translate(0,0); } 33% { transform: scale(1.06) translate(1%,1.5%); } 66% { transform: scale(0.97) translate(-1%,-0.5%); } 100% { transform: scale(1) translate(0,0); } }
+body::before { animation: meshDrift 14s ease-in-out infinite !important; }
 `,
   },
 
@@ -737,6 +747,8 @@ body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0
 .card { border-radius: 8px !important; }
 .cta-btn { border-radius: 6px !important; }
 nav { border-bottom: 1px solid rgba(${v.tb},0.08) !important; }
+@keyframes grainFlicker { 0%, 100% { opacity: 0.4; } 25% { opacity: 0.32; } 75% { opacity: 0.45; } }
+body::after { animation: grainFlicker 7s ease-in-out infinite !important; }
 `,
   },
 
@@ -757,11 +769,12 @@ body { background: #fff !important; color: #09090B !important; }
 .cta-btn { border-radius: 100px !important; }
 .btn-secondary { border-radius: 100px !important; border-color: rgba(0,0,0,0.12) !important; }
 .card { background: #fff !important; border: none !important; border-radius: 14px !important; box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05) !important; position: relative !important; }
-.card::before { content: ''; position: absolute; inset: -1px; border-radius: 15px; background: linear-gradient(135deg, ${v.primary}55, ${v.accent}44, ${v.primary}33); z-index: -1; opacity: 0; transition: opacity 0.3s; }
-.card:hover::before { opacity: 1; }
+.card::before { content: ''; position: absolute; inset: -1px; border-radius: 15px; background: linear-gradient(135deg, ${v.primary}55, ${v.accent}44, ${v.primary}33, ${v.accent}55); background-size: 200% 200%; z-index: -1; opacity: 0; transition: opacity 0.3s; }
+.card:hover::before { opacity: 1; animation: prismShimmer 2.5s ease infinite !important; }
 .card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important; transform: none !important; }
 nav { background: rgba(255,255,255,0.92) !important; border-bottom: 1px solid rgba(0,0,0,0.06) !important; }
 .section { padding: 100px 24px !important; }
+@keyframes prismShimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 `,
   },
 

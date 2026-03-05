@@ -94,11 +94,10 @@ export default function BuildingScreen({
           color: T.text,
           letterSpacing: "-0.02em",
           lineHeight: 1.1,
-          marginBottom: 8,
+          marginBottom: 0,
         }}>
           Setting up {businessName}
         </h2>
-        <p style={{ color: T.text2, fontSize: "0.95rem" }}>{tagline}</p>
       </motion.div>
 
       {/* Progress ring */}
