@@ -95,7 +95,7 @@ function CompCell({ value }: { value: boolean | string }) {
 // ── Dashboard visual ───────────────────────────────────────────────────────
 function DashboardMock({ isMobile }: { isMobile: boolean }) {
   return (
-    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", background: "#06060A", flex: isMobile ? "none" : "0 0 52%" }}>
+    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", background: "#06060A" }}>
       {/* Chrome */}
       <div style={{ background: "#0A0A0E", padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", gap: 5 }}>
@@ -345,9 +345,9 @@ export default function SwitchPage() {
             Replace Calendly, Dubsado, DocuSign, and 8 more with one platform. $79/mo. Everything included.
           </p>
           <div className="a4" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <a href="#switch" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
+            <Link href="/wizard?existing=true" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
               Switch to Kovra <ArrowRight size={15} />
-            </a>
+            </Link>
             <a href="#compare" className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 500, fontSize: 14, color: C.text, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, padding: "14px 28px", borderRadius: 9 }}>
               See the comparison
             </a>
@@ -379,7 +379,7 @@ export default function SwitchPage() {
       {/* ─── VISUALS ─── */}
       <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
-          <div style={{ marginBottom: 48 }}>
+          <div style={{ marginBottom: 56 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>One platform</span>
             <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
               Everything in one place.
@@ -388,9 +388,29 @@ export default function SwitchPage() {
               Bookings, proposals, contracts, invoices, projects — your whole business runs from one dashboard.
             </p>
           </div>
-          <div className="visuals-row" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-            <DashboardMock isMobile={isMobile} />
-            <CostPanels />
+          <div className="visuals-row" style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+            {/* Left — dashboard */}
+            <div style={{ flex: isMobile ? "none" : "0 0 52%", width: isMobile ? "100%" : undefined }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.goldDim, border: `1px solid ${C.goldBorder}`, borderRadius: 100, padding: "4px 12px", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase" }}>Kovra dashboard</span>
+                </div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em", color: C.text, marginBottom: 6 }}>Your whole business in one view</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>Revenue, active clients, proposals out, outstanding invoices — all in one place, without switching between 5 tabs.</p>
+              </div>
+              <DashboardMock isMobile={isMobile} />
+            </div>
+            {/* Right — cost breakdown */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.18)", borderRadius: 100, padding: "4px 12px", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#EF4444", letterSpacing: "0.08em", textTransform: "uppercase" }}>The math</span>
+                </div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em", color: C.text, marginBottom: 6 }}>Stop paying for 5 tools</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>Most freelancers cobble together $266/mo across separate subscriptions. Kovra replaces all of them at $79/mo.</p>
+              </div>
+              <CostPanels />
+            </div>
           </div>
         </div>
       </section>

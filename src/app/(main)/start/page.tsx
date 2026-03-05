@@ -93,7 +93,7 @@ function Logo({ size = 24, dim = false }: { size?: number; dim?: boolean }) {
 // ── Generated site mock ────────────────────────────────────────────────────
 function SiteMock({ isMobile }: { isMobile: boolean }) {
   return (
-    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", background: "#06060A", flex: isMobile ? "none" : "0 0 52%" }}>
+    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", background: "#06060A" }}>
       {/* Browser chrome */}
       <div style={{ background: "#0A0A0E", padding: "8px 14px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", gap: 5 }}>
@@ -362,9 +362,9 @@ export default function StartPage() {
             Kovra gives you everything to launch, run, and grow a solo service business — before you ever quit your 9-5.
           </p>
           <div className="a4" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <a href="#start" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
+            <Link href="/wizard" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
               Build my business <ArrowRight size={15} />
-            </a>
+            </Link>
             <a href="#features" className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 500, fontSize: 14, color: C.text, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, padding: "14px 28px", borderRadius: 9 }}>
               See what&apos;s included
             </a>
@@ -392,7 +392,7 @@ export default function StartPage() {
       {/* ─── VISUALS ─── */}
       <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
-          <div style={{ marginBottom: 48 }}>
+          <div style={{ marginBottom: 56 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>What you get</span>
             <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
               A business, ready on day one.
@@ -401,9 +401,29 @@ export default function StartPage() {
               Your site goes live. Booking link works. Proposals write themselves. Invoices get paid.
             </p>
           </div>
-          <div className="visuals-row" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-            <SiteMock isMobile={isMobile} />
-            <AppPanels />
+          <div className="visuals-row" style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+            {/* Left — website */}
+            <div style={{ flex: isMobile ? "none" : "0 0 52%", width: isMobile ? "100%" : undefined }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: C.goldDim, border: `1px solid ${C.goldBorder}`, borderRadius: 100, padding: "4px 12px", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: "0.08em", textTransform: "uppercase" }}>AI website</span>
+                </div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em", color: C.text, marginBottom: 6 }}>Your site, live in 4 minutes</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>Built from your business details — custom domain, portfolio, and booking button ready from day one. No design skills needed.</p>
+              </div>
+              <SiteMock isMobile={isMobile} />
+            </div>
+            {/* Right — tools */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, borderRadius: 100, padding: "4px 12px", marginBottom: 10 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.textSec, letterSpacing: "0.08em", textTransform: "uppercase" }}>Business tools</span>
+                </div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em", color: C.text, marginBottom: 6 }}>From first booking to paid invoice</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>Client books a call, you send a proposal, they sign the contract, you send the invoice — all without leaving Kovra.</p>
+              </div>
+              <AppPanels />
+            </div>
           </div>
         </div>
       </section>
