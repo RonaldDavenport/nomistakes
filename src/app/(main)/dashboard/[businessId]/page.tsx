@@ -17,7 +17,7 @@ import {
 
 // ─── Design tokens (local overrides for readability) ─────────────────────────
 
-const SYNE = "'Syne', -apple-system, sans-serif";
+const SYNE = "'DM Sans', -apple-system, sans-serif";
 const SANS = "'DM Sans', -apple-system, sans-serif";
 const GRAD = "linear-gradient(135deg, #C8A44E, #E8C56E)";
 

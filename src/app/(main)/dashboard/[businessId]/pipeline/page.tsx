@@ -107,7 +107,7 @@ export default function PipelinePage() {
       <div style={{ padding: "32px 40px 80px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>Proposals</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>Pipeline</h1>
             <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>{contacts.length} contacts in pipeline</p>
           </div>
           <Link href={`/dashboard/${businessId}/contacts`} style={{ fontSize: 13, fontWeight: 600, color: T.gold, textDecoration: "none" }}>View all clients</Link>

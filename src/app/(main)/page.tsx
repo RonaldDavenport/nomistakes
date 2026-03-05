@@ -8,7 +8,8 @@ import { Calendar, FileText, FolderOpen, TrendingUp, ArrowRight } from "lucide-r
 
 // ─── tokens ───────────────────────────────────────────────────────────────────
 
-const SYNE = "'Syne', -apple-system, sans-serif";
+const DISPLAY = "'DM Sans', -apple-system, sans-serif";
+const SYNE = DISPLAY; // alias kept for compatibility
 const SANS = "'DM Sans', -apple-system, sans-serif";
 const GRAD = "linear-gradient(135deg, #C8A44E 0%, #E8C56E 60%, #C8A44E 100%)";
 
@@ -204,7 +205,7 @@ export default function LandingPage() {
           </div>
 
           {/* Headline */}
-          <h1 className="a2" style={{ fontFamily: SYNE, fontWeight: 900, fontSize: isMobile ? "clamp(2.8rem, 12vw, 4.5rem)" : "clamp(4rem, 8vw, 7.5rem)", lineHeight: 0.92, letterSpacing: "-0.05em", maxWidth: 860, marginBottom: 28 }}>
+          <h1 className="a2" style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: isMobile ? "clamp(2.4rem, 10vw, 3.6rem)" : "clamp(2.8rem, 5vw, 4.8rem)", lineHeight: 1.0, letterSpacing: "-0.03em", maxWidth: 720, marginBottom: 28 }}>
             <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               The OS for<br />service{" "}
             </span>
@@ -270,7 +271,7 @@ export default function LandingPage() {
           <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "40px 60px", textAlign: "center" }}>
             {[["2,400+", "Businesses on Kovra"], ["$4.2M+", "Revenue processed"], ["11×", "Tools replaced"], ["4 min", "Avg setup time"]].map(([n, l]) => (
               <div key={l}>
-                <p style={{ fontFamily: SYNE, fontWeight: 900, lineHeight: 1, fontSize: "clamp(2rem, 5vw, 3.2rem)", letterSpacing: "-0.05em", background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{n}</p>
+                <p style={{ fontFamily: DISPLAY, fontWeight: 800, lineHeight: 1, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", letterSpacing: "-0.03em", background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{n}</p>
                 <p style={{ fontSize: 13, color: C.textSec, marginTop: 10 }}>{l}</p>
               </div>
             ))}
@@ -283,7 +284,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
           <div style={{ marginBottom: 56 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Four phases. One tool.</span>
-            <h2 style={{ fontFamily: SYNE, fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.5rem)", letterSpacing: "-0.045em", lineHeight: 1.0, maxWidth: 600, marginTop: 12 }}>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", letterSpacing: "-0.03em", lineHeight: 1.05, maxWidth: 600, marginTop: 12 }}>
               From first inquiry<br />
               <span style={{ color: C.textSec, fontWeight: 400 }}>to repeat client.</span>
             </h2>
@@ -313,7 +314,7 @@ export default function LandingPage() {
                   <p.Icon size={12} color={p.accent} />
                   <span style={{ fontSize: 11, fontWeight: 700, color: p.accent, letterSpacing: "0.1em" }}>{p.tag}</span>
                 </div>
-                <h3 style={{ fontFamily: SYNE, fontWeight: 800, fontSize: "clamp(1.6rem, 3.5vw, 2.5rem)", letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: 28 }}>{p.title}</h3>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.4rem, 2.5vw, 2rem)", letterSpacing: "-0.025em", lineHeight: 1.1, marginBottom: 28 }}>{p.title}</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                   {p.items.map((item) => (
                     <div key={item} style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -337,14 +338,12 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FEATURE HOVER GRID ─── */}
-      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "0 clamp(20px, 5vw, 56px)" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", paddingTop: 80 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Everything included</span>
-            <h2 style={{ fontFamily: SYNE, fontWeight: 900, fontSize: "clamp(1.8rem, 4vw, 3rem)", letterSpacing: "-0.045em", marginTop: 12 }}>No feature gating. No upsells.</h2>
-          </div>
-          <FeaturesSectionWithHoverEffects />
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, overflow: "hidden" }}>
+        <div style={{ textAlign: "center", padding: "80px clamp(20px, 5vw, 56px) 0" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Everything included</span>
+          <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", marginTop: 12 }}>No feature gating. No upsells.</h2>
         </div>
+        <FeaturesSectionWithHoverEffects />
       </section>
 
       {/* ─── PRICING ─── */}
@@ -352,7 +351,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Pricing</span>
-            <h2 style={{ fontFamily: SYNE, fontWeight: 900, fontSize: "clamp(2rem, 5vw, 3.2rem)", letterSpacing: "-0.045em", lineHeight: 1.0, marginTop: 12, marginBottom: 12 }}>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.8rem)", letterSpacing: "-0.03em", lineHeight: 1.05, marginTop: 12, marginBottom: 12 }}>
               One price.<br />Everything included.
             </h2>
             <p style={{ fontSize: 15, color: C.textSec }}>No per-seat fees. No feature gating.</p>
@@ -373,7 +372,7 @@ export default function LandingPage() {
                 )}
                 <p style={{ fontSize: 11, fontWeight: 700, color: C.textSec, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>{p.name}</p>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3, marginBottom: 6 }}>
-                  <span style={{ fontFamily: SYNE, fontSize: 44, fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 1 }}>{p.price}</span>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 1 }}>{p.price}</span>
                   <span style={{ fontSize: 13, color: C.textSec }}>{p.per}</span>
                 </div>
                 <p style={{ fontSize: 13, color: C.textSec, marginBottom: 22 }}>{p.desc}</p>
@@ -405,8 +404,8 @@ export default function LandingPage() {
       <section style={{ padding: "120px clamp(20px, 5vw, 56px)", position: "relative", overflow: "hidden", borderTop: `1px solid ${C.border}` }}>
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(200,164,78,0.10) 0%, transparent 70%)" }} />
         <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontFamily: SYNE, fontWeight: 900, letterSpacing: "-0.05em", lineHeight: 0.9, fontSize: "clamp(2.8rem, 8vw, 5.5rem)", marginBottom: 24 }}>
-            <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Stop duct-taping<br />your business </span>
+          <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08, fontSize: "clamp(2rem, 3.5vw, 3.2rem)", marginBottom: 24 }}>
+            <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Stop duct-taping your business </span>
             <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>together.</span>
           </h2>
           <p style={{ fontSize: 16, color: C.textSec, lineHeight: 1.7, marginBottom: 44 }}>Kovra gives you every tool a service business needs — in one place, from day one.</p>
