@@ -38,20 +38,23 @@ const TYPES = [
 
 const TOOLS = [
   "Calendly", "Dubsado", "HoneyBook", "DocuSign",
-  "Toggl", "Dropbox", "Pipedrive", "Typeform",
-  "ManyChat", "FreshBooks", "Acuity", "17hats",
+  "Apollo", "Lemlist", "Instantly", "LinkedIn Sales Nav",
+  "Toggl", "FreshBooks", "Pipedrive", "Typeform",
+  "ManyChat", "Acuity", "17hats",
 ];
 
 const COMPARISON_ROWS = [
-  { feature: "Booking link",       kovra: true,  calendly: true,  dubsado: true,       stack: true  },
-  { feature: "CRM / pipeline",     kovra: true,  calendly: false, dubsado: true,       stack: true  },
-  { feature: "Proposals",          kovra: true,  calendly: false, dubsado: true,       stack: true  },
-  { feature: "E-signatures",       kovra: true,  calendly: false, dubsado: true,       stack: true  },
-  { feature: "Invoicing",          kovra: true,  calendly: false, dubsado: "partial",  stack: true  },
-  { feature: "Project management", kovra: true,  calendly: false, dubsado: true,       stack: true  },
-  { feature: "AI website",         kovra: true,  calendly: false, dubsado: false,      stack: false },
-  { feature: "AI writing",         kovra: true,  calendly: false, dubsado: false,      stack: false },
-  { feature: "Monthly cost",       kovra: "$79", calendly: "$16+", dubsado: "$200+",   stack: "$300+" },
+  { feature: "Booking link",          kovra: true,  calendly: true,  dubsado: true,       stack: true  },
+  { feature: "CRM / pipeline",        kovra: true,  calendly: false, dubsado: true,       stack: true  },
+  { feature: "Proposals",             kovra: true,  calendly: false, dubsado: true,       stack: true  },
+  { feature: "E-signatures",          kovra: true,  calendly: false, dubsado: true,       stack: true  },
+  { feature: "Invoicing",             kovra: true,  calendly: false, dubsado: "partial",  stack: true  },
+  { feature: "Project management",    kovra: true,  calendly: false, dubsado: true,       stack: true  },
+  { feature: "Lead discovery",        kovra: true,  calendly: false, dubsado: false,      stack: "partial" },
+  { feature: "Cold email infra",      kovra: true,  calendly: false, dubsado: false,      stack: false },
+  { feature: "Unified outreach inbox",kovra: true,  calendly: false, dubsado: false,      stack: false },
+  { feature: "AI website",            kovra: true,  calendly: false, dubsado: false,      stack: false },
+  { feature: "Monthly cost",          kovra: "$79", calendly: "$16+", dubsado: "$200+",   stack: "$450+" },
 ];
 
 const TESTIMONIALS = [
@@ -170,10 +173,11 @@ function CostPanels() {
       <div style={{ background: C.surface, border: "1px solid rgba(239,68,68,0.15)", borderRadius: 10, padding: 16 }}>
         <p style={{ fontSize: 10, fontWeight: 700, color: "#EF4444", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 12 }}>What you pay now</p>
         {[
+          ["Apollo", "$49/mo"],
+          ["Lemlist", "$99/mo"],
           ["Calendly", "$16/mo"],
           ["Dubsado", "$200/mo"],
           ["DocuSign", "$25/mo"],
-          ["Toggl", "$10/mo"],
           ["Pipedrive", "$15/mo"],
         ].map(([tool, cost]) => (
           <div key={tool} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${C.border}` }}>
@@ -183,7 +187,7 @@ function CostPanels() {
         ))}
         <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 0" }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Total</span>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "#EF4444" }}>$266/mo</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "#EF4444" }}>$404/mo</span>
         </div>
       </div>
 
@@ -196,14 +200,21 @@ function CostPanels() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 10px", borderRadius: 7, background: "rgba(200,164,78,0.08)" }}>
           <Check size={12} color={C.gold} strokeWidth={2.5} />
-          <span style={{ fontSize: 11, color: C.gold, fontWeight: 600 }}>Save $187/mo — $2,244 per year</span>
+          <span style={{ fontSize: 11, color: C.gold, fontWeight: 600 }}>Save $325/mo — $3,900 per year</span>
         </div>
       </div>
 
       {/* Plus what you gain */}
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: 16 }}>
         <p style={{ fontSize: 10, fontWeight: 700, color: C.textSec, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Plus you gain</p>
-        {["AI website + custom domain", "AI-written proposals", "Client portal", "Automations + referrals"].map(f => (
+        {[
+          "Lead engine (2,500 prospects/mo)",
+          "Cold email infra, built and warmed",
+          "Unified inbox — email, LinkedIn, social",
+          "AI website + custom domain",
+          "AI-written proposals",
+          "Client portal + automations",
+        ].map(f => (
           <div key={f} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
             <Check size={11} color={C.gold} strokeWidth={2.5} />
             <span style={{ fontSize: 11, color: C.textSec }}>{f}</span>
@@ -219,8 +230,8 @@ function TypePicker() {
   const [selected, setSelected] = useState("");
   const selectedType = TYPES.find(t => t.label === selected);
   const href = selectedType
-    ? `/wizard?existing=true&fill=${encodeURIComponent(selectedType.fill)}`
-    : "/wizard?existing=true";
+    ? `/wizard/switch?fill=${encodeURIComponent(selectedType.fill)}`
+    : "/wizard/switch";
 
   return (
     <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
@@ -321,7 +332,7 @@ export default function SwitchPage() {
             {!isMobile && (
               <Link href="/auth/login" className="btn-ghost" style={{ fontSize: 13, fontWeight: 500, color: C.textSec, padding: "7px 14px", borderRadius: 7, border: "1px solid transparent" }}>Sign in</Link>
             )}
-            <Link href="/wizard?existing=true" className="btn-cta" style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: "#07070A", background: GRAD, borderRadius: 7, padding: "8px 18px", boxShadow: "0 4px 20px rgba(200,164,78,0.25)" }}>Switch now</Link>
+            <Link href="/wizard/switch" className="btn-cta" style={{ fontFamily: SANS, fontSize: 13, fontWeight: 700, color: "#07070A", background: GRAD, borderRadius: 7, padding: "8px 18px", boxShadow: "0 4px 20px rgba(200,164,78,0.25)" }}>Switch now</Link>
             {isMobile && (
               <button onClick={() => setMenuOpen(o => !o)} style={{ background: "none", border: "none", color: C.text, cursor: "pointer", padding: 6 }}>
                 <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
@@ -362,10 +373,10 @@ export default function SwitchPage() {
             <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Your tools aren&apos;t.</span>
           </h1>
           <p className="a3" style={{ fontSize: "clamp(1rem, 2vw, 1.15rem)", lineHeight: 1.7, color: C.textSec, maxWidth: 500, marginBottom: 44 }}>
-            Replace Calendly, Dubsado, DocuSign, and 8 more with one platform. $79/mo. Everything included.
+            Replace Apollo, Lemlist, Calendly, Dubsado, and 8 more with one platform. Find clients, close them, and run the whole engagement — $79/mo.
           </p>
           <div className="a4" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/wizard?existing=true" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
+            <Link href="/wizard/switch" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>
               Switch to Kovra <ArrowRight size={15} />
             </Link>
             <a href="#compare" className="btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 500, fontSize: 14, color: C.text, background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`, padding: "14px 28px", borderRadius: 9 }}>
@@ -410,7 +421,7 @@ export default function SwitchPage() {
             {[
               {
                 label: "Great month, dead month",
-                desc: "You land 2-3 clients, deliver the work, and then realize you stopped looking for new ones. Revenue swings $2K–$8K with no predictability.",
+                desc: "You land 2-3 clients, deliver the work, and realize you stopped prospecting. Revenue swings $2K–$8K because there's no system keeping your pipeline moving while you're heads-down on work.",
               },
               {
                 label: "Weekends on admin",
@@ -428,6 +439,50 @@ export default function SwitchPage() {
               <div key={p.label} style={{ background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.1)", borderRadius: 14, padding: 28 }}>
                 <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em", color: C.text, marginBottom: 8 }}>{p.label}</h3>
                 <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── OUTREACH ─── */}
+      <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ marginBottom: 56 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Full-cycle</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
+              You can&apos;t manage clients<br />
+              <span style={{ color: C.textSec, fontWeight: 400 }}>you haven&apos;t landed yet.</span>
+            </h2>
+            <p style={{ fontSize: 15, color: C.textSec, marginTop: 10, maxWidth: 520 }}>
+              Most tools help you run existing clients. Kovra also finds you new ones — and keeps your pipeline moving while you deliver.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+            {[
+              {
+                icon: "◎",
+                title: "Lead Engine",
+                desc: "Find 2,500 verified prospects per month — filtered by industry, location, and company size. Push them straight into your CRM with one click. No Apollo subscription.",
+                color: C.gold,
+              },
+              {
+                icon: "⟶",
+                title: "Cold email infra, done for you",
+                desc: "Kovra sets up your sending domain, connects Google Workspace, and runs MailReach warm-up automatically. Real deliverability without paying for Lemlist or Instantly.",
+                color: "#3B82F6",
+              },
+              {
+                icon: "⌁",
+                title: "One inbox for all of it",
+                desc: "Cold email replies, LinkedIn DMs, inbound leads — everything threads into one place. You see the full conversation, not just the last message. No tab-switching.",
+                color: "#22C55E",
+              },
+            ].map(f => (
+              <div key={f.title} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28 }}>
+                <div style={{ fontSize: 22, color: f.color, marginBottom: 16, lineHeight: 1 }}>{f.icon}</div>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em", color: C.text, marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>{f.desc}</p>
               </div>
             ))}
           </div>
@@ -529,7 +584,7 @@ export default function SwitchPage() {
             ))}
           </div>
           <p style={{ fontSize: 12, color: C.textDim, marginTop: 16, textAlign: "center" }}>
-            Calendly $16+/mo · Dubsado $200+/mo · 11 tools combined $300+/mo. Kovra replaces all of them for $79/mo.
+            Apollo $49+/mo · Lemlist $99+/mo · Dubsado $200+/mo · full stack $450+/mo. Kovra replaces all of them for $79/mo.
           </p>
         </div>
       </section>
@@ -575,7 +630,7 @@ export default function SwitchPage() {
           <p style={{ fontSize: 15, color: C.textSec, lineHeight: 1.7, marginBottom: 40 }}>
             You&apos;re already doing the work. Kovra just stops charging you $300/mo to prove it.
           </p>
-          <Link href="/wizard?existing=true" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 15, color: "#07070A", background: GRAD, padding: "16px 36px", borderRadius: 10, boxShadow: "0 8px 40px rgba(200,164,78,0.28)" }}>
+          <Link href="/wizard/switch" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 15, color: "#07070A", background: GRAD, padding: "16px 36px", borderRadius: 10, boxShadow: "0 8px 40px rgba(200,164,78,0.28)" }}>
             Switch to Kovra <ArrowRight size={16} />
           </Link>
           <p style={{ fontSize: 12, color: C.textDim, marginTop: 18 }}>15 free credits on signup. Takes 4 minutes.</p>

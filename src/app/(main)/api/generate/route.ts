@@ -69,8 +69,9 @@ async function handleBuild(body: {
   budget: string;
   bizType: string;
   subtype?: string;
+  siteMode?: string;
 }) {
-  const { userId, concept, skills, time, budget, bizType, subtype } = body;
+  const { userId, concept, skills, time, budget, bizType, subtype, siteMode } = body;
   const resolvedSubtype = subtype || concept.subtype || "";
   const db = createServerClient();
 
@@ -92,17 +93,24 @@ async function handleBuild(body: {
     slug = `${slug}-${suffix}`;
   }
 
-  // 1. Generate brand + site content + business plan ALL in parallel
-  // Site content only uses brand.tone which Claude infers from business context
-  const [brandResult, siteResult, planResult] = await Promise.all([
-    generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
-    generateSiteContent(
-      concept.name, concept.tagline, concept.type, concept.desc, concept.audience, {}
-    ),
-    generateBusinessPlan(
-      concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup
-    ),
-  ]);
+  // 1. Generate brand + business plan (always). Skip site content for workspace-only mode.
+  const workspaceOnly = siteMode === "transfer";
+
+  const generators = workspaceOnly
+    ? [
+        generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
+        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup),
+      ]
+    : [
+        generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
+        generateSiteContent(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, {}),
+        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup),
+      ];
+
+  const results = await Promise.all(generators);
+  const brandResult = results[0];
+  const siteResult = workspaceOnly ? null : results[1];
+  const planResult = workspaceOnly ? results[1] : results[2];
 
   let brand;
   try {
@@ -112,12 +120,14 @@ async function handleBuild(body: {
     brand = match ? JSON.parse(match[0]) : {};
   }
 
-  let siteContent;
-  try {
-    siteContent = JSON.parse(siteResult.content);
-  } catch {
-    const match = siteResult.content.match(/\{[\s\S]*\}/);
-    siteContent = match ? JSON.parse(match[0]) : {};
+  let siteContent = {};
+  if (siteResult) {
+    try {
+      siteContent = JSON.parse(siteResult.content);
+    } catch {
+      const match = siteResult.content.match(/\{[\s\S]*\}/);
+      siteContent = match ? JSON.parse(match[0]) : {};
+    }
   }
 
   let businessPlan;
@@ -161,9 +171,8 @@ async function handleBuild(body: {
 
   // 5. Log generations for cost tracking (fire-and-forget)
   const generations = [
-    { type: "concepts", ...brandResult },
     { type: "brand", ...brandResult },
-    { type: "site_content", ...siteResult },
+    ...(siteResult ? [{ type: "site_content", ...siteResult }] : []),
     { type: "business_plan", ...planResult },
   ];
 
@@ -181,8 +190,12 @@ async function handleBuild(body: {
     )
   ).catch((err) => console.error("[generate] Logging error:", err));
 
-  // 6. Generate images in background (don't block response)
-  const productInfos = (siteContent.products || []).slice(0, 3).map((p: { name: string; desc: string }) => ({
+  // 6. Generate images in background — only when site is being built
+  if (workspaceOnly) {
+    return NextResponse.json({ business, businessId: business.id, siteUrl: null });
+  }
+
+  const productInfos = ((siteContent as { products?: { name: string; desc: string }[] }).products || []).slice(0, 3).map((p: { name: string; desc: string }) => ({
     name: p.name,
     desc: p.desc,
   }));
