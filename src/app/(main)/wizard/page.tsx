@@ -62,7 +62,7 @@ function WizardContent() {
   const QUESTION_STEPS = isExisting ? EXISTING_STEPS : NEW_STEPS;
 
   const [step, setStep] = useState<Step>(QUESTION_STEPS[0]);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(params.get("fill") || "");
   const [bizName, setBizName] = useState("");
   const [nameSuggestions, setNameSuggestions] = useState<string[]>([]);
   const [loadingNames, setLoadingNames] = useState(false);
