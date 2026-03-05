@@ -43,12 +43,12 @@ const ROLES = [
 ];
 
 const FEATURES = [
-  { title: "Your own booking link", desc: "Clients book directly. No back-and-forth, no Calendly subscription.", accent: C.gold },
-  { title: "AI-written proposals", desc: "Describe the project. Kovra writes the proposal — deliverables, timeline, pricing.", accent: "#3B82F6" },
-  { title: "E-signed contracts", desc: "Legally binding. Client signs from any device. Auto-stored.", accent: "#22C55E" },
-  { title: "Online invoicing", desc: "Send invoices, collect payment via card or bank. Deposits and payment plans built in.", accent: "#8B5CF6" },
-  { title: "Client portal", desc: "Clients see their projects, files, and invoices in one clean place.", accent: "#F97316" },
-  { title: "AI website", desc: "A full professional site in 4 minutes. Custom domain included.", accent: C.gold },
+  { title: "Your own booking link", desc: "Send it anywhere. Looks like you've been running a business for years — not a side hustle.", accent: C.gold },
+  { title: "AI-written proposals", desc: "Describe the project. Kovra writes the proposal. You send something that actually closes.", accent: "#3B82F6" },
+  { title: "E-signed contracts", desc: "Legally binding. Professional. Client signs from any device — no PDFs, no printing.", accent: "#22C55E" },
+  { title: "Online invoicing", desc: "Branded invoices paid by card or bank. Not PayPal. Not a Google Form.", accent: "#8B5CF6" },
+  { title: "Client portal", desc: "Clients log in and see their projects, files, and invoices. You look like an agency from day one.", accent: "#F97316" },
+  { title: "AI website", desc: "Full professional site in 4 minutes. Looks like you paid $10K for it. Custom domain included.", accent: C.gold },
 ];
 
 const BEFORE_AFTER = [
@@ -379,7 +379,7 @@ export default function StartPage() {
             <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>a salary.</span>
           </h1>
           <p className="a3" style={{ fontSize: "clamp(1rem, 2vw, 1.15rem)", lineHeight: 1.7, color: C.textSec, maxWidth: 500, marginBottom: 44 }}>
-            Kovra gives you everything to launch, run, and grow a solo service business — before you ever quit your 9-5.
+            You&apos;ve been ready for a while. The only thing missing was something real to show people — a website, a booking link, a way to send a proper proposal. Kovra builds all of it in 4 minutes.
           </p>
           <div className="a4" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/wizard" className="btn-cta" style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: SANS, fontWeight: 700, fontSize: 14, color: "#07070A", background: GRAD, padding: "14px 28px", borderRadius: 9, boxShadow: "0 6px 28px rgba(200,164,78,0.30)" }}>

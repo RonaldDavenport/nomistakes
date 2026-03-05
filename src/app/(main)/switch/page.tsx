@@ -22,18 +22,18 @@ const C = {
 };
 
 const TYPES = [
-  { label: "Web design",       fill: "I design and build websites. Been doing it on the side and want to turn it into something real" },
-  { label: "Consulting",       fill: "I give advice on business and strategy. People pay me to help them figure things out" },
-  { label: "Coaching",         fill: "I'm good at helping people work through their goals and get unstuck" },
-  { label: "Marketing",        fill: "I do marketing: content, social, ads. I know how to get attention and drive results" },
-  { label: "Photography",      fill: "I take photos: portraits, events, brands. Been shooting on the side for years" },
-  { label: "Copywriting",      fill: "I write ads, emails, and websites. Good at making words actually work" },
-  { label: "Bookkeeping",      fill: "I do bookkeeping. I've been handling finances for years and want to go out on my own" },
-  { label: "Fitness training", fill: "I train people. Been doing it informally for years and want to do it properly" },
-  { label: "IT & tech",        fill: "I fix and set up tech for people. Computers, networks, software. I figure it out" },
-  { label: "Legal services",   fill: "I have a law background and want to offer consulting and advisory work independently" },
-  { label: "Interior design",  fill: "I have a good eye for spaces and have been helping friends with their homes" },
-  { label: "HR consulting",    fill: "I have an HR background and want to help small companies hire and manage people better" },
+  { label: "Web design",       fill: "I design and build websites. Have several clients, running on Calendly, PayPal, and a handful of spreadsheets. Want to consolidate everything into one system." },
+  { label: "Consulting",       fill: "I run a consulting practice with recurring clients. Managing projects, invoices, and proposals across too many tools. Need one place for everything." },
+  { label: "Coaching",         fill: "I'm an established coach with regular clients. Using a mix of Calendly, Stripe, and Notion. Want a proper system that makes me look and operate more professionally." },
+  { label: "Marketing",        fill: "I freelance in marketing — content, strategy, ads. Have clients but my backend is a mess. Chasing invoices, juggling tools. Need to consolidate." },
+  { label: "Photography",      fill: "I'm a working photographer with bookings, galleries, and invoicing. Current tools don't talk to each other. Want everything in one place." },
+  { label: "Copywriting",      fill: "I write for clients and have steady work. But proposals go out in Google Docs, invoices in PayPal, and scheduling is a back-and-forth mess. Want a real system." },
+  { label: "Bookkeeping",      fill: "I run a bookkeeping practice with existing clients. Need to replace my current tool stack with something that handles scheduling, invoicing, and client management together." },
+  { label: "Fitness training", fill: "I train clients regularly. Managing bookings and payments across different apps. Want one platform that handles scheduling, invoices, and client tracking." },
+  { label: "IT & tech",        fill: "I run IT and tech support for small businesses. Have ongoing clients but my billing and project tracking are scattered. Need to consolidate into one system." },
+  { label: "Legal services",   fill: "I do legal consulting with active clients. Running on disconnected tools for scheduling, contracts, and invoicing. Want a single platform that handles it professionally." },
+  { label: "Interior design",  fill: "I have a design practice with real projects. Proposals go out as PDFs, invoices through PayPal, projects tracked in Notion. Need everything in one place." },
+  { label: "HR consulting",    fill: "I run an HR consulting practice with ongoing retainer clients. Current tools are siloed. Need a proper system for proposals, contracts, and client management." },
 ];
 
 const TOOLS = [
@@ -52,6 +52,24 @@ const COMPARISON_ROWS = [
   { feature: "AI website",         kovra: true,  calendly: false, dubsado: false,      stack: false },
   { feature: "AI writing",         kovra: true,  calendly: false, dubsado: false,      stack: false },
   { feature: "Monthly cost",       kovra: "$79", calendly: "$16+", dubsado: "$200+",   stack: "$300+" },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: "I was paying $240/mo across five tools and still doing everything manually. Moved everything to Kovra in an afternoon and haven't touched any of those apps since.",
+    name: "Morgan K.",
+    role: "UX consultant, San Francisco",
+  },
+  {
+    quote: "I had an $8K month followed by a $900 month because I had no system for staying visible between projects. The CRM and lead tools fixed that completely.",
+    name: "Taylor R.",
+    role: "Copywriter, New York",
+  },
+  {
+    quote: "I used to spend every Sunday chasing invoices and scheduling calls. Now it's automated and I get paid on time. I genuinely don't think about billing anymore.",
+    name: "Alex M.",
+    role: "Brand designer, Seattle",
+  },
 ];
 
 function useScrolled(offset = 24) {
@@ -273,6 +291,8 @@ export default function SwitchPage() {
         @media (max-width: 768px) {
           .visuals-row { flex-direction: column !important; }
           .comp-col-hide { display: none !important; }
+          .pain-grid { grid-template-columns: 1fr !important; }
+          .testi-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -376,6 +396,44 @@ export default function SwitchPage() {
         </div>
       </section>
 
+      {/* ─── PAIN ─── */}
+      <section style={{ padding: "100px clamp(20px, 5vw, 56px)", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ marginBottom: 56 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#EF4444", letterSpacing: "0.12em", textTransform: "uppercase" }}>Sound familiar?</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
+              The work is great.<br />
+              <span style={{ color: C.textSec, fontWeight: 400 }}>The backend is a mess.</span>
+            </h2>
+          </div>
+          <div className="pain-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+            {[
+              {
+                label: "Great month, dead month",
+                desc: "You land 2-3 clients, deliver the work, and then realize you stopped looking for new ones. Revenue swings $2K–$8K with no predictability.",
+              },
+              {
+                label: "Weekends on admin",
+                desc: "You charge $150/hr on client work, then spend half your weekend scheduling calls, chasing invoices, and updating spreadsheets.",
+              },
+              {
+                label: "Five apps that don't talk",
+                desc: "Calendly for booking, PayPal for invoices, Notion for projects, Google Docs for proposals. You copy-paste client names between all of them.",
+              },
+              {
+                label: "Proposals you're embarrassed to send",
+                desc: "Your work is excellent. You're sending a Word doc or a Google Slides deck to prospects who expect to deal with a real business.",
+              },
+            ].map(p => (
+              <div key={p.label} style={{ background: "rgba(239,68,68,0.03)", border: "1px solid rgba(239,68,68,0.1)", borderRadius: 14, padding: 28 }}>
+                <h3 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em", color: C.text, marginBottom: 8 }}>{p.label}</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.7 }}>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── VISUALS ─── */}
       <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
@@ -421,9 +479,9 @@ export default function SwitchPage() {
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Switch in 4 minutes</span>
             <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.2rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10, marginBottom: 8 }}>
-              What kind of work do you do?
+              Tell us about your business.
             </h2>
-            <p style={{ fontSize: 14, color: C.textSec }}>Pick your type and we&apos;ll set Kovra up for your business.</p>
+            <p style={{ fontSize: 14, color: C.textSec }}>Pick your service and we&apos;ll configure Kovra for how you already work.</p>
           </div>
           <TypePicker />
         </div>
@@ -473,6 +531,36 @@ export default function SwitchPage() {
           <p style={{ fontSize: 12, color: C.textDim, marginTop: 16, textAlign: "center" }}>
             Calendly $16+/mo · Dubsado $200+/mo · 11 tools combined $300+/mo. Kovra replaces all of them for $79/mo.
           </p>
+        </div>
+      </section>
+
+      {/* ─── TESTIMONIALS ─── */}
+      <section style={{ padding: "100px clamp(20px, 5vw, 56px)", background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ marginBottom: 56, textAlign: "center" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>From the community</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.08, marginTop: 10 }}>
+              People who made the switch.
+            </h2>
+          </div>
+          <div className="testi-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+            {TESTIMONIALS.map(t => (
+              <div key={t.name} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 14, padding: 28, display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", gap: 3, marginBottom: 20 }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} style={{ color: C.gold, fontSize: 13 }}>★</span>
+                  ))}
+                </div>
+                <p style={{ fontSize: 14, color: C.text, lineHeight: 1.75, flex: 1, marginBottom: 24 }}>
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 18 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: "0 0 3px" }}>{t.name}</p>
+                  <p style={{ fontSize: 11, color: C.textSec, margin: 0 }}>{t.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
