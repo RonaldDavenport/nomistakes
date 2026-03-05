@@ -34,6 +34,9 @@ interface Business {
   tagline: string;
   type: string;
   audience: string;
+  subtype?: string;
+  persona?: "grinder" | "operator" | "scaler" | null;
+  quiz_experience?: string;
   brand: {
     colors?: { primary: string; secondary: string; accent: string; background: string; text: string };
     logo_url?: string;
@@ -1129,14 +1132,27 @@ export default function OnboardingPage() {
                   </svg>
                 </div>
 
-                <div>
-                  <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
-                    {business.name} is ready.
-                  </h2>
-                  <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
-                    Your workspace is live. Start booking clients, sending invoices, and growing.
-                  </p>
-                </div>
+                {(() => {
+                  const subtypeLabel = business.subtype === "consulting" ? "consulting practice"
+                    : business.subtype === "coaching" ? "coaching practice"
+                    : business.subtype === "agency" ? "agency"
+                    : "business";
+                  const personaSubtext = business.persona === "grinder"
+                    ? "Your site is live and your workspace is ready. Your first priority: landing your first clients. The checklist walks you through it step by step."
+                    : business.persona === "scaler"
+                    ? "Your workspace is built for scale. Start by importing your client base — then use the lead engine and pipeline to grow from there."
+                    : "Import your existing clients first — it takes about 10 minutes and unlocks the full CRM. Then use proposals and invoicing to run everything from one place.";
+                  return (
+                    <div>
+                      <h2 style={{ fontFamily: T.h, fontSize: "clamp(1.6rem, 4vw, 2rem)", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", lineHeight: 1.15, marginBottom: 8 }}>
+                        Your {subtypeLabel} is ready.
+                      </h2>
+                      <p style={{ color: T.text2, fontSize: "0.9rem", lineHeight: 1.6 }}>
+                        {personaSubtext}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 {(() => {
                   const siteUrl = business.deployed_url || business.live_url || `kovra-${slugValue || business.slug}.vercel.app`;
@@ -1369,7 +1385,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
     </div>
   );
 
-  async function handleChoosePlan(planId: "starter" | "growth") {
+  async function handleChoosePlan(planId: "solo" | "scale") {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -1473,7 +1489,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </div>
 
               <button
-                onClick={() => handleChoosePlan("starter")}
+                onClick={() => handleChoosePlan("solo")}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -1546,7 +1562,7 @@ function UpsellModal({ businessId, onClose, onSkip }: { businessId: string; onCl
               </div>
 
               <button
-                onClick={() => handleChoosePlan("growth")}
+                onClick={() => handleChoosePlan("scale")}
                 style={{
                   width: "100%",
                   padding: "12px 0",

@@ -20,6 +20,43 @@ interface CreditTransaction {
   created_at: string;
 }
 
+function StripeConnectButton({ businessId }: { businessId: string }) {
+  const [connecting, setConnecting] = useState(false);
+
+  async function handleConnect() {
+    setConnecting(true);
+    try {
+      const res = await fetch("/api/stripe/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessId }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch { /* ignore */ }
+    setConnecting(false);
+  }
+
+  return (
+    <button
+      onClick={handleConnect}
+      disabled={connecting}
+      style={{
+        padding: "7px 16px", borderRadius: 8,
+        fontSize: "0.8rem", fontWeight: 600,
+        background: connecting ? "rgba(255,255,255,0.05)" : CTA_GRAD,
+        color: connecting ? T.text3 : "#09090B",
+        border: "none", cursor: connecting ? "not-allowed" : "pointer",
+        opacity: connecting ? 0.6 : 1,
+        fontFamily: T.h, flexShrink: 0,
+        transition: "opacity 0.15s",
+      }}
+    >
+      {connecting ? "Connecting..." : "Connect Stripe"}
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,6 +77,14 @@ export default function SettingsPage() {
   const [removingDomain, setRemovingDomain] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [deployMsg, setDeployMsg] = useState("");
+
+  useEffect(() => {
+    // Stripe returned after onboarding — refresh to pick up connected account
+    if (searchParams.get("stripe") === "connected") {
+      refreshBusiness?.();
+      router.replace(`?tab=stripe`);
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === "credits" && userId && business) {
@@ -370,28 +415,38 @@ export default function SettingsPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold mb-4" style={{ color: T.text, fontFamily: T.h }}>Integrations</h2>
         <div className="space-y-3">
-          {[
-            { label: "Stripe Payments", desc: business.stripe_account_id ? "Connected" : "Accept payments from customers", connected: !!business.stripe_account_id, status: business.stripe_account_id ? "Connected" : "Not connected" },
-            { label: "Calendly", desc: business.calendly_url || "Schedule meetings with clients", connected: !!business.calendly_url, status: business.calendly_url ? "Connected" : "Not set" },
-            { label: "Business Email", desc: business.business_email || "Professional email address", connected: !!business.business_email, status: business.business_email ? "Set" : "Not set" },
-          ].map((item) => (
-            <div key={item.label} className="p-4 rounded-xl flex items-center justify-between" style={{ ...glassCard }}>
-              <div>
-                <p className="text-sm font-medium" style={{ color: T.text }}>{item.label}</p>
-                <p className="text-xs" style={{ color: T.text3 }}>{item.desc}</p>
-              </div>
-              <span
-                className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                style={
-                  item.connected
-                    ? { background: "rgba(34,197,94,0.10)", color: T.green }
-                    : { background: T.glass, color: T.text3 }
-                }
-              >
-                {item.status}
-              </span>
+
+          {/* Stripe */}
+          <div className="p-4 rounded-xl flex items-center justify-between" style={{ ...glassCard }}>
+            <div>
+              <p className="text-sm font-medium" style={{ color: T.text }}>Stripe Payments</p>
+              <p className="text-xs" style={{ color: T.text3 }}>
+                {business.stripe_account_id ? "Connected — invoices and card payments are live" : "Accept card payments and send branded invoices"}
+              </p>
             </div>
-          ))}
+            {business.stripe_account_id ? (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(34,197,94,0.10)", color: T.green }}>
+                Connected
+              </span>
+            ) : (
+              <StripeConnectButton businessId={business.id} />
+            )}
+          </div>
+
+          {/* Business Email */}
+          <div className="p-4 rounded-xl flex items-center justify-between" style={{ ...glassCard }}>
+            <div>
+              <p className="text-sm font-medium" style={{ color: T.text }}>Business Email</p>
+              <p className="text-xs" style={{ color: T.text3 }}>{business.business_email || "Professional email address"}</p>
+            </div>
+            <span
+              className="px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={business.business_email ? { background: "rgba(34,197,94,0.10)", color: T.green } : { background: T.glass, color: T.text3 }}
+            >
+              {business.business_email ? "Set" : "Not set"}
+            </span>
+          </div>
+
         </div>
       </section>
 

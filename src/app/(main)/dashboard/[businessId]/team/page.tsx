@@ -74,12 +74,12 @@ export default function TeamPage() {
   const pending = members.filter((m) => !m.accepted_at).length;
 
   return (
-    <PaywallGate requiredPlan="growth" teaser={{ headline: "Team Members", description: "Invite team members to collaborate on your business.", bullets: ["Unlimited team members", "Role-based access", "Email invitations"] }}>
+    <PaywallGate requiredPlan="scale" teaser={{ headline: "Team Members", description: "Invite team members to collaborate on your business.", bullets: ["Unlimited team members", "Role-based access", "Email invitations"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Team</h1>
-            <p style={{ fontSize: 13, color: T.subtitle, marginTop: 4 }}>Invite and manage team members.</p>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Team</h1>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Invite and manage team members.</p>
           </div>
           <button onClick={() => setShowInvite(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             + Invite Member
@@ -87,51 +87,62 @@ export default function TeamPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", gap: 40, marginBottom: 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { label: "Active", value: active },
-            { label: "Pending Invite", value: pending },
-          ].map((s, i, arr) => (
-            <div key={s.label} style={{ display: "flex", gap: 40, alignItems: "center" }}>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0 }}>{s.value}</p>
-              </div>
-              {i < arr.length - 1 && <div style={{ width: 1, height: 40, background: T.rule }} />}
+            { label: "Total Members", value: members.length, color: T.text },
+            { label: "Active", value: active, color: T.green },
+            { label: "Pending Invite", value: pending, color: T.gold },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
-
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <p style={{ color: T.text3, fontSize: 13 }}>Loading...</p>
         ) : members.length === 0 ? (
-          <div style={{ maxWidth: 480, paddingTop: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8 }}>No team members yet</h2>
-            <p style={{ fontSize: 14, color: T.subtitle, lineHeight: 1.6, marginBottom: 24 }}>
-              Invite team members to collaborate on your business. They'll receive an email with a link to accept the invitation.
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              👥
+            </div>
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>No team members yet</h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 340, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              Invite team members to collaborate. They'll receive an email to accept the invitation.
             </p>
-            <button onClick={() => setShowInvite(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={() => setShowInvite(true)} style={{ display: "inline-block", padding: "10px 22px", borderRadius: 9, background: CTA_GRAD, color: "#09090B", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
               Invite First Member
             </button>
           </div>
         ) : (
-          <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.rule}`, fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", gap: 12, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               <span>Email</span>
               <span>Role</span>
               <span>Status</span>
               <span style={{ textAlign: "right" }}></span>
             </div>
-            {members.map((m) => (
-              <div key={m.id} style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", gap: 12, padding: "14px 0", borderBottom: `1px solid ${T.rule}`, alignItems: "center" }}>
+            {members.map((m, idx) => (
+              <div key={m.id} style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px 60px", gap: 12, padding: "14px 16px", borderTop: idx > 0 ? `1px solid ${T.border}` : "none", alignItems: "center" }}>
                 <span style={{ fontSize: 13, color: T.text }}>{m.invited_email}</span>
-                <span style={{ fontSize: 12, color: T.subtitle, textTransform: "capitalize" }}>{m.role}</span>
-                <span style={{ fontSize: 12, fontWeight: 500, color: m.accepted_at ? T.green : T.gold }}>
+                <span style={{ fontSize: 12, color: T.text2, textTransform: "capitalize" }}>{m.role}</span>
+                <span style={{
+                  display: "inline-flex", alignItems: "center",
+                  fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                  background: m.accepted_at ? "rgba(34,197,94,0.12)" : "rgba(200,164,78,0.12)",
+                  color: m.accepted_at ? T.green : T.gold,
+                }}>
                   {m.accepted_at ? "Active" : "Pending"}
                 </span>
-                <button onClick={() => remove(m.id, m.invited_email)} style={{ fontSize: 12, color: T.subtitle, background: "none", border: "none", cursor: "pointer", textAlign: "right" }}>
+                <button onClick={() => remove(m.id, m.invited_email)} style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", textAlign: "right" }}>
                   Remove
                 </button>
               </div>
@@ -146,11 +157,11 @@ export default function TeamPage() {
             <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 440, background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, padding: 28, zIndex: 51 }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>Invite Team Member</h2>
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Email Address *</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Email Address *</span>
                 <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} style={inputStyle} placeholder="teammate@example.com" />
               </label>
               <label style={{ display: "block", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Role</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Role</span>
                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} style={{ ...inputStyle, appearance: "none" as const }}>
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
@@ -158,7 +169,7 @@ export default function TeamPage() {
               </label>
               {error && <p style={{ fontSize: 13, color: T.red, marginBottom: 12 }}>{error}</p>}
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button onClick={() => { setShowInvite(false); setError(""); }} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.subtitle, cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => { setShowInvite(false); setError(""); }} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.text2, cursor: "pointer" }}>Cancel</button>
                 <button onClick={invite} disabled={saving || !inviteEmail.trim()} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 8, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Sending..." : "Send Invite"}
                 </button>

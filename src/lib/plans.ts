@@ -1,5 +1,7 @@
 // Plan tier definitions, feature gates, limits, and credit allocations
 
+export type PlanId = "free" | "solo" | "scale";
+
 export interface PlanDefinition {
   id: string;
   name: string;
@@ -23,7 +25,7 @@ const FREE_FEATURES = [
   "scheduling",
 ];
 
-const STARTER_FEATURES = [
+const SOLO_FEATURES = [
   ...FREE_FEATURES,
   "custom_domain",
   "remove_branding",
@@ -50,8 +52,8 @@ const STARTER_FEATURES = [
   "site_analytics",
 ];
 
-const GROWTH_FEATURES = [
-  ...STARTER_FEATURES,
+const SCALE_FEATURES = [
+  ...SOLO_FEATURES,
   "course_content",
   "video_scripts",
   "ebook_chapters",
@@ -62,7 +64,6 @@ const GROWTH_FEATURES = [
   "capabilities_deck",
   "ad_copy",
   "ad_images",
-  "ugc_creation",
   "extra_product_images",
   "webinar_scripts",
   "evergreen_funnels",
@@ -71,10 +72,6 @@ const GROWTH_FEATURES = [
   "push_notifications",
   "multi_channel_inbox",
   "ad_funnel_orchestrator",
-];
-
-const PRO_FEATURES = [
-  ...GROWTH_FEATURES,
   "white_label",
   "api_access",
   "dedicated_support",
@@ -95,9 +92,9 @@ export const PLANS: Record<string, PlanDefinition> = {
     },
     features: FREE_FEATURES,
   },
-  starter: {
-    id: "starter",
-    name: "Starter",
+  solo: {
+    id: "solo",
+    name: "Solo",
     price: 7900,
     monthlyCredits: 500,
     limits: {
@@ -106,11 +103,11 @@ export const PLANS: Record<string, PlanDefinition> = {
       blogPostsPerMonth: 10,
       aiImagesPerBusiness: 5,
     },
-    features: STARTER_FEATURES,
+    features: SOLO_FEATURES,
   },
-  growth: {
-    id: "growth",
-    name: "Growth",
+  scale: {
+    id: "scale",
+    name: "Scale",
     price: 19900,
     monthlyCredits: 2500,
     limits: {
@@ -119,20 +116,7 @@ export const PLANS: Record<string, PlanDefinition> = {
       blogPostsPerMonth: 50,
       aiImagesPerBusiness: 10,
     },
-    features: GROWTH_FEATURES,
-  },
-  pro: {
-    id: "pro",
-    name: "Scale",
-    price: 19900,
-    monthlyCredits: Infinity,
-    limits: {
-      businesses: Infinity,
-      chatMessagesPerDay: Infinity,
-      blogPostsPerMonth: Infinity,
-      aiImagesPerBusiness: Infinity,
-    },
-    features: PRO_FEATURES,
+    features: SCALE_FEATURES,
   },
 };
 
@@ -151,7 +135,7 @@ export function getLimit(planId: string, key: keyof PlanDefinition["limits"]): n
 }
 
 // Check if a plan can access a required plan level
-const PLAN_HIERARCHY = ["free", "starter", "growth", "pro"];
+const PLAN_HIERARCHY = ["free", "solo", "scale"];
 
 export function meetsRequiredPlan(userPlan: string, requiredPlan: string): boolean {
   const userIdx = PLAN_HIERARCHY.indexOf(userPlan);
@@ -160,5 +144,5 @@ export function meetsRequiredPlan(userPlan: string, requiredPlan: string): boole
 }
 
 export function getUpgradePlan(requiredPlan: string): PlanDefinition {
-  return PLANS[requiredPlan] || PLANS.starter;
+  return PLANS[requiredPlan] || PLANS.solo;
 }

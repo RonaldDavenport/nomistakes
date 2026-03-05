@@ -95,6 +95,21 @@ export async function PATCH(req: Request) {
       }
       case "meet-your-coach": {
         update.onboarding_completed = true;
+        // Activate 14-day trial on first onboarding completion (no CC required)
+        const { data: biz } = await db
+          .from("businesses")
+          .select("user_id")
+          .eq("id", businessId)
+          .single();
+        if (biz?.user_id) {
+          await db.from("profiles")
+            .update({
+              trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              trial_activated_at: new Date().toISOString(),
+            })
+            .eq("id", biz.user_id)
+            .is("trial_ends_at", null); // Only set once
+        }
         break;
       }
       case "claim": {

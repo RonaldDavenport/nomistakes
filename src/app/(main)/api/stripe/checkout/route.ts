@@ -3,14 +3,13 @@ import Stripe from "stripe";
 
 export const runtime = "nodejs";
 
-const VALID_PLANS = ["starter", "growth", "pro"] as const;
+const VALID_PLANS = ["solo", "scale"] as const;
 type PaidPlan = (typeof VALID_PLANS)[number];
 
 function getPriceId(planId: PaidPlan): string | undefined {
   const map: Record<PaidPlan, string | undefined> = {
-    starter: process.env.STRIPE_STARTER_PRICE_ID,
-    growth: process.env.STRIPE_GROWTH_PRICE_ID,
-    pro: process.env.STRIPE_PRO_PRICE_ID,
+    solo: process.env.STRIPE_SOLO_PRICE_ID ?? process.env.STRIPE_STARTER_PRICE_ID,
+    scale: process.env.STRIPE_SCALE_PRICE_ID ?? process.env.STRIPE_GROWTH_PRICE_ID,
   };
   return map[planId];
 }

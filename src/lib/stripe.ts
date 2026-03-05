@@ -18,12 +18,13 @@ function getStripe(): Stripe {
 // Platform fee percentage (e.g., 0.05 = 5%)
 const PLATFORM_FEE_PERCENT = 0.05;
 
-// Create a Stripe Connect account for a new business (controller model for embedded components)
+// Create a Stripe Express connected account for a business
 export async function createConnectedAccount(
   businessName: string,
   email: string
 ): Promise<{ accountId: string }> {
   const account = await getStripe().accounts.create({
+    type: "express",
     country: "US",
     business_profile: {
       name: businessName,
@@ -33,15 +34,24 @@ export async function createConnectedAccount(
       card_payments: { requested: true },
       transfers: { requested: true },
     },
-    controller: {
-      stripe_dashboard: { type: "none" },
-      fees: { payer: "application" },
-      losses: { payments: "stripe" },
-      requirement_collection: "stripe",
-    },
-  } as Stripe.AccountCreateParams);
+  });
 
   return { accountId: account.id };
+}
+
+// Create an AccountLink for hosted Stripe onboarding
+export async function createAccountLink(
+  accountId: string,
+  refreshUrl: string,
+  returnUrl: string
+): Promise<{ url: string }> {
+  const link = await getStripe().accountLinks.create({
+    account: accountId,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
+    type: "account_onboarding",
+  });
+  return { url: link.url };
 }
 
 // Create an Account Session for Stripe embedded components
@@ -176,9 +186,9 @@ export function isStripeConfigured(): boolean {
 
 function getPriceIdForPlan(planId: string): string | null {
   const map: Record<string, string | undefined> = {
-    starter: process.env.STRIPE_STARTER_PRICE_ID,
-    growth: process.env.STRIPE_GROWTH_PRICE_ID,
-    pro: process.env.STRIPE_PRO_PRICE_ID,
+    // New tier names (Solo/Scale) — env vars may still use old names during transition
+    solo: process.env.STRIPE_SOLO_PRICE_ID ?? process.env.STRIPE_STARTER_PRICE_ID,
+    scale: process.env.STRIPE_SCALE_PRICE_ID ?? process.env.STRIPE_GROWTH_PRICE_ID,
   };
   return map[planId] || null;
 }

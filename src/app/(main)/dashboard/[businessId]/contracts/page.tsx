@@ -94,13 +94,13 @@ export default function ContractsPage() {
   const signed = contracts.filter((c) => c.signed_at).length;
 
   return (
-    <PaywallGate requiredPlan="starter" teaser={{ headline: "Contracts & E-Signatures", description: "Send contracts, collect legally binding e-signatures.", bullets: ["Create contracts", "Send signing links", "Track signature status"] }}>
+    <PaywallGate requiredPlan="solo" teaser={{ headline: "Contracts & E-Signatures", description: "Send contracts, collect legally binding e-signatures.", bullets: ["Create contracts", "Send signing links", "Track signature status"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Contracts</h1>
-            <p style={{ fontSize: 13, color: T.subtitle, marginTop: 4, margin: 0 }}>Send and track client contracts with e-signatures.</p>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Contracts</h1>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4, margin: "4px 0 0" }}>Send and track client contracts with e-signatures.</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
@@ -111,51 +111,65 @@ export default function ContractsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", gap: 40, marginBottom: 28 }}>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Pending Signature</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0 }}>{pending}</p>
-          </div>
-          <div style={{ width: 1, background: T.rule }} />
-          <div style={{ paddingLeft: 0 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Signed</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: T.green, margin: 0 }}>{signed}</p>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+          {[
+            { label: "Total", value: contracts.length, color: T.text },
+            { label: "Pending Signature", value: pending, color: T.gold },
+            { label: "Signed", value: signed, color: T.green },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
+            </div>
+          ))}
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
-
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <p style={{ color: T.text3, fontSize: 13 }}>Loading...</p>
         ) : contracts.length === 0 ? (
-          <div style={{ maxWidth: 480, paddingTop: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8 }}>No contracts yet</h2>
-            <p style={{ fontSize: 14, color: T.subtitle, lineHeight: 1.6, marginBottom: 24 }}>
-              Create a contract, send the signing link to your client, and get a legally binding e-signature in minutes.
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              📄
+            </div>
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>No contracts yet</h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 320, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              Create a contract, send the signing link to your client, and get an e-signature in minutes.
             </p>
-            <button onClick={() => setShowCreate(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={() => setShowCreate(true)} style={{ display: "inline-block", padding: "10px 22px", borderRadius: 9, background: CTA_GRAD, color: "#09090B", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
               Create First Contract
             </button>
           </div>
         ) : (
-          <div>
+          <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
             {/* Table header */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 120px", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.rule}`, fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 120px", gap: 12, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", background: T.bgEl }}>
               <span>Title</span>
               <span>Client</span>
               <span>Status</span>
               <span style={{ textAlign: "right" }}>Actions</span>
             </div>
-            {contracts.map((c) => (
-              <div key={c.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 120px", gap: 12, padding: "14px 0", borderBottom: `1px solid ${T.rule}`, alignItems: "center" }}>
+            {contracts.map((c, idx) => (
+              <div key={c.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 100px 120px", gap: 12, padding: "14px 16px", borderTop: idx > 0 ? `1px solid ${T.border}` : "none", alignItems: "center" }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: T.text, margin: 0 }}>{c.title}</p>
-                  <p style={{ fontSize: 12, color: T.subtitle, margin: 0, marginTop: 2 }}>
+                  <p style={{ fontSize: 12, color: T.text3, margin: 0, marginTop: 2 }}>
                     {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 </div>
                 <span style={{ fontSize: 13, color: T.text2 }}>{c.contacts?.name || "—"}</span>
-                <span style={{ fontSize: 12, fontWeight: 500, color: c.signed_at ? T.green : T.gold }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center",
+                  fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 100,
+                  background: c.signed_at ? "rgba(34,197,94,0.12)" : "rgba(200,164,78,0.12)",
+                  color: c.signed_at ? T.green : T.gold,
+                }}>
                   {c.signed_at ? "Signed" : "Pending"}
                 </span>
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
@@ -167,7 +181,7 @@ export default function ContractsPage() {
                   </button>
                   <button
                     onClick={() => deleteContract(c.id)}
-                    style={{ fontSize: 12, color: T.subtitle, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                   >
                     Delete
                   </button>
@@ -185,12 +199,12 @@ export default function ContractsPage() {
               <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>New Contract</h2>
 
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Contract Title *</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Contract Title *</span>
                 <input value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} placeholder="e.g. Web Design Agreement" />
               </label>
 
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Client (optional)</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Client (optional)</span>
                 <select value={contactId} onChange={(e) => setContactId(e.target.value)} style={{ ...inputStyle, appearance: "none" as const }}>
                   <option value="">Select a client...</option>
                   {contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -198,7 +212,7 @@ export default function ContractsPage() {
               </label>
 
               <label style={{ display: "block", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Contract Body *</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Contract Body *</span>
                 <textarea
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
@@ -209,7 +223,7 @@ export default function ContractsPage() {
               </label>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.subtitle, cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.text2, cursor: "pointer" }}>Cancel</button>
                 <button onClick={createContract} disabled={saving || !title.trim() || !body.trim()} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 8, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Creating..." : "Create Contract"}
                 </button>

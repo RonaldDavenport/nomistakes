@@ -184,9 +184,9 @@ export default function DashboardOverview() {
       {businesses.length === 0 ? (
         <div className="text-center py-20 rounded-xl border border-white/5 bg-surface/50">
           <p className="text-zinc-400 text-lg mb-2">No businesses yet</p>
-          <p className="text-zinc-600 text-sm mb-6">Answer 4 questions and AI builds your first business in 60 seconds.</p>
+          <p className="text-zinc-600 text-sm mb-6">Add your business and Kovra sets up your workspace in minutes.</p>
           <Link href="/wizard" className="btn-primary px-8 py-3 rounded-xl text-sm font-bold text-white inline-block">
-            Build Your First Business
+            Add Your Business
           </Link>
         </div>
       ) : (

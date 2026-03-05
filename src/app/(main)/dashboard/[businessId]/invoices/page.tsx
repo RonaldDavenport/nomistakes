@@ -39,8 +39,17 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: T.red,
 };
 
+const STATUS_BG: Record<string, string> = {
+  draft: "rgba(255,255,255,0.06)",
+  sent: "rgba(200,164,78,0.12)",
+  viewed: "rgba(59,130,246,0.12)",
+  paid: "rgba(34,197,94,0.12)",
+  overdue: "rgba(249,115,22,0.12)",
+  cancelled: "rgba(239,68,68,0.12)",
+};
+
 function fmt(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function statusLabel(s: string) {
@@ -59,7 +68,6 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
 
-  // Create form
   const [contactId, setContactId] = useState("");
   const [contacts, setContacts] = useState<{ id: string; name: string; email: string }[]>([]);
   const [items, setItems] = useState<LineItem[]>([{ name: "", description: "", quantity: 1, unit_price_cents: 0 }]);
@@ -97,8 +105,7 @@ export default function InvoicesPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        businessId,
-        userId,
+        businessId, userId,
         contactId: contactId || null,
         lineItems: items.filter((i) => i.name),
         dueDate: dueDate || null,
@@ -138,116 +145,77 @@ export default function InvoicesPage() {
     fetchInvoices();
   };
 
-  // Stats
   const outstanding = invoices
     .filter((i) => ["sent", "viewed", "overdue"].includes(i.status))
     .reduce((s, i) => s + i.total_cents, 0);
   const paidThisMonth = invoices
     .filter((i) => i.status === "paid" && i.paid_at && new Date(i.paid_at).getMonth() === new Date().getMonth())
     .reduce((s, i) => s + i.total_cents, 0);
-  const overdueCount = invoices.filter((i) => i.status === "overdue" || (i.due_date && new Date(i.due_date) < new Date() && !["paid", "cancelled", "draft"].includes(i.status))).length;
+  const overdueCount = invoices.filter((i) =>
+    i.status === "overdue" || (i.due_date && new Date(i.due_date) < new Date() && !["paid", "cancelled", "draft"].includes(i.status))
+  ).length;
 
   const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    fontSize: 13,
-    background: T.bgAlt,
-    border: `1px solid ${T.border}`,
-    borderRadius: 8,
-    color: T.text,
-    outline: "none",
-  };
-
-  const selectStyle: React.CSSProperties = {
-    ...inputStyle,
-    appearance: "none" as const,
-  };
-
-  const hrStyle: React.CSSProperties = {
-    border: "none",
-    borderTop: "1px solid #1E1E21",
-    margin: 0,
+    width: "100%", padding: "10px 12px", fontSize: 13,
+    background: T.bgAlt, border: `1px solid ${T.border}`,
+    borderRadius: 8, color: T.text, outline: "none",
   };
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{ headline: "Invoicing", description: "Send professional invoices, track payments, and get paid faster.", bullets: ["Create and send invoices", "Automatic payment tracking", "Stripe checkout integration"] }}
     >
       <div style={{ padding: "32px 40px 80px" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>
               Invoices
             </h1>
-            <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
               {invoices.length} total
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
             style={{
-              background: CTA_GRAD,
-              color: "#09090B",
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 20px",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
+              background: CTA_GRAD, color: "#09090B", border: "none",
+              borderRadius: 10, padding: "11px 22px", fontSize: 14,
+              fontWeight: 600, cursor: "pointer",
             }}
           >
             + New Invoice
           </button>
         </div>
 
-        <hr style={hrStyle} />
-
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 40, padding: "28px 0" }}>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-              Outstanding
-            </p>
-            <p style={{ fontSize: 24, fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>
-              {fmt(outstanding)}
-            </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+          <div style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Outstanding</span>
+            <span style={{ fontSize: 26, fontWeight: 700, color: T.text, fontFamily: T.h, fontVariantNumeric: "tabular-nums" }}>{fmt(outstanding)}</span>
           </div>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-              Paid this month
-            </p>
-            <p style={{ fontSize: 24, fontWeight: 700, color: T.green, fontVariantNumeric: "tabular-nums" }}>
-              {fmt(paidThisMonth)}
-            </p>
+          <div style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Paid this month</span>
+            <span style={{ fontSize: 26, fontWeight: 700, color: T.green, fontFamily: T.h, fontVariantNumeric: "tabular-nums" }}>{fmt(paidThisMonth)}</span>
           </div>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-              Overdue
-            </p>
-            <p style={{ fontSize: 24, fontWeight: 700, color: overdueCount > 0 ? T.orange : T.text, fontVariantNumeric: "tabular-nums" }}>
-              {overdueCount}
-            </p>
+          <div style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em", display: "block", marginBottom: 6 }}>Overdue</span>
+            <span style={{ fontSize: 26, fontWeight: 700, color: overdueCount > 0 ? T.orange : T.text, fontFamily: T.h }}>{overdueCount}</span>
           </div>
         </div>
 
-        <hr style={hrStyle} />
-
-        {/* Filter */}
-        <div style={{ display: "flex", gap: 8, padding: "20px 0" }}>
+        {/* Filter pills */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
           {["", "draft", "sent", "viewed", "paid", "overdue"].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
               style={{
-                padding: "6px 14px",
-                fontSize: 12,
-                fontWeight: 500,
-                borderRadius: 6,
+                padding: "6px 14px", fontSize: 12, fontWeight: 500, borderRadius: 100,
                 border: `1px solid ${filter === s ? T.gold : T.border}`,
                 background: filter === s ? T.goldDim : "transparent",
-                color: filter === s ? T.gold : "#9CA3AF",
+                color: filter === s ? T.gold : T.text2,
                 cursor: "pointer",
               }}
             >
@@ -256,219 +224,120 @@ export default function InvoicesPage() {
           ))}
         </div>
 
-        <hr style={hrStyle} />
-
         {/* Invoice list */}
         {loading ? (
-          <p style={{ color: "#9CA3AF", fontSize: 13, paddingTop: 32 }}>Loading...</p>
+          <div style={{ textAlign: "center", padding: 60, color: T.text3 }}>Loading...</div>
         ) : invoices.length === 0 ? (
-          <div style={{ padding: "48px 0 32px" }}>
-            {/* Empty state: educational content */}
-            <div style={{ maxWidth: 600 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: "0 0 8px", letterSpacing: "-0.01em" }}>
-                Get paid faster with professional invoices
-              </h2>
-              <p style={{ fontSize: 14, lineHeight: 1.6, color: "#9CA3AF", margin: "0 0 32px" }}>
-                Create itemized invoices, send them to clients via email, and track payment
-                status all in one place. Clients receive a secure link to view and pay online
-                through Stripe.
-              </p>
-
-              <hr style={hrStyle} />
-
-              <div style={{ padding: "28px 0" }}>
-                <h3 style={{ fontSize: 13, fontWeight: 600, color: T.text, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 20px" }}>
-                  How it works
-                </h3>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                  <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 28, height: 28, minWidth: 28, borderRadius: 8,
-                      background: T.goldDim, color: T.gold, fontSize: 12, fontWeight: 700,
-                    }}>
-                      1
-                    </span>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 4px" }}>
-                        Create an invoice
-                      </p>
-                      <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0, lineHeight: 1.5 }}>
-                        Add line items with descriptions and pricing. Select a client from your
-                        contacts or create one on the fly. Set a due date and optional notes.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 28, height: 28, minWidth: 28, borderRadius: 8,
-                      background: T.goldDim, color: T.gold, fontSize: 12, fontWeight: 700,
-                    }}>
-                      2
-                    </span>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 4px" }}>
-                        Send it to your client
-                      </p>
-                      <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0, lineHeight: 1.5 }}>
-                        Hit send and your client receives a professional email with a secure payment
-                        link. No back-and-forth with PDFs or bank details.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                    <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      width: 28, height: 28, minWidth: 28, borderRadius: 8,
-                      background: T.goldDim, color: T.gold, fontSize: 12, fontWeight: 700,
-                    }}>
-                      3
-                    </span>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: T.text, margin: "0 0 4px" }}>
-                        Track and get paid
-                      </p>
-                      <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0, lineHeight: 1.5 }}>
-                        See when invoices are viewed, paid, or overdue. Payments are processed
-                        through Stripe and deposited directly to your account.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <hr style={hrStyle} />
-
-              <div style={{ padding: "28px 0 0" }}>
-                <h3 style={{ fontSize: 13, fontWeight: 600, color: T.text, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 16px" }}>
-                  Invoice statuses
-                </h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
-                  {[
-                    { label: "Draft", desc: "Created but not yet sent", color: "#52525B" },
-                    { label: "Sent", desc: "Delivered to client email", color: T.gold },
-                    { label: "Viewed", desc: "Client opened the invoice", color: T.blue },
-                    { label: "Paid", desc: "Payment received", color: T.green },
-                    { label: "Overdue", desc: "Past the due date", color: T.orange },
-                  ].map((st) => (
-                    <div key={st.label} style={{ minWidth: 140 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: st.color, margin: "0 0 2px" }}>
-                        {st.label}
-                      </p>
-                      <p style={{ fontSize: 12, color: "#52525B", margin: 0 }}>
-                        {st.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ paddingTop: 32 }}>
-                <button
-                  onClick={() => setShowCreate(true)}
-                  style={{
-                    background: CTA_GRAD,
-                    color: "#09090B",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "10px 20px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  Create your first invoice
-                </button>
-              </div>
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              🧾
             </div>
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>
+              {filter ? "No invoices match" : "No invoices yet"}
+            </h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 300, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              {filter
+                ? "Try a different status filter."
+                : "Create an invoice, send it to your client, and get paid through Stripe."}
+            </p>
+            {!filter && (
+              <button
+                onClick={() => setShowCreate(true)}
+                style={{
+                  background: CTA_GRAD, color: "#09090B", border: "none",
+                  padding: "10px 22px", borderRadius: 9, fontSize: 13,
+                  fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Create your first invoice
+              </button>
+            )}
           </div>
         ) : (
-          <div style={{ paddingTop: 4 }}>
+          <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             {/* Table header */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: "100px 1.5fr 1fr 100px 100px 120px",
-              gap: 12,
-              padding: "8px 0",
-              borderBottom: "1px solid #1E1E21",
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#9CA3AF",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
+              gridTemplateColumns: "100px 1.5fr 120px 100px 100px 130px",
+              gap: 12, padding: "11px 16px",
+              borderBottom: `1px solid ${T.border}`,
+              background: T.bgEl,
             }}>
-              <span>Invoice</span>
-              <span>Client</span>
-              <span>Amount</span>
-              <span>Status</span>
-              <span>Due</span>
-              <span style={{ textAlign: "right" }}>Actions</span>
+              {["Invoice", "Client", "Amount", "Status", "Due", "Actions"].map((h, i) => (
+                <span key={h} style={{
+                  fontSize: 11, fontWeight: 600, color: T.text3,
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                  textAlign: i === 5 ? "right" : "left",
+                }}>
+                  {h}
+                </span>
+              ))}
             </div>
-            {invoices.map((inv) => (
+            {invoices.map((inv, idx) => (
               <div
                 key={inv.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "100px 1.5fr 1fr 100px 100px 120px",
-                  gap: 12,
-                  padding: "14px 0",
-                  borderBottom: "1px solid #1E1E21",
-                  alignItems: "center",
+                  gridTemplateColumns: "100px 1.5fr 120px 100px 100px 130px",
+                  gap: 12, padding: "13px 16px", alignItems: "center",
+                  borderBottom: idx < invoices.length - 1 ? `1px solid ${T.border}` : "none",
                 }}
               >
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontVariantNumeric: "tabular-nums" }}>
                     {inv.invoice_number}
                   </span>
-                  {inv.recurring && (
-                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 6, padding: "1px 6px", borderRadius: 4, background: "rgba(59,130,246,0.1)", color: T.blue }}>
-                      Recurring
-                    </span>
-                  )}
-                  {inv.deposit_amount && !inv.deposit_paid && (
-                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "rgba(245,158,11,0.1)", color: T.orange }}>
-                      Deposit due
-                    </span>
-                  )}
-                  {inv.deposit_amount && inv.deposit_paid && (
-                    <span style={{ fontSize: 10, fontWeight: 500, marginLeft: 4, padding: "1px 6px", borderRadius: 4, background: "rgba(34,197,94,0.1)", color: T.green }}>
-                      Deposit paid
-                    </span>
-                  )}
+                  <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
+                    {inv.recurring && (
+                      <span style={{ fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 4, background: "rgba(59,130,246,0.1)", color: T.blue }}>
+                        Recurring
+                      </span>
+                    )}
+                    {inv.deposit_amount && !inv.deposit_paid && (
+                      <span style={{ fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 4, background: "rgba(245,158,11,0.1)", color: T.orange }}>
+                        Deposit due
+                      </span>
+                    )}
+                    {inv.deposit_amount && inv.deposit_paid && (
+                      <span style={{ fontSize: 10, fontWeight: 500, padding: "1px 6px", borderRadius: 4, background: "rgba(34,197,94,0.1)", color: T.green }}>
+                        Deposit paid
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>
-                    {inv.contacts?.name || "\u2014"}
-                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{inv.contacts?.name || "—"}</span>
                   {inv.contacts?.email && (
-                    <span style={{ fontSize: 12, color: "#9CA3AF", marginLeft: 6 }}>{inv.contacts.email}</span>
+                    <span style={{ fontSize: 12, color: T.text2, display: "block", marginTop: 1 }}>{inv.contacts.email}</span>
                   )}
                 </div>
                 <span style={{ fontSize: 14, fontWeight: 600, color: T.text, fontVariantNumeric: "tabular-nums" }}>
                   {fmt(inv.total_cents)}
                 </span>
                 <span style={{
-                  fontSize: 12, fontWeight: 500,
-                  color: STATUS_COLORS[inv.status] || "#9CA3AF",
+                  display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 100,
+                  fontSize: 11, fontWeight: 600,
+                  background: STATUS_BG[inv.status] || "rgba(255,255,255,0.06)",
+                  color: STATUS_COLORS[inv.status] || T.text2,
                 }}>
                   {statusLabel(inv.status)}
                 </span>
-                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
-                  {inv.due_date ? new Date(inv.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "\u2014"}
+                <span style={{ fontSize: 12, color: T.text3 }}>
+                  {inv.due_date ? new Date(inv.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
                 </span>
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   {inv.status === "draft" && (
                     <button
                       onClick={() => sendInvoice(inv.id)}
                       disabled={sending === inv.id}
-                      style={{
-                        fontSize: 12, fontWeight: 500, color: T.gold,
-                        background: "none", border: "none", cursor: "pointer", padding: 0,
-                      }}
+                      style={{ fontSize: 12, fontWeight: 500, color: T.gold, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                     >
                       {sending === inv.id ? "Sending..." : "Send"}
                     </button>
@@ -476,10 +345,7 @@ export default function InvoicesPage() {
                   {["sent", "viewed", "overdue"].includes(inv.status) && (
                     <button
                       onClick={() => markPaid(inv.id)}
-                      style={{
-                        fontSize: 12, fontWeight: 500, color: T.green,
-                        background: "none", border: "none", cursor: "pointer", padding: 0,
-                      }}
+                      style={{ fontSize: 12, fontWeight: 500, color: T.green, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                     >
                       Mark paid
                     </button>
@@ -493,33 +359,20 @@ export default function InvoicesPage() {
         {/* Create modal */}
         {showCreate && (
           <>
-            <div
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50 }}
-              onClick={() => setShowCreate(false)}
-            />
-            <div
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                width: 560,
-                maxHeight: "85vh",
-                overflowY: "auto",
-                background: T.bgEl,
-                border: `1px solid ${T.border}`,
-                borderRadius: 12,
-                padding: 28,
-                zIndex: 51,
-              }}
-            >
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50 }} onClick={() => setShowCreate(false)} />
+            <div style={{
+              position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+              width: 560, maxHeight: "85vh", overflowY: "auto",
+              background: T.bgEl, border: `1px solid ${T.border}`,
+              borderRadius: 14, padding: 28, zIndex: 51,
+            }}>
+              <h2 style={{ fontFamily: T.h, fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>
                 New Invoice
               </h2>
 
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Client</span>
-                <select value={contactId} onChange={(e) => setContactId(e.target.value)} style={selectStyle}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Client</span>
+                <select value={contactId} onChange={(e) => setContactId(e.target.value)} style={inputStyle}>
                   <option value="">Select a client...</option>
                   {contacts.map((c) => (
                     <option key={c.id} value={c.id}>{c.name || c.email}</option>
@@ -528,57 +381,27 @@ export default function InvoicesPage() {
               </label>
 
               <div style={{ marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: "#9CA3AF", display: "block", marginBottom: 8 }}>Line Items</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 8 }}>Line Items</span>
                 {items.map((item, idx) => (
                   <div key={idx} style={{ display: "grid", gridTemplateColumns: "2fr 60px 100px 32px", gap: 8, marginBottom: 8 }}>
-                    <input
-                      placeholder="Item name"
-                      value={item.name}
-                      onChange={(e) => {
-                        const updated = [...items];
-                        updated[idx].name = e.target.value;
-                        setItems(updated);
-                      }}
-                      style={inputStyle}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Qty"
-                      value={item.quantity || ""}
-                      onChange={(e) => {
-                        const updated = [...items];
-                        updated[idx].quantity = parseInt(e.target.value) || 1;
-                        setItems(updated);
-                      }}
-                      style={inputStyle}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={item.unit_price_cents ? item.unit_price_cents / 100 : ""}
-                      onChange={(e) => {
-                        const updated = [...items];
-                        updated[idx].unit_price_cents = Math.round(parseFloat(e.target.value || "0") * 100);
-                        setItems(updated);
-                      }}
-                      style={inputStyle}
-                    />
+                    <input placeholder="Item name" value={item.name}
+                      onChange={(e) => { const u = [...items]; u[idx].name = e.target.value; setItems(u); }}
+                      style={inputStyle} />
+                    <input type="number" placeholder="Qty" value={item.quantity || ""}
+                      onChange={(e) => { const u = [...items]; u[idx].quantity = parseInt(e.target.value) || 1; setItems(u); }}
+                      style={inputStyle} />
+                    <input type="number" placeholder="Price" value={item.unit_price_cents ? item.unit_price_cents / 100 : ""}
+                      onChange={(e) => { const u = [...items]; u[idx].unit_price_cents = Math.round(parseFloat(e.target.value || "0") * 100); setItems(u); }}
+                      style={inputStyle} />
                     {items.length > 1 && (
-                      <button
-                        onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                        style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 16 }}
-                      >
-                        ×
-                      </button>
+                      <button onClick={() => setItems(items.filter((_, i) => i !== idx))}
+                        style={{ background: "none", border: "none", color: T.text2, cursor: "pointer", fontSize: 16 }}>×</button>
                     )}
                   </div>
                 ))}
                 <button
                   onClick={() => setItems([...items, { name: "", description: "", quantity: 1, unit_price_cents: 0 }])}
-                  style={{
-                    fontSize: 12, color: T.gold, background: "none",
-                    border: "none", cursor: "pointer", padding: 0, fontWeight: 500,
-                  }}
+                  style={{ fontSize: 12, color: T.gold, background: "none", border: "none", cursor: "pointer", padding: 0, fontWeight: 500 }}
                 >
                   + Add line item
                 </button>
@@ -591,27 +414,24 @@ export default function InvoicesPage() {
               </div>
 
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Due Date</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Due Date</span>
                 <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={inputStyle} />
               </label>
 
               <label style={{ display: "block", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Notes (optional)</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Notes (optional)</span>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
               </label>
 
-              {/* Recurring */}
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} style={{ width: 16, height: 16 }} />
                   <span style={{ fontSize: 13, color: T.text }}>Recurring invoice</span>
                 </label>
                 {recurring && (
-                  <select
-                    value={recurringInterval}
+                  <select value={recurringInterval}
                     onChange={(e) => setRecurringInterval(e.target.value as typeof recurringInterval)}
-                    style={{ ...selectStyle, marginTop: 8 }}
-                  >
+                    style={{ ...inputStyle, marginTop: 8 }}>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                     <option value="quarterly">Quarterly</option>
@@ -619,44 +439,26 @@ export default function InvoicesPage() {
                 )}
               </div>
 
-              {/* Deposit */}
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={depositEnabled} onChange={(e) => setDepositEnabled(e.target.checked)} style={{ width: 16, height: 16 }} />
                   <span style={{ fontSize: 13, color: T.text }}>Require deposit</span>
                 </label>
                 {depositEnabled && (
-                  <input
-                    type="number"
-                    placeholder="Deposit amount ($)"
-                    value={depositAmount}
+                  <input type="number" placeholder="Deposit amount ($)" value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    style={{ ...inputStyle, marginTop: 8 }}
-                  />
+                    style={{ ...inputStyle, marginTop: 8 }} />
                 )}
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button
-                  onClick={() => setShowCreate(false)}
-                  style={{
-                    padding: "10px 20px", fontSize: 13, fontWeight: 500,
-                    background: "none", border: `1px solid ${T.border}`,
-                    borderRadius: 8, color: "#9CA3AF", cursor: "pointer",
-                  }}
-                >
+                <button onClick={() => setShowCreate(false)}
+                  style={{ padding: "10px 20px", fontSize: 13, fontWeight: 500, background: "none", border: `1px solid ${T.border}`, borderRadius: 9, color: T.text2, cursor: "pointer" }}>
                   Cancel
                 </button>
-                <button
-                  onClick={createInvoice}
+                <button onClick={createInvoice}
                   disabled={saving || !items.some((i) => i.name && i.unit_price_cents > 0)}
-                  style={{
-                    padding: "10px 20px", fontSize: 13, fontWeight: 600,
-                    background: CTA_GRAD, border: "none",
-                    borderRadius: 8, color: "#09090B", cursor: "pointer",
-                    opacity: saving ? 0.6 : 1,
-                  }}
-                >
+                  style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 9, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Creating..." : "Create Invoice"}
                 </button>
               </div>

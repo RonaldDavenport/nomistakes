@@ -3,13 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
-import { FeaturesSectionWithHoverEffects } from "@/components/blocks/feature-section-with-hover-effects";
-import { Calendar, FileText, FolderOpen, TrendingUp, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 // ─── tokens ───────────────────────────────────────────────────────────────────
 
 const DISPLAY = "'DM Sans', -apple-system, sans-serif";
-const SYNE = DISPLAY; // alias kept for compatibility
 const SANS = "'DM Sans', -apple-system, sans-serif";
 const GRAD = "linear-gradient(135deg, #C8A44E 0%, #E8C56E 60%, #C8A44E 100%)";
 
@@ -51,35 +49,59 @@ function useIsMobile(bp = 768) {
 // ─── data ─────────────────────────────────────────────────────────────────────
 
 const TOOLS = [
-  "Calendly", "Dubsado", "HoneyBook", "DocuSign",
-  "Toggl", "Dropbox", "Pipedrive", "Typeform",
-  "ManyChat", "FreshBooks", "Acuity", "17hats",
+  "Calendly", "Dubsado", "HoneyBook", "Wave",
+  "Pipedrive", "Typeform", "FreshBooks", "Acuity",
+  "Google Docs", "Notion", "Stripe Links", "17hats",
 ];
 
 const PILLARS = [
   {
-    Icon: Calendar, tag: "BOOK", accent: "#C8A44E",
-    title: "Booking & intake",
-    items: ["Custom booking link", "Intake forms", "Auto reminders 24h + 1h", "ICS calendar feed"],
-    img: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2068&auto=format&fit=crop",
+    tag: "BOOK",
+    accent: "#C8A44E",
+    title: "Booking & discovery",
+    items: [
+      "Custom booking link, no tool needed",
+      "Set your hours and availability",
+      "Pre-booking intake questions",
+      "Discovery call tracking + notes",
+    ],
+    mock: "booking",
   },
   {
-    Icon: FileText, tag: "SELL", accent: "#3B82F6",
-    title: "Proposals & contracts",
-    items: ["AI-written proposals", "E-signatures", "Deposits + payment plans", "Recurring billing"],
-    img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop",
+    tag: "SELL",
+    accent: "#3B82F6",
+    title: "Proposals & payments",
+    items: [
+      "AI-written proposals in seconds",
+      "Stripe-connected invoices",
+      "Contact pipeline with deal stages",
+      "One-click payment links",
+    ],
+    mock: "sell",
   },
   {
-    Icon: FolderOpen, tag: "DELIVER", accent: "#22C55E",
-    title: "Projects & files",
-    items: ["Deliverable boards", "Subtask checklists", "File sharing", "Time tracking"],
-    img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?q=80&w=2087&auto=format&fit=crop",
+    tag: "DELIVER",
+    accent: "#22C55E",
+    title: "Projects & clients",
+    items: [
+      "Project + deliverable boards",
+      "Client portal — they see everything",
+      "Activity log per contact",
+      "Full contact history",
+    ],
+    mock: "deliver",
   },
   {
-    Icon: TrendingUp, tag: "GROW", accent: "#8B5CF6",
-    title: "Retention & growth",
-    items: ["Review requests", "Re-engagement flows", "Referral links", "Automations"],
-    img: "https://images.unsplash.com/photo-1553484771-371a605b060b?q=80&w=2070&auto=format&fit=crop",
+    tag: "GROW",
+    accent: "#8B5CF6",
+    title: "Leads & marketing",
+    items: [
+      "Apollo-powered prospect discovery",
+      "Outreach inbox — email, LinkedIn, Twitter",
+      "AI website, blog posts, and ad copy",
+      "Site analytics + tracking",
+    ],
+    mock: "grow",
   },
 ];
 
@@ -113,7 +135,6 @@ export default function LandingPage() {
         .btn-ghost:hover { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.18) !important; }
         .nav-item { transition: color 0.15s; }
         .nav-item:hover { color: #F2F2F5 !important; }
-        .pill-tab { cursor: pointer; transition: all 0.18s; }
         .price-card { transition: border-color 0.2s, transform 0.2s; }
         .price-card:hover { transform: translateY(-3px); }
 
@@ -158,10 +179,10 @@ export default function LandingPage() {
               }}>Sign in</Link>
             )}
             <Link href="/auth/signup" className="btn-cta" style={{
-              fontFamily: SYNE, fontSize: 13, fontWeight: 700, color: "#07070A",
+              fontFamily: DISPLAY, fontSize: 13, fontWeight: 700, color: "#07070A",
               background: GRAD, borderRadius: 7, padding: "8px 18px",
               boxShadow: "0 4px 20px rgba(200,164,78,0.25)",
-            }}>Get started</Link>
+            }}>Get started free</Link>
             {isMobile && (
               <button onClick={() => setMenuOpen(o => !o)} style={{ background: "none", border: "none", color: C.text, cursor: "pointer", padding: 6 }}>
                 <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
@@ -180,7 +201,7 @@ export default function LandingPage() {
       {menuOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(7,7,10,0.98)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 40 }}>
           {[["Features", "#features"], ["Pricing", "#pricing"], ["Sign in", "/auth/login"]].map(([l, h]) => (
-            <a key={l} href={h} onClick={() => setMenuOpen(false)} style={{ fontFamily: SYNE, fontSize: 32, fontWeight: 700, color: C.text, letterSpacing: "-0.04em" }}>{l}</a>
+            <a key={l} href={h} onClick={() => setMenuOpen(false)} style={{ fontFamily: DISPLAY, fontSize: 32, fontWeight: 700, color: C.text, letterSpacing: "-0.04em" }}>{l}</a>
           ))}
         </div>
       )}
@@ -192,9 +213,7 @@ export default function LandingPage() {
           <div style={{ position: "absolute", top: "-20%", left: "50%", transform: "translateX(-50%)", width: "130%", height: "80%", background: "radial-gradient(ellipse at 50% 0%, rgba(200,164,78,0.18) 0%, transparent 65%)", filter: "blur(60px)" }} />
           <div style={{ position: "absolute", top: "10%", left: "-20%", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(139,92,246,0.10) 0%, transparent 65%)", filter: "blur(80px)" }} />
           <div style={{ position: "absolute", top: "0%", right: "-18%", width: "55%", height: "90%", background: "radial-gradient(ellipse at center, rgba(59,130,246,0.09) 0%, transparent 65%)", filter: "blur(80px)" }} />
-          {/* Grid */}
           <div style={{ position: "absolute", inset: 0, opacity: 0.025, backgroundImage: "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
-          {/* Noise */}
           <div style={{ position: "absolute", inset: 0, opacity: 0.025, backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: "256px 256px" }} />
         </div>
 
@@ -202,32 +221,32 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="a1" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 40, background: C.goldDim, border: `1px solid ${C.goldBorder}`, borderRadius: 100, padding: "6px 16px" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.gold, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 500, color: C.gold, letterSpacing: "0.02em" }}>Team accounts, contracts + time tracking — now live</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: C.gold, letterSpacing: "0.02em" }}>14-day free trial — no credit card required</span>
           </div>
 
           {/* Headline */}
           <h1 className="a2" style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: isMobile ? "clamp(2.4rem, 10vw, 3.6rem)" : "clamp(2.8rem, 5vw, 4.8rem)", lineHeight: 1.0, letterSpacing: "-0.03em", maxWidth: 720, marginBottom: 28 }}>
             <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              The OS for<br />service{" "}
+              Run your service business{" "}
             </span>
-            <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>businesses.</span>
+            <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>from one place.</span>
           </h1>
 
           {/* Sub */}
-          <p className="a3" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", lineHeight: 1.7, color: C.textSec, maxWidth: 520, marginBottom: 48 }}>
-            Kovra replaces Calendly, Dubsado, HoneyBook, DocuSign, and six other tools
-            with one platform built for people who sell their time.
+          <p className="a3" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", lineHeight: 1.7, color: C.textSec, maxWidth: 540, marginBottom: 48 }}>
+            Kovra is the operating system for freelancers and service businesses.
+            Booking, proposals, invoicing, CRM, lead generation, and your website — all in one tool.
           </p>
 
           {/* CTAs */}
           <div className="a4" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/auth/signup" className="btn-cta" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
-              fontFamily: SYNE, fontWeight: 700, fontSize: 14, color: "#07070A",
+              fontFamily: DISPLAY, fontWeight: 700, fontSize: 14, color: "#07070A",
               background: GRAD, padding: "14px 28px", borderRadius: 9,
               boxShadow: "0 6px 28px rgba(200,164,78,0.30)",
             }}>
-              Start free <ArrowRight size={15} />
+              Start free trial <ArrowRight size={15} />
             </Link>
             <a href="#features" className="btn-ghost" style={{
               display: "inline-flex", alignItems: "center", gap: 8,
@@ -235,14 +254,14 @@ export default function LandingPage() {
               background: "rgba(255,255,255,0.04)", border: `1px solid ${C.border}`,
               padding: "14px 28px", borderRadius: 9,
             }}>
-              See how it works
+              See what&apos;s included
             </a>
           </div>
-          <p className="a4" style={{ fontSize: 12, color: C.textDim, marginTop: 24 }}>15 free credits · No card required · Setup in 4 minutes</p>
+          <p className="a4" style={{ fontSize: 12, color: C.textDim, marginTop: 24 }}>14-day Solo trial · No card required · Set up in minutes</p>
         </div>
       </section>
 
-      {/* ─── TOOLS REPLACED (InfiniteSlider) ─── */}
+      {/* ─── TOOLS REPLACED ─── */}
       <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "36px 0", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center" }}>
           <div style={{ flexShrink: 0, padding: "0 clamp(20px, 4vw, 48px)", borderRight: `1px solid ${C.border}` }}>
@@ -254,7 +273,7 @@ export default function LandingPage() {
             <InfiniteSlider speed={28} gap={56}>
               {TOOLS.map((t) => (
                 <div key={t} style={{ display: "flex", alignItems: "center", paddingRight: 8 }}>
-                  <span style={{ fontFamily: SYNE, fontSize: 14, fontWeight: 700, color: C.textDim, letterSpacing: "-0.02em", textDecoration: "line-through", textDecorationColor: "rgba(255,255,255,0.12)" }}>
+                  <span style={{ fontFamily: DISPLAY, fontSize: 14, fontWeight: 700, color: C.textDim, letterSpacing: "-0.02em", textDecoration: "line-through", textDecorationColor: "rgba(255,255,255,0.12)" }}>
                     {t}
                   </span>
                 </div>
@@ -266,39 +285,74 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── STATS ─── */}
+      {/* ─── WHO IT'S FOR ─── */}
       <section style={{ padding: "100px clamp(20px, 5vw, 56px)" }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
-          <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "40px 60px", textAlign: "center" }}>
-            {[["2,400+", "Businesses on Kovra"], ["$4.2M+", "Revenue processed"], ["11×", "Tools replaced"], ["4 min", "Avg setup time"]].map(([n, l]) => (
-              <div key={l}>
-                <p style={{ fontFamily: DISPLAY, fontWeight: 800, lineHeight: 1, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", letterSpacing: "-0.03em", background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>{n}</p>
-                <p style={{ fontSize: 13, color: C.textSec, marginTop: 10 }}>{l}</p>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Built for service businesses</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.6rem)", letterSpacing: "-0.03em", lineHeight: 1.1, marginTop: 12 }}>
+              You&apos;re good at what you do.<br />
+              <span style={{ color: C.textSec, fontWeight: 400 }}>The backend shouldn&apos;t slow you down.</span>
+            </h2>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 2 }}>
+            {[
+              {
+                label: "THE GRINDER",
+                accent: C.gold,
+                problem: "Referrals are unpredictable. You need a real pipeline and a way to reach new clients consistently.",
+                fix: "Lead engine, booking link, and a website that actually converts.",
+              },
+              {
+                label: "THE OPERATOR",
+                accent: "#3B82F6",
+                problem: "You're running your business across 7 different tools and losing hours every week to admin.",
+                fix: "One place for booking, proposals, invoices, and CRM. Cancel everything else.",
+              },
+              {
+                label: "THE SCALER",
+                accent: "#8B5CF6",
+                problem: "You've outgrown the freelancer setup but aren't ready to hire a full team to manage operations.",
+                fix: "Client portal, project management, and outreach infrastructure that scales with you.",
+              },
+            ].map((card) => (
+              <div key={card.label} style={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                padding: "32px 28px",
+              }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6, background: card.accent + "12", border: `1px solid ${card.accent}28`, marginBottom: 20 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: card.accent, letterSpacing: "0.08em" }}>{card.label}</span>
+                </div>
+                <p style={{ fontSize: 14, color: C.textSec, lineHeight: 1.7, marginBottom: 20 }}>{card.problem}</p>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ color: card.accent, fontSize: 12, flexShrink: 0, marginTop: 2 }}>→</span>
+                  <span style={{ fontSize: 13, color: C.text, lineHeight: 1.6, fontWeight: 500 }}>{card.fix}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── PHASES GRID ─── */}
+      {/* ─── PILLARS GRID ─── */}
       <section id="features" style={{ padding: "100px clamp(20px, 5vw, 56px)", borderTop: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1160, margin: "0 auto" }}>
 
-          {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 64, flexWrap: "wrap", gap: 24 }}>
             <div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Four phases. One tool.</span>
-              <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", letterSpacing: "-0.03em", lineHeight: 1.05, marginTop: 10, marginBottom: 0 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>The full lifecycle</span>
+              <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3.5vw, 3rem)", letterSpacing: "-0.03em", lineHeight: 1.05, marginTop: 10 }}>
                 From first inquiry<br />
-                <span style={{ color: C.textSec, fontWeight: 400 }}>to repeat client.</span>
+                <span style={{ color: C.textSec, fontWeight: 400 }}>to paid and delivered.</span>
               </h2>
             </div>
-            <Link href="/auth/signup" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: C.gold, textDecoration: "none", flexShrink: 0 }}>
-              Get started free <ArrowRight size={13} />
+            <Link href="/auth/signup" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: C.gold, flexShrink: 0 }}>
+              Start free trial <ArrowRight size={13} />
             </Link>
           </div>
 
-          {/* 2×2 grid */}
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: 2 }}>
             {PILLARS.map((p, i) => (
               <div key={p.tag} style={{
@@ -310,18 +364,16 @@ export default function LandingPage() {
                 flexDirection: "column",
                 gap: 28,
               }}>
-                {/* Top: number + tag */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontFamily: DISPLAY, fontSize: 13, fontWeight: 700, color: C.textDim, letterSpacing: "0.04em" }}>0{i + 1}</span>
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 6, background: p.accent + "12", border: `1px solid ${p.accent}28` }}>
-                    <p.Icon size={11} color={p.accent} />
                     <span style={{ fontSize: 11, fontWeight: 700, color: p.accent, letterSpacing: "0.08em" }}>{p.tag}</span>
                   </div>
                 </div>
 
                 {/* Mock UI */}
                 <div style={{ borderRadius: 10, border: `1px solid ${C.border}`, background: "#08080C", padding: 18, flex: 1 }}>
-                  {p.tag === "BOOK" && (
+                  {p.mock === "booking" && (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Book a discovery call</span>
@@ -339,7 +391,7 @@ export default function LandingPage() {
                       </div>
                     </div>
                   )}
-                  {p.tag === "SELL" && (
+                  {p.mock === "sell" && (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Brand Identity Package</span>
@@ -354,14 +406,13 @@ export default function LandingPage() {
                           </div>
                         ))}
                       </div>
-                      <div style={{ borderRadius: 7, border: `1px solid ${C.border}`, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 11, color: C.textSec, flex: 1 }}>Contract · E-signature</span>
-                        <div style={{ width: 60, height: 3, borderRadius: 2, background: p.accent + "20" }}><div style={{ width: "100%", height: "100%", background: p.accent, borderRadius: 2 }} /></div>
-                        <span style={{ fontSize: 10, color: p.accent, fontWeight: 600 }}>Signed</span>
+                      <div style={{ borderRadius: 7, border: `1px solid ${C.border}`, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: C.textSec }}>Invoice · Stripe payment</span>
+                        <span style={{ fontSize: 10, color: p.accent, fontWeight: 600 }}>Paid</span>
                       </div>
                     </div>
                   )}
-                  {p.tag === "DELIVER" && (
+                  {p.mock === "deliver" && (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                         <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Website Redesign</span>
@@ -371,7 +422,7 @@ export default function LandingPage() {
                         { task: "Discovery call notes", done: true },
                         { task: "Wireframes delivered", done: true },
                         { task: "Design mockups", done: false },
-                        { task: "Final handoff + files", done: false },
+                        { task: "Final handoff", done: false },
                       ].map((t) => (
                         <div key={t.task} style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
                           <div style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${t.done ? p.accent : C.border}`, background: t.done ? p.accent + "15" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -380,38 +431,34 @@ export default function LandingPage() {
                           <span style={{ fontSize: 11, color: t.done ? C.textSec : C.text, textDecoration: t.done ? "line-through" : "none" }}>{t.task}</span>
                         </div>
                       ))}
-                      <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 10, color: C.textDim }}>6.5h tracked · $780</span>
-                        <span style={{ fontSize: 10, color: p.accent, fontWeight: 600 }}>2 files shared</span>
+                      <div style={{ marginTop: 12 }}>
+                        <span style={{ fontSize: 10, color: C.textDim }}>Client portal active · Last viewed 2h ago</span>
                       </div>
                     </div>
                   )}
-                  {p.tag === "GROW" && (
+                  {p.mock === "grow" && (
                     <div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
-                        {[["Review requests","12 sent"],["Re-engagements","4 active"]].map(([l, v]) => (
-                          <div key={l} style={{ borderRadius: 7, border: `1px solid ${C.border}`, padding: "10px 12px" }}>
-                            <p style={{ fontSize: 10, color: C.textSec, margin: "0 0 3px" }}>{l}</p>
-                            <p style={{ fontSize: 16, fontWeight: 700, color: p.accent, margin: 0 }}>{v}</p>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: C.text }}>Lead engine</span>
+                        <span style={{ fontSize: 10, color: p.accent, fontWeight: 600 }}>24 prospects found</span>
+                      </div>
+                      {[
+                        { name: "Jordan Mills", co: "Mills Creative", status: "Contacted" },
+                        { name: "Sara Chen", co: "Chen & Co", status: "Replied" },
+                        { name: "Alex Torres", co: "Torres Media", status: "New" },
+                      ].map((lead) => (
+                        <div key={lead.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                          <div>
+                            <span style={{ fontSize: 11, color: C.text, display: "block" }}>{lead.name}</span>
+                            <span style={{ fontSize: 10, color: C.textDim }}>{lead.co}</span>
                           </div>
-                        ))}
-                      </div>
-                      <div style={{ borderRadius: 7, border: `1px solid ${C.border}`, padding: "10px 12px", marginBottom: 8 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
-                          <span style={{ fontSize: 10, color: C.textSec }}>Referral · Instagram bio</span>
-                          <span style={{ fontSize: 10, color: p.accent, fontWeight: 600 }}>47 clicks</span>
+                          <span style={{ fontSize: 9, fontWeight: 600, color: lead.status === "Replied" ? "#22C55E" : lead.status === "Contacted" ? p.accent : C.textSec, background: lead.status === "Replied" ? "rgba(34,197,94,0.1)" : lead.status === "Contacted" ? p.accent + "15" : "rgba(255,255,255,0.04)", padding: "2px 7px", borderRadius: 4 }}>{lead.status}</span>
                         </div>
-                        <div style={{ height: 3, borderRadius: 2, background: p.accent + "15" }}><div style={{ width: "62%", height: "100%", background: p.accent, borderRadius: 2 }} /></div>
-                      </div>
-                      <div style={{ borderRadius: 7, border: `1px solid ${C.border}`, padding: "10px 12px" }}>
-                        <span style={{ fontSize: 10, color: C.textSec }}>Automation: project completed → </span>
-                        <span style={{ fontSize: 10, color: C.text, fontWeight: 500 }}>send review request</span>
-                      </div>
+                      ))}
                     </div>
                   )}
                 </div>
 
-                {/* Bottom: title + bullets */}
                 <div>
                   <h3 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.2rem, 2vw, 1.5rem)", letterSpacing: "-0.025em", lineHeight: 1.1, margin: "0 0 16px", color: C.text }}>{p.title}</h3>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -429,13 +476,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── FEATURE HOVER GRID ─── */}
-      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ textAlign: "center", padding: "80px clamp(20px, 5vw, 56px) 0" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Everything included</span>
-          <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", marginTop: 12 }}>No feature gating. No upsells.</h2>
+      {/* ─── ALSO INCLUDED ─── */}
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px clamp(20px, 5vw, 56px)" }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Also included</span>
+            <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.6rem, 2.8vw, 2.4rem)", letterSpacing: "-0.03em", marginTop: 12 }}>Everything you need to run and grow.</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
+            {[
+              { title: "AI website", desc: "Brand, site copy, and a deployed website generated from a 4-minute setup flow.", accent: C.gold },
+              { title: "AI blog & ad copy", desc: "Generate blog posts and ad copy for Meta, TikTok, and Google in seconds.", accent: "#3B82F6" },
+              { title: "Satellite email infra", desc: "Outreach-ready domain, Google Workspace, and email warming — set up automatically.", accent: "#22C55E" },
+              { title: "Multi-channel inbox", desc: "Track conversations from email, LinkedIn, and Twitter in one thread view.", accent: "#8B5CF6" },
+              { title: "Site analytics", desc: "Pageview and event tracking built in. Embed a snippet and it works.", accent: C.gold },
+              { title: "AI coach", desc: "A business coach that knows your business. Ask it anything.", accent: "#3B82F6" },
+            ].map((f) => (
+              <div key={f.title} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 12, padding: "24px 22px" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: f.accent, marginBottom: 14 }} />
+                <h3 style={{ fontFamily: DISPLAY, fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <FeaturesSectionWithHoverEffects />
       </section>
 
       {/* ─── PRICING ─── */}
@@ -444,15 +508,39 @@ export default function LandingPage() {
           <div style={{ textAlign: "center", marginBottom: 64 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: "0.12em", textTransform: "uppercase" }}>Pricing</span>
             <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "clamp(1.8rem, 3vw, 2.8rem)", letterSpacing: "-0.03em", lineHeight: 1.05, marginTop: 12, marginBottom: 12 }}>
-              One price.<br />Everything included.
+              Simple, honest pricing.
             </h2>
-            <p style={{ fontSize: 15, color: C.textSec }}>No per-seat fees. No feature gating.</p>
+            <p style={{ fontSize: 15, color: C.textSec }}>Start free. Upgrade when you&apos;re ready. No per-seat fees.</p>
           </div>
           <div className="price-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, maxWidth: 860, margin: "0 auto" }}>
             {[
-              { name: "Free", price: "$0", per: "forever", desc: "Start building.", features: ["15 one-time credits", "AI website generation", "Basic CRM", "1 booking link"], hi: false },
-              { name: "Starter", price: "$79", per: "/mo", desc: "For solo service providers.", features: ["500 credits/mo", "Proposals + contracts", "Invoicing + payments", "Project management", "Automations + referrals"], hi: true },
-              { name: "Growth", price: "$199", per: "/mo", desc: "For agencies and teams.", features: ["2,500 credits/mo", "Everything in Starter", "Team accounts", "Time tracking", "Lead engine + outreach"], hi: false },
+              {
+                name: "Free",
+                price: "$0",
+                per: "forever",
+                desc: "Get set up and see if it fits.",
+                features: ["15 one-time credits", "AI website generation", "Booking link", "Basic CRM"],
+                hi: false,
+                cta: "Get started free",
+              },
+              {
+                name: "Solo",
+                price: "$79",
+                per: "/mo",
+                desc: "For freelancers running a real business.",
+                features: ["500 credits/mo", "Proposals + invoicing", "Project management", "Lead engine + outreach", "AI blog + ad copy", "14-day free trial"],
+                hi: true,
+                cta: "Start 14-day trial",
+              },
+              {
+                name: "Scale",
+                price: "$199",
+                per: "/mo",
+                desc: "For service businesses ready to grow.",
+                features: ["2,500 credits/mo", "Everything in Solo", "Satellite email infra", "Multi-channel inbox", "Ad campaign generation"],
+                hi: false,
+                cta: "Start 14-day trial",
+              },
             ].map((p) => (
               <div key={p.name} className="price-card" style={{
                 position: "relative", background: p.hi ? "rgba(200,164,78,0.06)" : C.surface,
@@ -470,13 +558,13 @@ export default function LandingPage() {
                 <p style={{ fontSize: 13, color: C.textSec, marginBottom: 22 }}>{p.desc}</p>
                 <Link href="/auth/signup" style={{
                   display: "block", textAlign: "center",
-                  fontFamily: SYNE, fontWeight: 700, fontSize: 13,
+                  fontFamily: DISPLAY, fontWeight: 700, fontSize: 13,
                   background: p.hi ? GRAD : "rgba(255,255,255,0.06)",
                   border: p.hi ? "none" : `1px solid ${C.border}`,
                   color: p.hi ? "#07070A" : C.text,
                   borderRadius: 8, padding: "11px 0", marginBottom: 22,
                 }}>
-                  {p.price === "$0" ? "Get started free" : "Start free trial"}
+                  {p.cta}
                 </Link>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {p.features.map((f) => (
@@ -497,19 +585,21 @@ export default function LandingPage() {
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(200,164,78,0.10) 0%, transparent 70%)" }} />
         <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontFamily: DISPLAY, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08, fontSize: "clamp(2rem, 3.5vw, 3.2rem)", marginBottom: 24 }}>
-            <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Stop duct-taping your business </span>
-            <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>together.</span>
+            <span style={{ background: "linear-gradient(175deg, #F2F2F5 0%, rgba(242,242,245,0.55) 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>Stop running your business{" "}</span>
+            <span style={{ background: GRAD, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>in a dozen tabs.</span>
           </h2>
-          <p style={{ fontSize: 16, color: C.textSec, lineHeight: 1.7, marginBottom: 44 }}>Kovra gives you every tool a service business needs — in one place, from day one.</p>
+          <p style={{ fontSize: 16, color: C.textSec, lineHeight: 1.7, marginBottom: 44 }}>
+            Kovra handles the whole lifecycle — booking, selling, delivering, and growing — so you can focus on the work.
+          </p>
           <Link href="/auth/signup" className="btn-cta" style={{
             display: "inline-flex", alignItems: "center", gap: 10,
-            fontFamily: SYNE, fontWeight: 700, fontSize: 15, color: "#07070A",
+            fontFamily: DISPLAY, fontWeight: 700, fontSize: 15, color: "#07070A",
             background: GRAD, padding: "17px 36px", borderRadius: 10,
             boxShadow: "0 8px 40px rgba(200,164,78,0.30)",
           }}>
             Start free — no card needed <ArrowRight size={16} />
           </Link>
-          <p style={{ fontSize: 12, color: C.textDim, marginTop: 18 }}>15 free credits on signup. Takes 4 minutes to set up.</p>
+          <p style={{ fontSize: 12, color: C.textDim, marginTop: 18 }}>14-day Solo trial included. Upgrade or cancel anytime.</p>
         </div>
       </section>
 
@@ -526,8 +616,8 @@ export default function LandingPage() {
           </div>
           <p style={{ fontSize: 12, color: C.textDim }}>© 2026 Kovra. All rights reserved.</p>
           <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy", "Terms", "Contact"].map((l) => (
-              <a key={l} href="#" className="nav-item" style={{ fontSize: 12, color: C.textDim }}>{l}</a>
+            {[["Privacy", "/privacy"], ["Terms", "/terms"]].map(([l, h]) => (
+              <Link key={l} href={h} className="nav-item" style={{ fontSize: 12, color: C.textDim }}>{l}</Link>
             ))}
           </div>
         </div>

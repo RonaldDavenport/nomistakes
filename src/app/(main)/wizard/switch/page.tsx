@@ -11,9 +11,25 @@ import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 type SiteChoice = "transfer" | "remake" | "scratch";
-type Step = "site-choice" | "name" | "describe" | "tools" | "building" | "done";
+type Persona = "grinder" | "operator" | "scaler";
+type Step = "quiz" | "site-choice" | "name" | "describe" | "tools" | "building" | "done";
 
-const SWITCH_STEPS: Step[] = ["site-choice", "name", "describe", "tools"];
+const SWITCH_STEPS: Step[] = ["quiz", "site-choice", "name", "describe", "tools"];
+
+type Experience = "new" | "building" | "established";
+type Challenge = "clients" | "tools" | "scale";
+
+const EXPERIENCE_OPTIONS: { id: Experience; label: string; sub: string }[] = [
+  { id: "new",         label: "Just getting started",    sub: "Under a year in" },
+  { id: "building",   label: "Building momentum",       sub: "1–3 years" },
+  { id: "established", label: "Been at it for a while", sub: "3+ years" },
+];
+
+const CHALLENGE_OPTIONS: { id: Challenge; label: string; sub: string; persona: Persona }[] = [
+  { id: "clients", label: "Getting clients consistently", sub: "Referrals aren't reliable enough", persona: "grinder" },
+  { id: "tools",   label: "Too many tools and too much admin", sub: "The backend is chaos", persona: "operator" },
+  { id: "scale",   label: "Growing beyond what I can do alone", sub: "Ready to build something bigger", persona: "scaler" },
+];
 
 const SITE_CHOICE_OPTIONS: { id: SiteChoice; title: string; subtitle: string; detail: string }[] = [
   {
@@ -113,12 +129,20 @@ function SwitchWizardContent() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const [step, setStep] = useState<Step>("site-choice");
+  // If ?persona= is in the URL (from a persona landing page), skip the quiz
+  const presetPersona = params.get("persona") as Persona | null;
+  const [step, setStep] = useState<Step>(presetPersona ? "site-choice" : "quiz");
   const [siteChoice, setSiteChoice] = useState<SiteChoice | null>(null);
   const [existingUrl, setExistingUrl] = useState("");
   const [bizName, setBizName] = useState("");
   const [description, setDescription] = useState(params.get("fill") || "");
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
+
+  // Zero-party data quiz
+  const [quizExperience, setQuizExperience] = useState<Experience | null>(null);
+  const [quizChallenge, setQuizChallenge] = useState<Challenge | null>(null);
+  const persona: Persona = presetPersona
+    ?? (quizChallenge ? CHALLENGE_OPTIONS.find(o => o.id === quizChallenge)!.persona : "operator");
 
   const [buildProgress, setBuildProgress] = useState(0);
   const [deployedUrl, setDeployedUrl] = useState("");
@@ -192,6 +216,9 @@ function SwitchWizardContent() {
             time: "",
             budget: "",
             bizType: "service",
+            persona,
+            quizExperience: quizExperience || undefined,
+            quizChallenge: quizChallenge || undefined,
           }),
         });
 
@@ -369,6 +396,89 @@ function SwitchWizardContent() {
         padding: "80px 24px 64px",
       }}>
         <AnimatePresence mode="wait">
+
+          {/* ── QUIZ ── */}
+          {step === "quiz" && (
+            <motion.div key="quiz" {...pt} style={{ maxWidth: 520, width: "100%" }}>
+              <p style={stepLabel}>1 / {SWITCH_STEPS.length}</p>
+              <h2 style={headingStyle}>Quick — two questions.</h2>
+              <p style={subtitleStyle}>So we set up the right workspace for you from day one.</p>
+
+              {/* Q1 */}
+              <p style={{ fontSize: "0.82rem", fontWeight: 600, color: T.text3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10, fontFamily: T.h }}>
+                How long have you been freelancing?
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 28 }}>
+                {EXPERIENCE_OPTIONS.map(({ id, label, sub }) => {
+                  const active = quizExperience === id;
+                  return (
+                    <button key={id} onClick={() => setQuizExperience(id)} style={{
+                      padding: "14px 18px", borderRadius: 10, textAlign: "left", width: "100%",
+                      background: active ? "rgba(200,164,78,0.07)" : T.bgEl,
+                      border: `1.5px solid ${active ? "rgba(200,164,78,0.35)" : T.border}`,
+                      cursor: "pointer", transition: "all 0.15s",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <div>
+                        <p style={{ fontSize: "0.9rem", fontWeight: 600, color: active ? T.gold : T.text, fontFamily: T.h, marginBottom: 2 }}>{label}</p>
+                        <p style={{ fontSize: "0.78rem", color: T.text3, fontFamily: T.h }}>{sub}</p>
+                      </div>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                        border: `2px solid ${active ? T.gold : T.border}`,
+                        background: active ? T.gold : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.15s",
+                      }}>
+                        {active && <svg width="9" height="9" fill="none" stroke="#09090B" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Q2 */}
+              <p style={{ fontSize: "0.82rem", fontWeight: 600, color: T.text3, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10, fontFamily: T.h }}>
+                What&apos;s your biggest challenge right now?
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 32 }}>
+                {CHALLENGE_OPTIONS.map(({ id, label, sub }) => {
+                  const active = quizChallenge === id;
+                  return (
+                    <button key={id} onClick={() => setQuizChallenge(id)} style={{
+                      padding: "14px 18px", borderRadius: 10, textAlign: "left", width: "100%",
+                      background: active ? "rgba(200,164,78,0.07)" : T.bgEl,
+                      border: `1.5px solid ${active ? "rgba(200,164,78,0.35)" : T.border}`,
+                      cursor: "pointer", transition: "all 0.15s",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                      <div>
+                        <p style={{ fontSize: "0.9rem", fontWeight: 600, color: active ? T.gold : T.text, fontFamily: T.h, marginBottom: 2 }}>{label}</p>
+                        <p style={{ fontSize: "0.78rem", color: T.text3, fontFamily: T.h }}>{sub}</p>
+                      </div>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+                        border: `2px solid ${active ? T.gold : T.border}`,
+                        background: active ? T.gold : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.15s",
+                      }}>
+                        {active && <svg width="9" height="9" fill="none" stroke="#09090B" viewBox="0 0 24 24" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                disabled={!quizExperience || !quizChallenge}
+                onClick={() => setStep("site-choice")}
+                style={primaryBtn(!quizExperience || !quizChallenge)}
+              >
+                Continue
+              </button>
+            </motion.div>
+          )}
 
           {/* ── SITE CHOICE ── */}
           {step === "site-choice" && (

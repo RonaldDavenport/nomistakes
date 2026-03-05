@@ -153,7 +153,7 @@ export default function CompetitorsPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "Competitive Intelligence",
           description: "Analyze any competitor's positioning, pricing, and strategy in seconds.",

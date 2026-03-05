@@ -5,11 +5,12 @@ import { addCredits, PLAN_CREDITS } from "@/lib/credits";
 
 export const runtime = "nodejs";
 
-// Map Stripe price IDs to plan names
+// Map Stripe price IDs to plan names (env vars may still use old names during transition)
 const PRICE_TO_PLAN: Record<string, string> = {
-  [process.env.STRIPE_STARTER_PRICE_ID as string]: "starter",
-  [process.env.STRIPE_GROWTH_PRICE_ID as string]: "growth",
-  [process.env.STRIPE_PRO_PRICE_ID as string]: "pro",
+  ...(process.env.STRIPE_SOLO_PRICE_ID && { [process.env.STRIPE_SOLO_PRICE_ID]: "solo" }),
+  ...(process.env.STRIPE_STARTER_PRICE_ID && { [process.env.STRIPE_STARTER_PRICE_ID]: "solo" }),
+  ...(process.env.STRIPE_SCALE_PRICE_ID && { [process.env.STRIPE_SCALE_PRICE_ID]: "scale" }),
+  ...(process.env.STRIPE_GROWTH_PRICE_ID && { [process.env.STRIPE_GROWTH_PRICE_ID]: "scale" }),
 };
 
 function getStripeInstance(): Stripe {

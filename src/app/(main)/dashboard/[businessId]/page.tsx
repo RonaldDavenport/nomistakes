@@ -155,7 +155,9 @@ function WelcomeBanner({ businessId, businessName, phase }: { businessId: string
 
 function SetupDashboard({ businessId, business }: { businessId: string; business: Record<string, unknown> }) {
   const subtype = (business.subtype as string) || "freelance";
-  const tasks = getChecklistForSubtype(subtype);
+  const hasExistingWebsite = !!(business.has_existing_website);
+  const persona = (business.persona as "grinder" | "operator" | "scaler" | null) ?? null;
+  const tasks = getChecklistForSubtype(subtype, { hasExistingWebsite, persona });
   const phase1 = tasks.filter((t) => t.phase === 1);
 
   const checks = {
@@ -287,7 +289,9 @@ function SetupRightPanel({ businessId }: { businessId: string }) {
 
 function GetClientsDashboard({ businessId, business }: { businessId: string; business: Record<string, unknown> }) {
   const subtype = (business.subtype as string) || "freelance";
-  const tasks = getChecklistForSubtype(subtype);
+  const hasExistingWebsite = !!(business.has_existing_website);
+  const persona = (business.persona as "grinder" | "operator" | "scaler" | null) ?? null;
+  const tasks = getChecklistForSubtype(subtype, { hasExistingWebsite, persona });
   const phase2 = tasks.filter((t) => t.phase === 2);
   const phase3 = tasks.filter((t) => t.phase === 3);
 

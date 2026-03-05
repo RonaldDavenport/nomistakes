@@ -23,6 +23,7 @@ export default function AccountSettingsPage() {
 
   // Plan state
   const [planId, setPlanId] = useState("free");
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(true);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -39,13 +40,14 @@ export default function AccountSettingsPage() {
       setFullName(user.user_metadata?.full_name || "");
       setUserId(user.id);
 
-      // Fetch plan from profiles
+      // Fetch plan + trial from profiles
       const { data: profile } = await supabase
         .from("profiles")
-        .select("plan")
+        .select("plan, trial_ends_at")
         .eq("id", user.id)
         .single();
       if (profile?.plan) setPlanId(profile.plan);
+      if (profile?.trial_ends_at) setTrialEndsAt(profile.trial_ends_at);
       setPlanLoading(false);
     }
     load();
@@ -87,11 +89,14 @@ export default function AccountSettingsPage() {
 
   const planLabels: Record<string, { name: string; price: string }> = {
     free: { name: "Free", price: "Free" },
-    starter: { name: "Starter", price: "$19.99/mo" },
-    growth: { name: "Growth", price: "$49.99/mo" },
-    pro: { name: "Pro", price: "$249.99/mo" },
+    solo: { name: "Solo", price: "$79/mo" },
+    scale: { name: "Scale", price: "$199/mo" },
   };
   const currentPlan = planLabels[planId] || planLabels.free;
+  const isOnTrial = !!trialEndsAt && new Date(trialEndsAt) > new Date();
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return (
     <div className="min-h-screen bg-[#0c0a09]">
@@ -180,6 +185,41 @@ export default function AccountSettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* Trial Banner */}
+        {isOnTrial && (
+          <div style={{ padding: "16px", borderRadius: "12px", border: `1px solid ${trialDaysLeft <= 3 ? "rgba(239,68,68,0.3)" : "rgba(234,179,8,0.3)"}`, background: trialDaysLeft <= 3 ? "rgba(239,68,68,0.08)" : "rgba(234,179,8,0.08)", marginBottom: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
+            <div>
+              <p style={{ color: trialDaysLeft <= 3 ? "#f87171" : "#fbbf24", fontWeight: 600, fontSize: "14px", marginBottom: "2px" }}>
+                {trialDaysLeft <= 3 ? `Trial ends in ${trialDaysLeft} day${trialDaysLeft === 1 ? "" : "s"}` : `${trialDaysLeft} days left in your Solo trial`}
+              </p>
+              <p style={{ color: "#71717a", fontSize: "13px" }}>
+                Trial ends on {new Date(trialEndsAt!).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}. Upgrade to keep Solo features.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                setUpgradeLoading(true);
+                try {
+                  const res = await fetch("/api/stripe/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ planId: "solo", userId, email }),
+                  });
+                  const { url, error } = await res.json();
+                  if (url) window.location.href = url;
+                  else console.error("Checkout error:", error);
+                } finally {
+                  setUpgradeLoading(false);
+                }
+              }}
+              disabled={upgradeLoading}
+              style={{ padding: "8px 20px", borderRadius: "8px", background: trialDaysLeft <= 3 ? "#dc2626" : "#ca8a04", border: "none", color: "white", fontSize: "13px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", opacity: upgradeLoading ? 0.5 : 1 }}
+            >
+              {upgradeLoading ? "Redirecting..." : "Upgrade Now"}
+            </button>
+          </div>
+        )}
 
         {/* Current Plan Section */}
         <div className="p-6 rounded-xl border border-white/5 bg-[#171412]/50 mb-6">

@@ -30,6 +30,11 @@ export interface Business {
   layout: string;
   availability_settings: Record<string, unknown> | null;
   intake_form_fields: unknown[] | null;
+  site_regen_count: number;
+  has_existing_website: boolean;
+  persona: "grinder" | "operator" | "scaler" | null;
+  quiz_experience: string | null;
+  quiz_challenge: string | null;
 }
 
 interface BusinessContextValue {
@@ -39,6 +44,8 @@ interface BusinessContextValue {
   credits: number;
   userId: string | null;
   loading: boolean;
+  isOnTrial: boolean;
+  trialEndsAt: Date | null;
   refreshBusiness: () => Promise<void>;
   refreshCredits: () => Promise<void>;
 }
@@ -50,6 +57,8 @@ const BusinessContext = createContext<BusinessContextValue>({
   credits: 0,
   userId: null,
   loading: true,
+  isOnTrial: false,
+  trialEndsAt: null,
   refreshBusiness: async () => {},
   refreshCredits: async () => {},
 });
@@ -71,6 +80,8 @@ export function BusinessProvider({
   const [credits, setCredits] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOnTrial, setIsOnTrial] = useState(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
 
   const fetchCredits = useCallback(async (uid: string, bizId: string) => {
     try {
@@ -95,13 +106,22 @@ export function BusinessProvider({
 
     setUserId(user.id);
 
-    // Fetch plan from profile
+    // Fetch plan + trial from profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("plan")
+      .select("plan, trial_ends_at")
       .eq("id", user.id)
       .single();
-    setPlan(profile?.plan || "free");
+
+    const rawPlan = profile?.plan || "free";
+    const trialEnd = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+    const onTrial = !!trialEnd && trialEnd > new Date();
+    // During trial, free users get solo-level access
+    const effectivePlan = onTrial && rawPlan === "free" ? "solo" : rawPlan;
+
+    setPlan(effectivePlan);
+    setIsOnTrial(onTrial);
+    setTrialEndsAt(trialEnd);
 
     // Fetch current business
     const { data: biz } = await supabase
@@ -148,7 +168,7 @@ export function BusinessProvider({
   }
 
   return (
-    <BusinessContext.Provider value={{ business, allBusinesses, plan, credits, userId, loading, refreshBusiness, refreshCredits }}>
+    <BusinessContext.Provider value={{ business, allBusinesses, plan, credits, userId, loading, isOnTrial, trialEndsAt, refreshBusiness, refreshCredits }}>
       {children}
     </BusinessContext.Provider>
   );

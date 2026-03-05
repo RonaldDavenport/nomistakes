@@ -170,7 +170,24 @@ export default function LeadsPage() {
   }
 
   return (
-    <PaywallGate requiredPlan="starter">
+    <PaywallGate
+      requiredPlan="solo"
+      teaser={{
+        headline: "Lead Engine",
+        description: "Find and reach out to cold prospects with one click. Each outreach costs 1 credit.",
+        bullets: [
+          "Search millions of contacts by role, industry, and location",
+          "AI-written personalized outreach in seconds",
+          "All replies logged to Inbox automatically",
+          "Track open rates and reply rates per campaign",
+        ],
+        previewRows: [
+          { label: "Sarah Chen · Head of Marketing · Acme Corp", value: "Sent 2h ago", color: "#22c55e" },
+          { label: "James Liu · Founder · Bloom Studio", value: "Opened", color: "#f59e0b" },
+          { label: "Priya Nair · CEO · Stackr", value: "Replied", color: "#3b82f6" },
+        ],
+      }}
+    >
       <div style={{ padding: "32px 24px", maxWidth: 1100, margin: "0 auto" }}>
 
         {/* Header */}

@@ -13,7 +13,7 @@ CREATE TABLE contracts (
   proposal_id UUID REFERENCES proposals(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
-  sign_token TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  sign_token TEXT UNIQUE NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
   signed_at TIMESTAMPTZ,
   signer_name TEXT,
   signer_ip TEXT,
@@ -66,7 +66,7 @@ CREATE TABLE team_members (
   user_id UUID REFERENCES auth.users(id),
   invited_email TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT 'member',
-  invite_token TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(16), 'hex'),
+  invite_token TEXT UNIQUE NOT NULL DEFAULT encode(extensions.gen_random_bytes(16), 'hex'),
   accepted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(business_id, invited_email)

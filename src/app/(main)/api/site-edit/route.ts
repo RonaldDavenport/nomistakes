@@ -19,13 +19,36 @@ export async function POST(req: NextRequest) {
   const db = createServerClient();
   const { data: business, error: bizErr } = await db
     .from("businesses")
-    .select("id")
+    .select("id, site_regen_count, user_id")
     .eq("id", businessId)
     .single();
 
   if (bizErr || !business) {
     return NextResponse.json({ error: "Business not found" }, { status: 404 });
   }
+
+  // Site regen gate: first AI edit is free; subsequent edits require credits or paid plan
+  const regenCount = business.site_regen_count || 0;
+  if (regenCount > 0 && business.user_id) {
+    const { data: profile } = await db
+      .from("profiles")
+      .select("plan, trial_ends_at")
+      .eq("id", business.user_id)
+      .single();
+    const isOnTrial = profile?.plan === "free" && profile?.trial_ends_at && new Date(profile.trial_ends_at) > new Date();
+    const hasPaidPlan = profile?.plan === "solo" || profile?.plan === "scale";
+    if (!hasPaidPlan && isOnTrial) {
+      return NextResponse.json(
+        { error: "site_regen_limit", message: "Trial includes 1 free AI site edit. Upgrade to Solo or buy credits for more." },
+        { status: 402 }
+      );
+    }
+  }
+
+  // Track regen count (increment on each AI edit call)
+  await db.from("businesses")
+    .update({ site_regen_count: regenCount + 1 })
+    .eq("id", businessId);
 
   const systemPrompt = buildEditorSystemPrompt({
     name: businessContext?.name || "a business",

@@ -19,14 +19,14 @@ const TEXT = "#FAFAFA";
 const MUTED_FG = "#A1A1AA";
 
 const FEATURES = [
-  { title: "Built for service businesses", description: "Built for freelancers, agencies, consultants, and anyone who sells their time.", icon: <IconTerminal2 /> },
-  { title: "Ease of use", description: "Set up in 4 minutes. No onboarding calls, no 50-page docs, no confusion.", icon: <IconEaseInOut /> },
-  { title: "Transparent pricing", description: "One price. Everything included. No per-seat fees, no feature gating.", icon: <IconCurrencyDollar /> },
-  { title: "Always available", description: "Your booking link, client portal, and contracts work 24/7.", icon: <IconCloud /> },
-  { title: "Complete business OS", description: "CRM, booking, proposals, contracts, invoicing, projects — all in one place.", icon: <IconRouteAltLeft /> },
-  { title: "AI-powered", description: "AI writes your proposals, your website, your blog posts, and your follow-up emails.", icon: <IconHelp /> },
-  { title: "Replaces 11 tools", description: "Calendly, Dubsado, DocuSign, Toggl, Pipedrive, Typeform, and more.", icon: <IconAdjustmentsBolt /> },
-  { title: "Everything else", description: "Referral links, team accounts, automations, analytics, client portal, and custom domain.", icon: <IconHeart /> },
+  { title: "Built for service businesses", description: "Built for freelancers, consultants, coaches, and agencies — anyone who sells their time.", icon: <IconTerminal2 /> },
+  { title: "Set up in minutes", description: "Answer a few questions. Kovra builds your website, sets up your workspace, and you're live.", icon: <IconEaseInOut /> },
+  { title: "Transparent pricing", description: "Free to start, then flat monthly. No per-seat fees, no feature gating, no surprises.", icon: <IconCurrencyDollar /> },
+  { title: "Always on", description: "Your booking link, client portal, and invoices work 24/7 — whether you're working or not.", icon: <IconCloud /> },
+  { title: "Full client lifecycle", description: "CRM, booking, proposals, invoicing, and project management all in one place.", icon: <IconRouteAltLeft /> },
+  { title: "AI-powered", description: "AI writes your website, blog posts, proposals, and ad copy — all from your business context.", icon: <IconHelp /> },
+  { title: "Lead engine included", description: "Find prospects, send outreach, and track replies — without leaving Kovra.", icon: <IconAdjustmentsBolt /> },
+  { title: "Everything else", description: "Site analytics, multi-channel inbox, satellite email infra, AI coach, and custom domain.", icon: <IconHeart /> },
 ];
 
 function Feature({ title, description, icon, index, cols }: { title: string; description: string; icon: React.ReactNode; index: number; cols: number }) {

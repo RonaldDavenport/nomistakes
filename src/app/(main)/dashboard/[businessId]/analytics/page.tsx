@@ -166,7 +166,7 @@ export default function AnalyticsPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "Site Analytics",
         description: "Track who visits your site, where they come from, and what they do.",
@@ -183,23 +183,23 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em", margin: 0 }}>
-              Site Analytics
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>
+              Analytics
             </h1>
-            <p style={{ fontSize: 13, color: T.text3, margin: "4px 0 0" }}>
+            <p style={{ fontSize: 14, color: T.text2, margin: "4px 0 0" }}>
               Visitor and event data for your deployed site.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 6 }}>
             {[7, 30, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 style={{
-                  padding: "6px 14px", borderRadius: 6, fontSize: 12, fontWeight: 500,
+                  padding: "6px 14px", borderRadius: 100, fontSize: 12, fontWeight: 500,
                   border: `1px solid ${days === d ? T.gold : T.border}`,
                   background: days === d ? T.goldDim : "transparent",
-                  color: days === d ? T.gold : T.text3,
+                  color: days === d ? T.gold : T.text2,
                   cursor: "pointer",
                 }}
               >

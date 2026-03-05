@@ -7,9 +7,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen">
       {/* Minimal top bar for non-business pages (overview, account) */}
       <header data-dashboard-header className="sticky top-0 z-30 border-b border-white/5 bg-[rgba(10,10,15,0.85)] backdrop-blur-xl px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          <span className="text-white">No</span>
-          <span className="gradient-text">Mistakes</span>
+        <Link href="/" className="text-xl font-bold tracking-tight" style={{ color: "white", textDecoration: "none" }}>
+          kovra
         </Link>
         <div className="flex items-center gap-3">
           <Link

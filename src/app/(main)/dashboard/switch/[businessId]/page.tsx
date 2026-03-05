@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { T, CTA_GRAD } from "@/lib/design-tokens";
 
 interface Business {
@@ -14,13 +13,6 @@ interface Business {
   live_url?: string;
   stripe_account_id?: string;
   onboarding_completed?: boolean;
-}
-
-interface Stats {
-  contacts: number;
-  proposals: number;
-  invoices: number;
-  revenue: number;
 }
 
 const TOOL_MAP: Record<string, { kovra: string; section: string }> = {
@@ -119,29 +111,16 @@ function SwitchDashboardContent() {
   const replacedTools = toolsParam ? toolsParam.split(",") : [];
 
   const [business, setBusiness] = useState<Business | null>(null);
-  const [stats, setStats] = useState<Stats>({ contacts: 0, proposals: 0, invoices: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
   const [bookingCopied, setBookingCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const [bizRes, statsRes] = await Promise.all([
-          fetch(`/api/onboarding?businessId=${businessId}`),
-          fetch(`/api/dashboard/stats?businessId=${businessId}`),
-        ]);
-        if (bizRes.ok) {
-          const data = await bizRes.json();
+        const res = await fetch(`/api/onboarding?businessId=${businessId}`);
+        if (res.ok) {
+          const data = await res.json();
           setBusiness(data.business);
-        }
-        if (statsRes.ok) {
-          const data = await statsRes.json();
-          setStats({
-            contacts: data.contacts ?? 0,
-            proposals: data.proposals ?? 0,
-            invoices: data.invoices ?? 0,
-            revenue: data.revenue ?? 0,
-          });
         }
       } catch {}
       setLoading(false);
@@ -175,32 +154,8 @@ function SwitchDashboardContent() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.h }}>
 
-      {/* Nav */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: T.bg, borderBottom: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 28px", height: 56,
-      }}>
-        <Link href="/" style={{ textDecoration: "none", color: T.text, fontWeight: 700, fontSize: 17, letterSpacing: "-0.03em" }}>
-          kovra
-        </Link>
-        <Link
-          href={`/dashboard/${businessId}`}
-          style={{
-            padding: "7px 16px", borderRadius: 8,
-            fontSize: "0.82rem", fontWeight: 500,
-            color: T.text2, textDecoration: "none",
-            border: `1px solid ${T.border}`,
-            background: T.bgEl,
-          }}
-        >
-          Full dashboard
-        </Link>
-      </div>
-
       {/* Content */}
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: "52px 24px 80px" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "40px 24px 80px" }}>
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
@@ -238,24 +193,6 @@ function SwitchDashboardContent() {
               Your workspace is configured and ready to use.
             </p>
           )}
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 40 }}>
-          {[
-            { label: "Clients", value: stats.contacts },
-            { label: "Proposals", value: stats.proposals },
-            { label: "Invoices", value: stats.invoices },
-            { label: "Revenue", value: `$${stats.revenue.toLocaleString()}` },
-          ].map(({ label, value }) => (
-            <div key={label} style={{
-              padding: "14px 16px", borderRadius: 10,
-              background: T.bgEl, border: `1px solid ${T.border}`,
-            }}>
-              <p style={{ fontSize: "1.3rem", fontWeight: 800, color: T.text, letterSpacing: "-0.03em", marginBottom: 2 }}>{value}</p>
-              <p style={{ fontSize: "0.72rem", color: T.text3 }}>{label}</p>
-            </div>
-          ))}
         </div>
 
         {/* Tools replaced — 2-col compact grid */}

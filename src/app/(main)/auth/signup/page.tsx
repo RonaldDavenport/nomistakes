@@ -52,7 +52,7 @@ export default function SignupPage() {
             <span style={{ color: T.text, fontWeight: 700, fontSize: 20, letterSpacing: "-0.03em" }}>kovra</span>
           </Link>
           <h1 className="text-2xl font-bold text-white mb-2">Create your account</h1>
-          <p style={{ color: T.text3 }} className="text-sm">Start building your AI-powered business</p>
+          <p style={{ color: T.text3 }} className="text-sm">Your free 14-day trial starts here</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">

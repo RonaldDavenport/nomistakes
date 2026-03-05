@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     // Count tasks blocked by plan tier
     const userPlan = plan;
-    const planOrder = ["free", "starter", "growth", "pro"];
+    const planOrder = ["free", "solo", "scale"];
     const userPlanIdx = planOrder.indexOf(userPlan);
     const blockedTasks = definitions.filter(
       (d) => statusMap.has(d.id) && statusMap.get(d.id) !== "completed" && planOrder.indexOf(d.requiredPlan) > userPlanIdx

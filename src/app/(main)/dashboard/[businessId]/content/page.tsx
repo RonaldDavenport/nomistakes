@@ -191,7 +191,7 @@ export default function ContentPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "AI Blog Generator",
         description: "Publish SEO-optimized blog posts to your site with one click.",
@@ -207,8 +207,8 @@ export default function ContentPage() {
           ],
         }}
       >
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+      <div style={{ padding: "32px 24px", maxWidth: 960 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28, flexWrap: "wrap" }}>
         <div>
           <h1 className="text-xl sm:text-2xl font-bold mb-1" style={{ color: T.text, fontFamily: T.h }}>Content</h1>
           <p className="text-sm" style={{ color: T.text3 }}>
@@ -445,24 +445,30 @@ export default function ContentPage() {
           <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2px solid ${T.purple}`, borderTopColor: "transparent" }} />
         </div>
       ) : posts.length === 0 ? (
-        <div className="rounded-xl p-8 text-center" style={{ ...glassCard }}>
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(123,57,252,0.10)" }}>
-            <svg className="w-6 h-6" style={{ color: T.purpleLight }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div style={{ ...glassCard, borderRadius: 16, padding: "48px 32px", textAlign: "center" }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", background: "rgba(123,57,252,0.10)" }}>
+            <svg width="22" height="22" style={{ color: T.purpleLight }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold mb-2" style={{ color: T.text, fontFamily: T.h }}>No blog posts yet</h2>
-          <p className="text-sm max-w-md mx-auto leading-relaxed mb-4" style={{ color: T.text3 }}>
-            Ask the AI Editor to &ldquo;write a blog post about...&rdquo; and it will generate SEO-optimized content
-            tailored to your business.
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: T.text, fontFamily: T.h, margin: "0 0 8px" }}>No blog posts yet</h2>
+          <p style={{ fontSize: 13, color: T.text3, maxWidth: 360, margin: "0 auto 20px", lineHeight: 1.6 }}>
+            Use &ldquo;Generate with AI&rdquo; above to create an SEO-optimized post, or open the AI Editor to write one yourself.
           </p>
-          <button
-            onClick={() => router.push(`/dashboard/${businessId}/editor`)}
-            className="px-4 py-2 rounded-lg text-sm font-semibold"
-            style={{ background: CTA_GRAD, color: "#fff" }}
-          >
-            Go to Editor
-          </button>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => setShowGenPanel(true)}
+              style={{ padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", background: "rgba(123,57,252,0.12)", color: T.purpleLight, border: `1px solid rgba(123,57,252,0.25)` }}
+            >
+              Generate with AI
+            </button>
+            <button
+              onClick={() => router.push(`/dashboard/${businessId}/editor`)}
+              style={{ padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", background: CTA_GRAD, color: "#fff", border: "none" }}
+            >
+              Write with AI
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

@@ -43,7 +43,6 @@ interface FileAttachment {
   download_url?: string | null;
 }
 
-// Per-project UI state (keyed by project ID)
 interface ProjectUI {
   files: FileAttachment[];
   uploading: boolean;
@@ -65,6 +64,13 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: T.red,
 };
 
+const STATUS_BG: Record<string, string> = {
+  active: "rgba(34,197,94,0.12)",
+  completed: "rgba(59,130,246,0.12)",
+  on_hold: "rgba(200,164,78,0.12)",
+  cancelled: "rgba(239,68,68,0.12)",
+};
+
 function buildDeliverableTree(flat: Deliverable[]): Deliverable[] {
   const map: Record<string, Deliverable> = {};
   const roots: Deliverable[] = [];
@@ -79,6 +85,13 @@ function buildDeliverableTree(flat: Deliverable[]): Deliverable[] {
   return roots;
 }
 
+function formatBytes(bytes: number | null) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
+
 export default function ProjectsPage() {
   const params = useParams();
   const businessId = params.businessId as string;
@@ -91,21 +104,15 @@ export default function ProjectsPage() {
   const [desc, setDesc] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  // Consolidated per-project UI state
   const [ui, setUi] = useState<Record<string, ProjectUI>>({});
   const patchUi = (id: string, patch: Partial<ProjectUI>) =>
     setUi((prev) => ({ ...prev, [id]: { ...DEFAULT_UI, ...prev[id], ...patch } }));
 
-  // Per-deliverable subtask state (keyed by deliverable ID)
   const [addingSubtask, setAddingSubtask] = useState<Record<string, boolean>>({});
   const [subtaskName, setSubtaskName] = useState<Record<string, string>>({});
 
-  // Toast notifications
   const [toast, setToast] = useState<string | null>(null);
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  };
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   const fetchProjectFiles = useCallback(async (projectId: string) => {
     const res = await fetch(`/api/files?businessId=${businessId}&projectId=${projectId}`);
@@ -132,10 +139,7 @@ export default function ProjectsPage() {
     const ps: Project[] = data.projects || [];
     setProjects(ps);
     setLoading(false);
-    ps.forEach((p) => {
-      fetchProjectFiles(p.id);
-      fetchActivities(p.id);
-    });
+    ps.forEach((p) => { fetchProjectFiles(p.id); fetchActivities(p.id); });
   }, [businessId, fetchProjectFiles, fetchActivities]);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
@@ -215,13 +219,6 @@ export default function ProjectsPage() {
     fetchProjects();
   };
 
-  function formatBytes(bytes: number | null) {
-    if (!bytes) return "";
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / 1048576).toFixed(1)} MB`;
-  }
-
   const createProject = async () => {
     setSaving(true);
     const res = await fetch("/api/projects", {
@@ -277,7 +274,7 @@ export default function ProjectsPage() {
 
   const renderDeliverable = (d: Deliverable, project: Project, depth = 0): React.ReactNode => (
     <div key={d.id}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0", paddingLeft: depth * 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", paddingLeft: depth * 22 }}>
         <button
           onClick={() => toggleDeliverable(d.id, d.status)}
           style={{
@@ -347,79 +344,67 @@ export default function ProjectsPage() {
   );
 
   return (
-    <PaywallGate requiredPlan="growth" teaser={{ headline: "Projects", description: "Track deliverables, manage timelines, and keep clients in the loop.", bullets: ["Deliverable checklists", "Progress tracking", "Client visibility"] }}>
+    <PaywallGate requiredPlan="scale" teaser={{ headline: "Projects", description: "Track deliverables, manage timelines, and keep clients in the loop.", bullets: ["Deliverable checklists", "Progress tracking", "Client visibility"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Projects</h1>
-            <p style={{ fontSize: 13, color: T.subtitle, margin: 0, marginTop: 4 }}>
-              Manage deliverables, subtasks, files, and notes per project.
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Projects</h1>
+            <p style={{ fontSize: 14, color: T.text2, margin: 0, marginTop: 4 }}>
+              Deliverables, files, and notes — all in one place.
             </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 10, padding: "11px 22px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
           >
             + New Project
           </button>
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: "flex", alignItems: "stretch", marginBottom: 28 }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: T.text3, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Active</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0, marginTop: 4 }}>{activeProjects.length}</p>
-          </div>
-          <div style={{ width: 1, background: T.rule, alignSelf: "stretch" }} />
-          <div style={{ flex: 1, paddingLeft: 24 }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: T.text3, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Completed</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0, marginTop: 4 }}>{completedProjects.length}</p>
-          </div>
-          <div style={{ width: 1, background: T.rule, alignSelf: "stretch" }} />
-          <div style={{ flex: 1, paddingLeft: 24 }}>
-            <p style={{ fontSize: 11, fontWeight: 500, color: T.text3, margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>Deliverables</p>
-            <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0, marginTop: 4 }}>{totalDeliverables}</p>
-          </div>
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+          {[
+            { label: "Active", value: activeProjects.length, color: T.green },
+            { label: "Completed", value: completedProjects.length, color: T.blue },
+            { label: "Deliverables", value: totalDeliverables, color: T.text },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
+            </div>
+          ))}
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 28 }} />
-
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <div style={{ textAlign: "center", padding: 60, color: T.text3 }}>Loading...</div>
         ) : projects.length === 0 ? (
-          <div style={{ maxWidth: 640 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, margin: 0, marginBottom: 8 }}>How Projects Work</h2>
-            <p style={{ fontSize: 14, color: T.subtitle, lineHeight: 1.65, margin: 0, marginBottom: 24 }}>
-              Projects let you group related deliverables under one roof so nothing slips through
-              the cracks. Create a project for each engagement, attach deliverables with due dates,
-              add subtasks, upload files, and leave notes for your own records.
-            </p>
-            <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 24 }}>
-              {[
-                { title: "Deliverable checklists + subtasks", desc: "Break work into deliverables, then break those into subtasks. Check them off as you go." },
-                { title: "File attachments", desc: "Upload any file directly to a project. Everything stays in one place." },
-                { title: "Notes & activity log", desc: "Leave timestamped notes on any project. Useful for status updates and internal reminders." },
-              ].map((item) => (
-                <div key={item.title}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: T.text, margin: 0, marginBottom: 2 }}>{item.title}</p>
-                  <p style={{ fontSize: 13, color: T.subtitle, margin: 0, lineHeight: 1.55 }}>{item.desc}</p>
-                </div>
-              ))}
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              📁
             </div>
-            <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>No projects yet</h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 320, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              Create a project for each client engagement. Add deliverables, track progress, upload files, and leave notes.
+            </p>
             <button
               onClick={() => setShowCreate(true)}
-              style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 9, padding: "10px 22px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               Create Your First Project
             </button>
           </div>
         ) : (
-          <div>
-            {projects.map((project, idx) => {
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {projects.map((project) => {
               const allDel = project.deliverables;
               const totalDel = allDel.length;
               const doneDel = allDel.filter((d) => d.status === "completed").length;
@@ -428,171 +413,157 @@ export default function ProjectsPage() {
               const pui = ui[project.id] ?? DEFAULT_UI;
 
               return (
-                <div key={project.id}>
-                  <div style={{ paddingBottom: 28, paddingTop: idx === 0 ? 0 : 28 }}>
-
-                    {/* Project header */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 600, color: T.text, margin: 0 }}>{project.name}</h3>
-                          <span style={{ fontSize: 11, fontWeight: 500, color: STATUS_COLORS[project.status] || T.text3 }}>
-                            {project.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                          </span>
-                        </div>
-                        {project.contacts && (
-                          <p style={{ fontSize: 12, color: T.subtitle, margin: 0 }}>{project.contacts.name}</p>
-                        )}
-                        {project.description && (
-                          <p style={{ fontSize: 13, color: T.text2, margin: 0, marginTop: 4 }}>{project.description}</p>
-                        )}
-                      </div>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        {project.due_date && (
-                          <span style={{ fontSize: 12, color: T.subtitle }}>
-                            Due {new Date(project.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                          </span>
-                        )}
-                        {project.status === "active" && (
-                          <button onClick={() => completeProject(project.id)} style={{ fontSize: 12, color: T.green, background: "none", border: "none", cursor: "pointer" }}>
-                            Complete
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteProject(project.id)}
-                          style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer" }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Progress bar */}
-                    {totalDel > 0 && (
-                      <div style={{ marginBottom: 12 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 11, color: T.text3 }}>{doneDel}/{totalDel} deliverables</span>
-                          <span style={{ fontSize: 11, color: T.text3 }}>{progress}%</span>
-                        </div>
-                        <div style={{ height: 4, background: T.border, borderRadius: 2 }}>
-                          <div style={{ height: 4, background: T.gold, borderRadius: 2, width: `${progress}%`, transition: "width 0.3s ease" }} />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Deliverables tree */}
-                    {tree.map((d) => renderDeliverable(d, project))}
-
-                    {/* Files */}
-                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${T.rule}` }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.05em" }}>Files</span>
-                        <label style={{ fontSize: 11, color: T.gold, cursor: "pointer", fontWeight: 500 }}>
-                          {pui.uploading ? "Uploading..." : "+ Upload"}
-                          <input
-                            type="file"
-                            style={{ display: "none" }}
-                            disabled={pui.uploading}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) uploadFile(project.id, file);
-                              e.target.value = "";
-                            }}
-                          />
-                        </label>
-                      </div>
-                      {pui.files.length === 0 ? (
-                        <p style={{ fontSize: 12, color: T.text3 }}>No files yet.</p>
-                      ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          {pui.files.map((f) => (
-                            <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <a
-                                href={f.download_url || "#"}
-                                download={f.filename}
-                                style={{ fontSize: 12, color: T.text2, textDecoration: "none", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                              >
-                                {f.filename}
-                              </a>
-                              {f.size_bytes && <span style={{ fontSize: 11, color: T.text3, flexShrink: 0 }}>{formatBytes(f.size_bytes)}</span>}
-                              <button
-                                onClick={() => deleteFile(f.id, project.id)}
-                                style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Activity / Notes */}
-                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.rule}` }}>
-                      <button
-                        onClick={() => patchUi(project.id, { showActivity: !pui.showActivity })}
-                        style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: pui.showActivity ? 12 : 0 }}
-                      >
-                        <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Notes {pui.activities.length > 0 ? `(${pui.activities.length})` : ""}
+                <div key={project.id} style={{
+                  background: T.bgEl, border: `1px solid ${T.border}`,
+                  borderRadius: 12, padding: "20px 24px",
+                }}>
+                  {/* Project header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                        <h3 style={{ fontFamily: T.h, fontSize: 16, fontWeight: 600, color: T.text, margin: 0 }}>{project.name}</h3>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, padding: "2px 9px", borderRadius: 100,
+                          background: STATUS_BG[project.status] || "rgba(255,255,255,0.06)",
+                          color: STATUS_COLORS[project.status] || T.text3,
+                        }}>
+                          {project.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                         </span>
-                        <span style={{ fontSize: 11, color: T.text3 }}>{pui.showActivity ? "▲" : "▼"}</span>
-                      </button>
-
-                      {pui.showActivity && (
-                        <div>
-                          {pui.activities.length === 0 ? (
-                            <p style={{ fontSize: 12, color: T.text3, margin: "0 0 10px" }}>No notes yet.</p>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
-                              {pui.activities.map((a) => (
-                                <div key={a.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                                  <div style={{ flex: 1 }}>
-                                    <p style={{ fontSize: 13, color: T.text, margin: 0, lineHeight: 1.55 }}>{a.body}</p>
-                                    <p style={{ fontSize: 11, color: T.text3, margin: "2px 0 0" }}>
-                                      {new Date(a.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                                    </p>
-                                  </div>
-                                  <button
-                                    onClick={() => deleteActivity(a.id, project.id)}
-                                    style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                            <textarea
-                              rows={2}
-                              value={pui.commentText}
-                              onChange={(e) => patchUi(project.id, { commentText: e.target.value })}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitComment(project.id);
-                              }}
-                              placeholder="Add a note… (⌘↵ to submit)"
-                              style={{ ...inputStyle, resize: "none", flex: 1, fontSize: 12, padding: "8px 10px" }}
-                            />
-                            <button
-                              onClick={() => submitComment(project.id)}
-                              disabled={pui.submittingComment || !pui.commentText.trim()}
-                              style={{
-                                padding: "8px 16px", fontSize: 12, fontWeight: 600,
-                                background: CTA_GRAD, border: "none", borderRadius: 8,
-                                color: "#09090B", cursor: "pointer", flexShrink: 0,
-                                opacity: pui.submittingComment ? 0.6 : 1,
-                              }}
-                            >
-                              Add
-                            </button>
-                          </div>
-                        </div>
+                      </div>
+                      {project.contacts && (
+                        <p style={{ fontSize: 12, color: T.text2, margin: 0 }}>{project.contacts.name}</p>
                       )}
+                      {project.description && (
+                        <p style={{ fontSize: 13, color: T.text2, margin: 0, marginTop: 4 }}>{project.description}</p>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      {project.due_date && (
+                        <span style={{ fontSize: 12, color: T.text3 }}>
+                          Due {new Date(project.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      )}
+                      {project.status === "active" && (
+                        <button onClick={() => completeProject(project.id)} style={{ fontSize: 12, color: T.green, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                          Complete
+                        </button>
+                      )}
+                      <button onClick={() => deleteProject(project.id)} style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                        Delete
+                      </button>
                     </div>
                   </div>
 
-                  {idx < projects.length - 1 && <div style={{ height: 1, background: T.rule }} />}
+                  {/* Progress bar */}
+                  {totalDel > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                        <span style={{ fontSize: 11, color: T.text3 }}>{doneDel}/{totalDel} deliverables</span>
+                        <span style={{ fontSize: 11, color: T.text3 }}>{progress}%</span>
+                      </div>
+                      <div style={{ height: 4, background: T.border, borderRadius: 2 }}>
+                        <div style={{ height: 4, background: T.gold, borderRadius: 2, width: `${progress}%`, transition: "width 0.3s ease" }} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Deliverables tree */}
+                  {tree.length > 0 && (
+                    <div style={{ marginBottom: 14 }}>
+                      {tree.map((d) => renderDeliverable(d, project))}
+                    </div>
+                  )}
+
+                  {/* Files */}
+                  <div style={{ paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.05em" }}>Files</span>
+                      <label style={{ fontSize: 11, color: T.gold, cursor: "pointer", fontWeight: 500 }}>
+                        {pui.uploading ? "Uploading..." : "+ Upload"}
+                        <input
+                          type="file" style={{ display: "none" }} disabled={pui.uploading}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) uploadFile(project.id, file);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+                    {pui.files.length === 0 ? (
+                      <p style={{ fontSize: 12, color: T.text3, margin: 0 }}>No files yet.</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {pui.files.map((f) => (
+                          <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <a href={f.download_url || "#"} download={f.filename}
+                              style={{ fontSize: 12, color: T.text2, textDecoration: "none", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {f.filename}
+                            </a>
+                            {f.size_bytes && <span style={{ fontSize: 11, color: T.text3, flexShrink: 0 }}>{formatBytes(f.size_bytes)}</span>}
+                            <button onClick={() => deleteFile(f.id, project.id)}
+                              style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>×</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Activity / Notes */}
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
+                    <button
+                      onClick={() => patchUi(project.id, { showActivity: !pui.showActivity })}
+                      style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: pui.showActivity ? 12 : 0 }}
+                    >
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Notes {pui.activities.length > 0 ? `(${pui.activities.length})` : ""}
+                      </span>
+                      <span style={{ fontSize: 10, color: T.text3 }}>{pui.showActivity ? "▲" : "▼"}</span>
+                    </button>
+
+                    {pui.showActivity && (
+                      <div>
+                        {pui.activities.length > 0 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+                            {pui.activities.map((a) => (
+                              <div key={a.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                                <div style={{ flex: 1 }}>
+                                  <p style={{ fontSize: 13, color: T.text, margin: 0, lineHeight: 1.55 }}>{a.body}</p>
+                                  <p style={{ fontSize: 11, color: T.text3, margin: "2px 0 0" }}>
+                                    {new Date(a.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                  </p>
+                                </div>
+                                <button onClick={() => deleteActivity(a.id, project.id)}
+                                  style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}>×</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                          <textarea
+                            rows={2}
+                            value={pui.commentText}
+                            onChange={(e) => patchUi(project.id, { commentText: e.target.value })}
+                            onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitComment(project.id); }}
+                            placeholder="Add a note… (⌘↵ to submit)"
+                            style={{ ...inputStyle, resize: "none", flex: 1, fontSize: 12, padding: "8px 10px" }}
+                          />
+                          <button
+                            onClick={() => submitComment(project.id)}
+                            disabled={pui.submittingComment || !pui.commentText.trim()}
+                            style={{
+                              padding: "8px 16px", fontSize: 12, fontWeight: 600,
+                              background: CTA_GRAD, border: "none", borderRadius: 8,
+                              color: "#09090B", cursor: "pointer", flexShrink: 0,
+                              opacity: pui.submittingComment ? 0.6 : 1,
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -603,23 +574,23 @@ export default function ProjectsPage() {
         {showCreate && (
           <>
             <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50 }} onClick={() => setShowCreate(false)} />
-            <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 480, background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, padding: 28, zIndex: 51 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>New Project</h2>
+            <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 480, background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 14, padding: 28, zIndex: 51 }}>
+              <h2 style={{ fontFamily: T.h, fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>New Project</h2>
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Project Name</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Project Name</span>
                 <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} placeholder="e.g. Brand Strategy for Marcus Chen" />
               </label>
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Description</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Description</span>
                 <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" }} />
               </label>
               <label style={{ display: "block", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Due Date</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Due Date</span>
                 <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={inputStyle} />
               </label>
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.subtitle, cursor: "pointer" }}>Cancel</button>
-                <button onClick={createProject} disabled={saving || !name} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 8, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
+                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 9, color: T.text2, cursor: "pointer" }}>Cancel</button>
+                <button onClick={createProject} disabled={saving || !name} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 9, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Creating..." : "Create Project"}
                 </button>
               </div>
@@ -629,12 +600,7 @@ export default function ProjectsPage() {
 
         {/* Toast */}
         {toast && (
-          <div style={{
-            position: "fixed", bottom: 24, right: 24, zIndex: 100,
-            background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 8,
-            padding: "10px 16px", fontSize: 13, color: T.text,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-          }}>
+          <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 100, background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 16px", fontSize: 13, color: T.text, boxShadow: "0 4px 16px rgba(0,0,0,0.4)" }}>
             {toast}
           </div>
         )}

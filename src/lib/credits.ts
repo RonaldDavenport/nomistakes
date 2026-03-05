@@ -9,8 +9,6 @@ export const CREDIT_COSTS: Record<string, number> = {
   ad_copy: 3,
   ad_image: 2,
   ad_image_set: 8,
-  ugc_script: 3,
-  ugc_video: 15,
   competitor_analysis: 5,
   product_research: 5,
   site_update_major: 5,
@@ -35,9 +33,8 @@ export const CREDIT_COSTS: Record<string, number> = {
 // Monthly credit allocations per plan
 export const PLAN_CREDITS: Record<string, number> = {
   free: 0,
-  starter: 500,
-  growth: 2500,
-  pro: 1000,
+  solo: 500,
+  scale: 2500,
 };
 
 // Credit packs available for purchase

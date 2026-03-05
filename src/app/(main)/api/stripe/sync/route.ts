@@ -5,9 +5,10 @@ import { createServerClient } from "@/lib/supabase";
 export const runtime = "nodejs";
 
 const PRICE_TO_PLAN: Record<string, string> = {
-  [process.env.STRIPE_STARTER_PRICE_ID as string]: "starter",
-  [process.env.STRIPE_GROWTH_PRICE_ID as string]: "growth",
-  [process.env.STRIPE_PRO_PRICE_ID as string]: "pro",
+  ...(process.env.STRIPE_SOLO_PRICE_ID && { [process.env.STRIPE_SOLO_PRICE_ID]: "solo" }),
+  ...(process.env.STRIPE_STARTER_PRICE_ID && { [process.env.STRIPE_STARTER_PRICE_ID]: "solo" }),
+  ...(process.env.STRIPE_SCALE_PRICE_ID && { [process.env.STRIPE_SCALE_PRICE_ID]: "scale" }),
+  ...(process.env.STRIPE_GROWTH_PRICE_ID && { [process.env.STRIPE_GROWTH_PRICE_ID]: "scale" }),
 };
 
 /**

@@ -127,7 +127,7 @@ export default function SeoPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "AI SEO Audits",
         description: "Get a full SEO health score with actionable fixes and keyword opportunities.",

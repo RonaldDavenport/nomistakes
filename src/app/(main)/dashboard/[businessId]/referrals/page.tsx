@@ -82,12 +82,12 @@ export default function ReferralsPage() {
   };
 
   return (
-    <PaywallGate requiredPlan="starter" teaser={{ headline: "Referral Links", description: "Create trackable referral links to see which channels drive the most bookings.", bullets: ["Track link clicks", "Measure conversions", "Multiple links per channel"] }}>
+    <PaywallGate requiredPlan="solo" teaser={{ headline: "Referral Links", description: "Create trackable referral links to see which channels drive the most bookings.", bullets: ["Track link clicks", "Measure conversions", "Multiple links per channel"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Referral Links</h1>
-            <p style={{ fontSize: 13, color: T.subtitle, marginTop: 4 }}>Track where your clients are coming from.</p>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Referral Links</h1>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Track where your clients are coming from.</p>
           </div>
           <button onClick={() => setShowCreate(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             + New Link
@@ -95,63 +95,68 @@ export default function ReferralsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", gap: 40, marginBottom: 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { label: "Total Links", value: referrals.length },
-            { label: "Total Clicks", value: totalClicks },
-            { label: "Conversions", value: totalConversions },
-          ].map((s, i, arr) => (
-            <div key={s.label} style={{ display: "flex", gap: 40, alignItems: "center" }}>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0 }}>{s.value}</p>
-              </div>
-              {i < arr.length - 1 && <div style={{ width: 1, height: 40, background: T.rule }} />}
+            { label: "Total Links", value: referrals.length, color: T.text },
+            { label: "Total Clicks", value: totalClicks, color: T.gold },
+            { label: "Conversions", value: totalConversions, color: T.green },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
-
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <p style={{ color: T.text3, fontSize: 13 }}>Loading...</p>
         ) : referrals.length === 0 ? (
-          <div style={{ maxWidth: 480, paddingTop: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8 }}>No referral links yet</h2>
-            <p style={{ fontSize: 14, color: T.subtitle, lineHeight: 1.6, marginBottom: 24 }}>
-              Create trackable links for your Instagram bio, email signature, or anywhere you promote your business. See exactly which channels drive bookings.
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              🔗
+            </div>
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>No referral links yet</h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 340, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              Create trackable links for your Instagram bio, email signature, or anywhere you promote your business.
             </p>
-            <button onClick={() => setShowCreate(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button onClick={() => setShowCreate(true)} style={{ display: "inline-block", padding: "10px 22px", borderRadius: 9, background: CTA_GRAD, color: "#09090B", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer" }}>
               Create First Link
             </button>
           </div>
         ) : (
-          <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 100px", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.rule}`, fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 100px", gap: 12, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               <span>Label / Code</span>
               <span>Clicks</span>
               <span>Conversions</span>
               <span>Created</span>
               <span style={{ textAlign: "right" }}>Actions</span>
             </div>
-            {referrals.map((r) => (
-              <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 100px", gap: 12, padding: "14px 0", borderBottom: `1px solid ${T.rule}`, alignItems: "center" }}>
+            {referrals.map((r, idx) => (
+              <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 80px 100px", gap: 12, padding: "14px 16px", borderTop: idx > 0 ? `1px solid ${T.border}` : "none", alignItems: "center" }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: T.text, margin: 0 }}>{r.label || "Untitled link"}</p>
-                  <p style={{ fontSize: 12, color: T.subtitle, margin: 0, marginTop: 2, fontFamily: "monospace" }}>
-                    {window.location.origin}/r/{r.code}
+                  <p style={{ fontSize: 12, color: T.text3, margin: 0, marginTop: 2, fontFamily: "monospace" }}>
+                    /r/{r.code}
                   </p>
                 </div>
                 <span style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{r.clicks}</span>
                 <span style={{ fontSize: 14, fontWeight: 600, color: r.conversions > 0 ? T.green : T.text }}>{r.conversions}</span>
-                <span style={{ fontSize: 12, color: T.subtitle }}>
+                <span style={{ fontSize: 12, color: T.text3 }}>
                   {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                   <button onClick={() => copyLink(r.code)} style={{ fontSize: 12, color: copied === r.code ? T.green : T.gold, background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0 }}>
                     {copied === r.code ? "Copied!" : "Copy"}
                   </button>
-                  <button onClick={() => deleteReferral(r.id)} style={{ fontSize: 12, color: T.subtitle, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                  <button onClick={() => deleteReferral(r.id)} style={{ fontSize: 12, color: T.text3, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                     Delete
                   </button>
                 </div>
@@ -167,15 +172,15 @@ export default function ReferralsPage() {
             <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 480, background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, padding: 28, zIndex: 51 }}>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>New Referral Link</h2>
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Label (optional)</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Label (optional)</span>
                 <input value={label} onChange={(e) => setLabel(e.target.value)} style={inputStyle} placeholder="e.g. Instagram bio, Email signature" />
               </label>
               <label style={{ display: "block", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Destination URL *</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Destination URL *</span>
                 <input value={targetUrl} onChange={(e) => setTargetUrl(e.target.value)} style={inputStyle} placeholder="https://yourbusiness.com/book" />
               </label>
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.subtitle, cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.text2, cursor: "pointer" }}>Cancel</button>
                 <button onClick={createReferral} disabled={saving || !targetUrl.trim()} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 8, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Creating..." : "Create Link"}
                 </button>

@@ -165,9 +165,16 @@ export async function generateSiteContent(
   type: string,
   desc: string,
   audience: string,
-  brand: Record<string, unknown>
+  brand: Record<string, unknown>,
+  subtype?: string,
+  persona?: string
 ) {
   const isServices = type === "services";
+  const stageContext = persona === "grinder"
+    ? "early-stage, building first clients, positioning matters most right now"
+    : persona === "scaler"
+    ? "established and scaling, focused on leverage and premium positioning"
+    : "growing practice, managing clients and building systems";
 
   const result = await generate(
     `You are building the website for "${businessName}" — a premium ${isServices ? "service-based" : "digital product"} business.
@@ -175,10 +182,11 @@ export async function generateSiteContent(
 BUSINESS CONTEXT:
 - Name: ${businessName}
 - Tagline: "${tagline}"
-- Type: ${type}
+- Type: ${type}${subtype ? `\n- Category: ${subtype}` : ""}
 - What they do: ${desc}
 - Target audience: ${audience}
 - Brand tone: ${(brand as { tone?: string }).tone || "professional"}
+- Business stage: ${stageContext}
 
 RESEARCH CONTEXT — Study how top companies in similar niches position themselves:
 - For consulting/coaching: Study how McKinsey, Bain, Tony Robbins, Alex Hormozi position their services. Use outcome-driven language. Lead with the transformation, not the process.
@@ -343,8 +351,15 @@ export async function generateBusinessPlan(
   desc: string,
   audience: string,
   revenue: string,
-  startup: string
+  startup: string,
+  persona?: string
 ) {
+  const personaContext = persona === "grinder"
+    ? "Focus on landing first clients, building proof, and generating initial revenue. The business is early stage."
+    : persona === "scaler"
+    ? "Focus on leverage, systems, and scaling beyond 1:1 work. The business already has clients and wants to grow efficiently."
+    : "Focus on consistency, converting pipeline to revenue, and building repeatable systems. The business is growing.";
+
   const result = await generate(
     `Create a concise business plan for:
 - Name: ${businessName}
@@ -354,6 +369,7 @@ export async function generateBusinessPlan(
 - Target audience: ${audience}
 - Revenue estimate: ${revenue}
 - Startup cost: ${startup}
+- Stage context: ${personaContext}
 
 Return a JSON object with:
 - summary: 2-3 sentence executive summary
@@ -361,8 +377,8 @@ Return a JSON object with:
 - revenue_model: How the business makes money (pricing, upsells, etc.)
 - marketing_strategy: Top 3 channels and tactics to get first customers
 - competitive_edge: What makes this different from competitors
-- first_week: Array of 5 action items for the first week
-- first_month: Array of 5 milestones for the first month
+- first_week: Array of 5 action items for the first week — tailored to the stage context above
+- first_month: Array of 5 milestones for the first month — tailored to the stage context above
 
 Return ONLY valid JSON, no other text.`,
     "You are a startup advisor AI. Create actionable business plans focused on getting to revenue fast. Be specific with numbers and tactics, not generic advice.",

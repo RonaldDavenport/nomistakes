@@ -20,7 +20,7 @@ interface Contact {
 }
 
 const STAGES = [
-  { value: "", label: "All Stages" },
+  { value: "", label: "All" },
   { value: "subscriber", label: "Subscriber" },
   { value: "lead", label: "Lead" },
   { value: "qualified_lead", label: "Qualified" },
@@ -29,15 +29,7 @@ const STAGES = [
   { value: "advocate", label: "Advocate" },
 ];
 
-const SOURCES = [
-  "website",
-  "booking",
-  "referral",
-  "social",
-  "email",
-  "manual",
-  "other",
-];
+const SOURCES = ["website", "booking", "referral", "social", "email", "manual", "other"];
 
 function stageStyle(stage: string) {
   const map: Record<string, { bg: string; color: string }> = {
@@ -55,7 +47,17 @@ function stageLabel(stage: string) {
   return stage.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-const HR_STYLE = { border: "none", borderTop: "1px solid #1E1E21", margin: 0 } as const;
+function getInitials(name: string | null, email: string): string {
+  if (name) {
+    const parts = name.trim().split(" ").filter(Boolean);
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : parts[0][0].toUpperCase();
+  }
+  return email[0].toUpperCase();
+}
+
+const AVATAR_COLORS = ["#8B5CF6", "#3B82F6", "#22C55E", "#C8A44E", "#F97316", "#EF4444"];
 
 export default function ContactsPage() {
   const params = useParams();
@@ -71,7 +73,6 @@ export default function ContactsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Add form
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newPhone, setNewPhone] = useState("");
@@ -80,10 +81,10 @@ export default function ContactsPage() {
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ businessId });
-    if (stage) params.set("stage", stage);
-    if (search) params.set("search", search);
-    const res = await fetch(`/api/contacts?${params}`);
+    const qs = new URLSearchParams({ businessId });
+    if (stage) qs.set("stage", stage);
+    if (search) qs.set("search", search);
+    const res = await fetch(`/api/contacts?${qs}`);
     if (res.ok) {
       const data = await res.json();
       setContacts(data.contacts);
@@ -92,9 +93,7 @@ export default function ContactsPage() {
     setLoading(false);
   }, [businessId, stage, search]);
 
-  useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+  useEffect(() => { fetchContacts(); }, [fetchContacts]);
 
   async function handleAdd() {
     if (!newEmail.trim()) return;
@@ -103,8 +102,7 @@ export default function ContactsPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        businessId,
-        userId,
+        businessId, userId,
         email: newEmail.trim(),
         name: newName.trim() || null,
         phone: newPhone.trim() || null,
@@ -114,11 +112,7 @@ export default function ContactsPage() {
     });
     if (res.ok) {
       setShowAdd(false);
-      setNewName("");
-      setNewEmail("");
-      setNewPhone("");
-      setNewCompany("");
-      setNewSource("manual");
+      setNewName(""); setNewEmail(""); setNewPhone(""); setNewCompany(""); setNewSource("manual");
       fetchContacts();
     } else {
       const err = await res.json();
@@ -127,9 +121,25 @@ export default function ContactsPage() {
     setSaving(false);
   }
 
+  const customers = contacts.filter((c) =>
+    c.lifecycle_stage === "customer" || c.lifecycle_stage === "repeat_customer"
+  ).length;
+  const leadsCount = contacts.filter((c) =>
+    c.lifecycle_stage === "lead" || c.lifecycle_stage === "qualified_lead"
+  ).length;
+  const activeThisWeek = contacts.filter((c) =>
+    c.last_contacted_at && (Date.now() - new Date(c.last_contacted_at).getTime()) < 7 * 86400000
+  ).length;
+
+  const fieldStyle: React.CSSProperties = {
+    width: "100%", padding: "10px 14px", borderRadius: 10,
+    background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
+    color: T.text, fontSize: 14, outline: "none",
+  };
+
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "Built-In CRM",
         description: "Track contacts, manage your pipeline, book discovery calls, and send proposals — all from one place.",
@@ -148,273 +158,180 @@ export default function ContactsPage() {
     >
       <div style={{ padding: "32px 40px 80px" }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px" }}>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>
               Contacts
             </h1>
-            <p style={{ fontSize: 14, color: "#9CA3AF", marginTop: 4 }}>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>
               {total} contact{total !== 1 ? "s" : ""} in your CRM
             </p>
           </div>
           <button
             onClick={() => setShowAdd(true)}
             style={{
-              background: CTA_GRAD,
-              color: "#09090B",
-              border: "none",
-              padding: "12px 24px",
-              borderRadius: 12,
-              fontSize: 14,
-              fontWeight: 600,
-              fontFamily: T.h,
-              cursor: "pointer",
+              background: CTA_GRAD, color: "#09090B", border: "none",
+              padding: "11px 22px", borderRadius: 10, fontSize: 14,
+              fontWeight: 600, cursor: "pointer",
             }}
           >
             + Add Contact
           </button>
         </div>
 
-        <hr style={HR_STYLE} />
-
         {/* Stats */}
-        <div style={{ display: "flex", gap: 48, padding: "20px 0" }}>
-          <div>
-            <span style={{ fontSize: 24, fontWeight: 700, color: T.text, fontFamily: T.h }}>{total}</span>
-            <span style={{ fontSize: 13, color: "#9CA3AF", display: "block", marginTop: 2 }}>Total contacts</span>
-          </div>
-          <div>
-            <span style={{ fontSize: 24, fontWeight: 700, color: T.green, fontFamily: T.h }}>
-              {contacts.filter((c) => c.lifecycle_stage === "customer" || c.lifecycle_stage === "repeat_customer").length}
-            </span>
-            <span style={{ fontSize: 13, color: "#9CA3AF", display: "block", marginTop: 2 }}>Customers</span>
-          </div>
-          <div>
-            <span style={{ fontSize: 24, fontWeight: 700, color: "#3b82f6", fontFamily: T.h }}>
-              {contacts.filter((c) => c.lifecycle_stage === "lead" || c.lifecycle_stage === "qualified_lead").length}
-            </span>
-            <span style={{ fontSize: 13, color: "#9CA3AF", display: "block", marginTop: 2 }}>Leads</span>
-          </div>
-          <div>
-            <span style={{ fontSize: 24, fontWeight: 700, color: T.text2, fontFamily: T.h }}>
-              {contacts.filter((c) => c.last_contacted_at && (Date.now() - new Date(c.last_contacted_at).getTime()) < 7 * 86400000).length}
-            </span>
-            <span style={{ fontSize: 13, color: "#9CA3AF", display: "block", marginTop: 2 }}>Active this week</span>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          {[
+            { label: "Total", value: total, color: T.text },
+            { label: "Customers", value: customers, color: T.green },
+            { label: "Leads", value: leadsCount, color: T.blue },
+            { label: "Active this week", value: activeThisWeek, color: T.text2 },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
+            </div>
+          ))}
         </div>
 
-        <hr style={HR_STYLE} />
-
         {/* Filters */}
-        <div style={{ display: "flex", gap: 12, padding: "20px 0", flexWrap: "wrap" }}>
-          <select
-            value={stage}
-            onChange={(e) => setStage(e.target.value)}
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: `1px solid ${T.border}`,
-              borderRadius: 10,
-              padding: "10px 16px",
-              fontSize: 13,
-              color: T.text2,
-              outline: "none",
-              minWidth: 160,
-            }}
-          >
-            {STAGES.map((s) => (
-              <option key={s.value} value={s.value} style={{ background: T.bgEl }}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+          {STAGES.map((s) => (
+            <button
+              key={s.value}
+              onClick={() => setStage(s.value)}
+              style={{
+                padding: "6px 14px", borderRadius: 100, fontSize: 12, fontWeight: 500,
+                border: `1px solid ${stage === s.value ? T.gold : T.border}`,
+                background: stage === s.value ? T.goldDim : "transparent",
+                color: stage === s.value ? T.gold : T.text2,
+                cursor: "pointer",
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
           <input
             type="text"
-            placeholder="Search contacts..."
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: `1px solid ${T.border}`,
-              borderRadius: 10,
-              padding: "10px 16px",
-              fontSize: 13,
-              color: T.text,
-              outline: "none",
-              flex: 1,
-              minWidth: 200,
+              marginLeft: "auto", background: T.bgEl, border: `1px solid ${T.border}`,
+              borderRadius: 8, padding: "6px 14px", fontSize: 13,
+              color: T.text, outline: "none", width: 200,
             }}
           />
         </div>
 
-        <hr style={HR_STYLE} />
-
         {/* Table */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: 60, color: "#9CA3AF" }}>Loading...</div>
+          <div style={{ textAlign: "center", padding: 60, color: T.text3 }}>Loading...</div>
         ) : contacts.length === 0 ? (
-          <div style={{ padding: "48px 0" }}>
-            {/* Empty state: educational walkthrough */}
-            <h2 style={{ fontFamily: T.h, fontSize: 22, fontWeight: 700, color: T.text, marginBottom: 8 }}>
-              Your contact list is empty
-            </h2>
-            <p style={{ fontSize: 14, color: "#9CA3AF", maxWidth: 540, lineHeight: 1.6, marginBottom: 32 }}>
-              Contacts are the people you do business with -- leads, customers, and everyone in between.
-              NoMistakes tracks each contact through lifecycle stages so you always know where they stand.
-            </p>
-
-            <hr style={HR_STYLE} />
-
-            {/* How contacts work */}
-            <div style={{ padding: "28px 0" }}>
-              <h3 style={{ fontFamily: T.h, fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                How contacts work
-              </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#52525B", fontFamily: T.mono, minWidth: 20 }}>01</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 2 }}>Add contacts manually or automatically</p>
-                    <p style={{ fontSize: 13, color: "#52525B", lineHeight: 1.5 }}>
-                      Add them yourself, or they get created automatically when someone books a discovery call or submits a form.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#52525B", fontFamily: T.mono, minWidth: 20 }}>02</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 2 }}>Track lifecycle stages</p>
-                    <p style={{ fontSize: 13, color: "#52525B", lineHeight: 1.5 }}>
-                      Every contact moves through stages: Subscriber, Lead, Qualified Lead, Customer, Repeat Customer, and Advocate. You always know where someone stands.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#52525B", fontFamily: T.mono, minWidth: 20 }}>03</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 2 }}>Tag and segment your audience</p>
-                    <p style={{ fontSize: 13, color: "#52525B", lineHeight: 1.5 }}>
-                      Use tags to group contacts by interest, campaign, or any criteria. Filter and search to find exactly who you need.
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#52525B", fontFamily: T.mono, minWidth: 20 }}>04</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 2 }}>Send emails and track engagement</p>
-                    <p style={{ fontSize: 13, color: "#52525B", lineHeight: 1.5 }}>
-                      Send emails directly from the contact detail page. Opens, clicks, and last-contact dates are tracked automatically.
-                    </p>
-                  </div>
-                </div>
-              </div>
+          <div style={{
+            textAlign: "center", padding: "64px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12, background: T.goldDim,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", fontSize: 22,
+            }}>
+              👥
             </div>
-
-            <hr style={HR_STYLE} />
-
-            {/* Get started */}
-            <div style={{ padding: "28px 0" }}>
-              <h3 style={{ fontFamily: T.h, fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Get started
-              </h3>
-              <p style={{ fontSize: 13, color: "#52525B", marginBottom: 20, lineHeight: 1.5 }}>
-                Add your first contact to start building your CRM. You can always import more later or let the system create them automatically from bookings.
-              </p>
+            <h3 style={{ fontFamily: T.h, fontSize: 17, fontWeight: 600, color: T.text, marginBottom: 6 }}>
+              {stage || search ? "No contacts match" : "No contacts yet"}
+            </h3>
+            <p style={{ fontSize: 13, color: T.text2, maxWidth: 320, margin: "0 auto 20px", lineHeight: 1.5 }}>
+              {stage || search
+                ? "Try clearing filters or searching for something else."
+                : "Add contacts manually or they're created automatically when someone books a call."}
+            </p>
+            {!stage && !search && (
               <button
                 onClick={() => setShowAdd(true)}
                 style={{
                   background: CTA_GRAD, color: "#09090B", border: "none",
-                  padding: "12px 24px", borderRadius: 12, fontSize: 14,
-                  fontWeight: 600, fontFamily: T.h, cursor: "pointer",
+                  padding: "10px 22px", borderRadius: 9, fontSize: 13,
+                  fontWeight: 600, cursor: "pointer",
                 }}
               >
                 + Add Your First Contact
               </button>
-            </div>
+            )}
           </div>
         ) : (
-          <div style={{ overflowX: "auto", marginTop: 4 }}>
+          <div style={{ borderRadius: 12, border: `1px solid ${T.border}`, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid #1E1E21" }}>
-                  {["Name", "Email", "Stage", "Source", "Tags", "Last Contact"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "14px 16px",
-                        textAlign: "left",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        color: "#52525B",
-                      }}
-                    >
+                <tr style={{ borderBottom: `1px solid ${T.border}`, background: T.bgEl }}>
+                  {["Name", "Stage", "Source", "Tags", "Last Contact"].map((h) => (
+                    <th key={h} style={{
+                      padding: "12px 16px", textAlign: "left", fontSize: 11,
+                      fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: T.text3,
+                    }}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {contacts.map((c) => {
+                {contacts.map((c, idx) => {
                   const ss = stageStyle(c.lifecycle_stage);
+                  const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
                   return (
                     <tr
                       key={c.id}
                       onClick={() => router.push(`/dashboard/${businessId}/contacts/${c.id}`)}
-                      style={{ borderBottom: "1px solid #1E1E21", cursor: "pointer" }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.background = "transparent";
-                      }}
+                      style={{ borderBottom: idx < contacts.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                     >
-                      <td style={{ padding: "14px 16px", fontSize: 14, fontWeight: 500, color: T.text }}>
-                        {c.name || "\u2014"}
+                      <td style={{ padding: "12px 16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 32, height: 32, borderRadius: 8,
+                            background: `${color}20`, border: `1px solid ${color}40`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: 12, fontWeight: 700, color, flexShrink: 0,
+                          }}>
+                            {getInitials(c.name, c.email)}
+                          </div>
+                          <div>
+                            <span style={{ fontSize: 14, fontWeight: 500, color: T.text, display: "block" }}>
+                              {c.name || "—"}
+                            </span>
+                            <span style={{ fontSize: 12, color: T.text2 }}>{c.email}</span>
+                          </div>
+                        </div>
                       </td>
-                      <td style={{ padding: "14px 16px", fontSize: 13, color: T.text2 }}>
-                        {c.email}
-                      </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 10px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            background: ss.bg,
-                            color: ss.color,
-                          }}
-                        >
+                      <td style={{ padding: "12px 16px" }}>
+                        <span style={{
+                          display: "inline-block", padding: "3px 9px", borderRadius: 100,
+                          fontSize: 11, fontWeight: 600, background: ss.bg, color: ss.color,
+                        }}>
                           {stageLabel(c.lifecycle_stage)}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 16px", fontSize: 13, color: "#52525B" }}>
-                        {c.source || "\u2014"}
+                      <td style={{ padding: "12px 16px", fontSize: 12, color: T.text3 }}>
+                        {c.source || "—"}
                       </td>
-                      <td style={{ padding: "14px 16px" }}>
+                      <td style={{ padding: "12px 16px" }}>
                         <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                           {(c.tags || []).slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              style={{
-                                padding: "2px 8px",
-                                borderRadius: 4,
-                                fontSize: 11,
-                                background: "rgba(255,255,255,0.06)",
-                                color: "#9CA3AF",
-                              }}
-                            >
+                            <span key={tag} style={{
+                              padding: "2px 8px", borderRadius: 4, fontSize: 11,
+                              background: "rgba(255,255,255,0.06)", color: T.text2,
+                            }}>
                               {tag}
                             </span>
                           ))}
                         </div>
                       </td>
-                      <td style={{ padding: "14px 16px", fontSize: 12, color: "#52525B", fontFamily: T.mono }}>
+                      <td style={{ padding: "12px 16px", fontSize: 12, color: T.text3, fontFamily: T.mono }}>
                         {c.last_contacted_at
                           ? new Date(c.last_contacted_at).toLocaleDateString()
-                          : "\u2014"}
+                          : "—"}
                       </td>
                     </tr>
                   );
@@ -429,21 +346,16 @@ export default function ContactsPage() {
           <div
             style={{
               position: "fixed", inset: 0, zIndex: 100,
-              background: "rgba(0,0,0,0.6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              padding: 16,
+              background: "rgba(0,0,0,0.6)", display: "flex",
+              alignItems: "center", justifyContent: "center", padding: 16,
             }}
             onClick={() => setShowAdd(false)}
           >
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: T.bgEl,
-                border: `1px solid ${T.border}`,
-                borderRadius: 14,
-                padding: "32px",
-                maxWidth: 460,
-                width: "100%",
+                background: T.bgEl, border: `1px solid ${T.border}`,
+                borderRadius: 14, padding: "32px", maxWidth: 460, width: "100%",
               }}
             >
               <h3 style={{ fontFamily: T.h, fontSize: 20, fontWeight: 600, color: T.text, marginBottom: 24 }}>
@@ -451,74 +363,26 @@ export default function ContactsPage() {
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
-                  <label style={{ fontSize: 12, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Email *</label>
-                  <input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
-                      color: T.text, fontSize: 14, outline: "none",
-                    }}
-                  />
+                  <label style={{ fontSize: 12, color: T.text2, display: "block", marginBottom: 6 }}>Email *</label>
+                  <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="name@company.com" style={fieldStyle} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Name</label>
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="John Smith"
-                    style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
-                      color: T.text, fontSize: 14, outline: "none",
-                    }}
-                  />
+                  <label style={{ fontSize: 12, color: T.text2, display: "block", marginBottom: 6 }}>Name</label>
+                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="John Smith" style={fieldStyle} />
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Phone</label>
-                    <input
-                      type="tel"
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="(555) 123-4567"
-                      style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 10,
-                        background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
-                        color: T.text, fontSize: 14, outline: "none",
-                      }}
-                    />
+                    <label style={{ fontSize: 12, color: T.text2, display: "block", marginBottom: 6 }}>Phone</label>
+                    <input type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="(555) 123-4567" style={fieldStyle} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Company</label>
-                    <input
-                      type="text"
-                      value={newCompany}
-                      onChange={(e) => setNewCompany(e.target.value)}
-                      placeholder="Acme Inc"
-                      style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 10,
-                        background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
-                        color: T.text, fontSize: 14, outline: "none",
-                      }}
-                    />
+                    <label style={{ fontSize: 12, color: T.text2, display: "block", marginBottom: 6 }}>Company</label>
+                    <input type="text" value={newCompany} onChange={(e) => setNewCompany(e.target.value)} placeholder="Acme Inc" style={fieldStyle} />
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: "#9CA3AF", display: "block", marginBottom: 6 }}>Source</label>
-                  <select
-                    value={newSource}
-                    onChange={(e) => setNewSource(e.target.value)}
-                    style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 10,
-                      background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
-                      color: T.text2, fontSize: 14, outline: "none",
-                    }}
-                  >
+                  <label style={{ fontSize: 12, color: T.text2, display: "block", marginBottom: 6 }}>Source</label>
+                  <select value={newSource} onChange={(e) => setNewSource(e.target.value)} style={{ ...fieldStyle, color: T.text2 }}>
                     {SOURCES.map((s) => (
                       <option key={s} value={s} style={{ background: T.bgEl }}>
                         {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -544,7 +408,8 @@ export default function ContactsPage() {
                   style={{
                     flex: 1, padding: "12px", borderRadius: 10,
                     background: CTA_GRAD, border: "none",
-                    color: "#09090B", fontSize: 14, fontWeight: 600, cursor: saving ? "wait" : "pointer",
+                    color: "#09090B", fontSize: 14, fontWeight: 600,
+                    cursor: saving ? "wait" : "pointer",
                     opacity: saving || !newEmail.trim() ? 0.6 : 1,
                   }}
                 >

@@ -151,34 +151,29 @@ export default function TimePage() {
   };
 
   return (
-    <PaywallGate requiredPlan="growth" teaser={{ headline: "Time Tracking", description: "Track billable hours and generate time reports.", bullets: ["Built-in timer", "Billable hours tracking", "Per-project reporting"] }}>
+    <PaywallGate requiredPlan="scale" teaser={{ headline: "Time Tracking", description: "Track billable hours and generate time reports.", bullets: ["Built-in timer", "Billable hours tracking", "Per-project reporting"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Time Tracking</h1>
-          <p style={{ fontSize: 13, color: T.subtitle, marginTop: 4 }}>Track billable hours across projects and clients.</p>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Time Tracking</h1>
+          <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Track billable hours across projects and clients.</p>
         </div>
 
         {/* Stats */}
-        <div style={{ display: "flex", gap: 40, marginBottom: 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { label: "This Week", value: formatMinutes(weekMinutes) },
-            { label: "Billable Hours", value: formatMinutes(billableMinutes) },
-            { label: "Billable Value", value: billableValue > 0 ? `$${billableValue.toFixed(2)}` : "$0.00" },
-          ].map((s, i, arr) => (
-            <div key={s.label} style={{ display: "flex", gap: 40, alignItems: "center" }}>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                <p style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: 0, fontVariantNumeric: "tabular-nums" }}>{s.value}</p>
-              </div>
-              {i < arr.length - 1 && <div style={{ width: 1, height: 40, background: T.rule }} />}
+            { label: "This Week", value: formatMinutes(weekMinutes), color: T.text },
+            { label: "Billable Hours", value: formatMinutes(billableMinutes), color: T.gold },
+            { label: "Billable Value", value: billableValue > 0 ? `$${billableValue.toFixed(2)}` : "$0.00", color: T.green },
+          ].map((s) => (
+            <div key={s.label} style={{ padding: "16px 20px", borderRadius: 10, background: T.bgEl, border: `1px solid ${T.border}` }}>
+              <span style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: T.h, fontVariantNumeric: "tabular-nums", display: "block" }}>{s.value}</span>
+              <span style={{ fontSize: 12, color: T.text3, display: "block", marginTop: 2 }}>{s.label}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 28 }} />
-
         {/* Timer widget */}
-        <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
+        <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 16 }}>Timer</p>
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <input
@@ -219,12 +214,18 @@ export default function TimePage() {
 
         {/* Entries table */}
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <p style={{ color: T.text3, fontSize: 13 }}>Loading...</p>
         ) : entries.length === 0 ? (
-          <p style={{ color: T.subtitle, fontSize: 14 }}>No time entries yet. Start the timer above to track your first session.</p>
+          <div style={{
+            textAlign: "center", padding: "48px 24px",
+            borderRadius: 12, border: `1px dashed ${T.border}`, background: T.bgEl,
+          }}>
+            <p style={{ fontSize: 15, color: T.text, marginBottom: 4 }}>No entries yet</p>
+            <p style={{ fontSize: 13, color: T.text3 }}>Start the timer above to log your first session.</p>
+          </div>
         ) : (
-          <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 140px 80px 80px 80px 60px", gap: 12, padding: "8px 0", borderBottom: `1px solid ${T.rule}`, fontSize: 11, fontWeight: 600, color: T.subtitle, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          <div style={{ background: T.bgEl, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 140px 80px 80px 80px 60px", gap: 12, padding: "10px 16px", borderBottom: `1px solid ${T.border}`, fontSize: 11, fontWeight: 600, color: T.text3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
               <span>Description</span>
               <span>Project</span>
               <span>Duration</span>
@@ -232,16 +233,16 @@ export default function TimePage() {
               <span>Billable</span>
               <span style={{ textAlign: "right" }}></span>
             </div>
-            {entries.map((e) => (
-              <div key={e.id} style={{ display: "grid", gridTemplateColumns: "1fr 140px 80px 80px 80px 60px", gap: 12, padding: "12px 0", borderBottom: `1px solid ${T.rule}`, alignItems: "center" }}>
-                <span style={{ fontSize: 13, color: T.text }}>{e.description || <span style={{ color: T.subtitle }}>No description</span>}</span>
-                <span style={{ fontSize: 12, color: T.subtitle }}>{e.projects?.name || "—"}</span>
+            {entries.map((e, idx) => (
+              <div key={e.id} style={{ display: "grid", gridTemplateColumns: "1fr 140px 80px 80px 80px 60px", gap: 12, padding: "12px 16px", borderTop: idx > 0 ? `1px solid ${T.border}` : "none", alignItems: "center" }}>
+                <span style={{ fontSize: 13, color: T.text }}>{e.description || <span style={{ color: T.text3 }}>No description</span>}</span>
+                <span style={{ fontSize: 12, color: T.text2 }}>{e.projects?.name || "—"}</span>
                 <span style={{ fontSize: 13, color: T.text, fontVariantNumeric: "tabular-nums" }}>{formatMinutes(e.minutes)}</span>
-                <span style={{ fontSize: 12, color: T.subtitle }}>
+                <span style={{ fontSize: 12, color: T.text3 }}>
                   {new Date(e.started_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
-                <span style={{ fontSize: 12, color: e.billable ? T.green : T.subtitle }}>{e.billable ? "Yes" : "No"}</span>
-                <button onClick={() => deleteEntry(e.id)} style={{ fontSize: 11, color: T.subtitle, background: "none", border: "none", cursor: "pointer", textAlign: "right" }}>
+                <span style={{ fontSize: 12, color: e.billable ? T.green : T.text3 }}>{e.billable ? "Yes" : "No"}</span>
+                <button onClick={() => deleteEntry(e.id)} style={{ fontSize: 11, color: T.text3, background: "none", border: "none", cursor: "pointer", textAlign: "right" }}>
                   Delete
                 </button>
               </div>

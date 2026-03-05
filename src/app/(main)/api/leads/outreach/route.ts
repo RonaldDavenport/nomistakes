@@ -20,6 +20,30 @@ export async function POST(req: NextRequest) {
 
   const db = createServerClient();
 
+  // Trial outreach cap: trial users (free plan + active trial) limited to 20 sends per business
+  const { data: profile } = await db
+    .from("profiles")
+    .select("plan, trial_ends_at")
+    .eq("id", userId)
+    .single();
+  const isOnTrial = profile?.plan === "free" && profile?.trial_ends_at && new Date(profile.trial_ends_at) > new Date();
+  if (isOnTrial) {
+    const { data: biz } = await db
+      .from("businesses")
+      .select("trial_outreach_count")
+      .eq("id", businessId)
+      .single();
+    if ((biz?.trial_outreach_count || 0) >= 20) {
+      return NextResponse.json(
+        { error: "trial_outreach_limit", message: "Trial includes 20 outreach sends. Upgrade to Solo for unlimited outreach." },
+        { status: 402 }
+      );
+    }
+    await db.from("businesses")
+      .update({ trial_outreach_count: (biz?.trial_outreach_count || 0) + 1 })
+      .eq("id", businessId);
+  }
+
   // Deduct 1 credit (throws InsufficientCreditsError if balance is too low)
   let newBalance: number;
   try {

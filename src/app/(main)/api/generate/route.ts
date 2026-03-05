@@ -70,9 +70,13 @@ async function handleBuild(body: {
   bizType: string;
   subtype?: string;
   siteMode?: string;
+  hasExistingWebsite?: boolean;
+  persona?: "grinder" | "operator" | "scaler";
+  quizExperience?: string;
+  quizChallenge?: string;
 }) {
-  const { userId, concept, skills, time, budget, bizType, subtype, siteMode } = body;
-  const resolvedSubtype = subtype || concept.subtype || "";
+  const { userId, concept, skills, time, budget, bizType, subtype, siteMode, hasExistingWebsite, persona, quizExperience, quizChallenge } = body;
+  const resolvedSubtype = subtype || concept.subtype || classifySubtype(concept.desc || "");
   const db = createServerClient();
 
   // Create slug — ensure uniqueness
@@ -93,18 +97,18 @@ async function handleBuild(body: {
     slug = `${slug}-${suffix}`;
   }
 
-  // 1. Generate brand + business plan (always). Skip site content for workspace-only mode.
-  const workspaceOnly = siteMode === "transfer";
+  // 1. Generate brand + business plan (always). Skip site content for workspace-only or existing-website mode.
+  const workspaceOnly = siteMode === "transfer" || hasExistingWebsite === true;
 
   const generators = workspaceOnly
     ? [
         generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
-        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup),
+        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup, persona),
       ]
     : [
         generateBrand(concept.name, concept.tagline, concept.type, concept.audience),
-        generateSiteContent(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, {}),
-        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup),
+        generateSiteContent(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, {}, resolvedSubtype, persona),
+        generateBusinessPlan(concept.name, concept.tagline, concept.type, concept.desc, concept.audience, concept.revenue, concept.startup, persona),
       ];
 
   const results = await Promise.all(generators);
@@ -153,6 +157,10 @@ async function handleBuild(body: {
       time_commitment: time,
       budget,
       biz_type: bizType,
+      has_existing_website: hasExistingWebsite || false,
+      persona: persona || null,
+      quiz_experience: quizExperience || null,
+      quiz_challenge: quizChallenge || null,
       brand,
       site_content: siteContent,
       business_plan: businessPlan,
@@ -223,6 +231,15 @@ async function handleBuild(body: {
     businessId: business.id,
     siteUrl: null,
   });
+}
+
+// Classify service subtype from description text when not explicitly provided
+function classifySubtype(description: string): string {
+  const d = description.toLowerCase();
+  if (d.includes("coach") || d.includes("mentor") || d.includes("trainer") || d.includes("fitness") || d.includes("mindset") || d.includes("life coach")) return "coaching";
+  if (d.includes("consult") || d.includes("advisor") || d.includes("strategist") || d.includes("analyst") || d.includes("hr ") || d.includes("legal") || d.includes("law ") || d.includes("marketing") || d.includes("accountant") || d.includes("accounting")) return "consulting";
+  if (d.includes("agency") || d.includes("studio") || d.includes("our team") || d.includes("we build") || d.includes("we design") || d.includes("we help")) return "agency";
+  return "freelance";
 }
 
 // Generate 5 alternative business names

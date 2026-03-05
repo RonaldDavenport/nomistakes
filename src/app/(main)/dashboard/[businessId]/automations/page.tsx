@@ -119,26 +119,24 @@ export default function AutomationsPage() {
   };
 
   return (
-    <PaywallGate requiredPlan="growth" teaser={{ headline: "Workflow Automations", description: "Automate follow-ups, review requests, and re-engagement emails.", bullets: ["Trigger on project completion", "Review request automation", "Re-engage inactive contacts"] }}>
+    <PaywallGate requiredPlan="scale" teaser={{ headline: "Workflow Automations", description: "Automate follow-ups, review requests, and re-engagement emails.", bullets: ["Trigger on project completion", "Review request automation", "Re-engage inactive contacts"] }}>
       <div style={{ padding: "32px 40px 80px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Automations</h1>
-            <p style={{ fontSize: 13, color: T.subtitle, marginTop: 4 }}>Set rules that fire automatically based on client activity.</p>
+            <h1 style={{ fontFamily: T.h, fontSize: 28, fontWeight: 700, color: T.text, letterSpacing: "-0.5px", margin: 0 }}>Automations</h1>
+            <p style={{ fontSize: 14, color: T.text2, marginTop: 4 }}>Set rules that fire automatically based on client activity.</p>
           </div>
           <button onClick={() => setShowCreate(true)} style={{ background: CTA_GRAD, color: "#09090B", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             + New Automation
           </button>
         </div>
 
-        <div style={{ height: 1, background: T.rule, marginBottom: 24 }} />
-
         {loading ? (
-          <p style={{ color: T.subtitle, fontSize: 13 }}>Loading...</p>
+          <p style={{ color: T.text3, fontSize: 13 }}>Loading...</p>
         ) : automations.length === 0 ? (
           <div style={{ maxWidth: 560, paddingTop: 16 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8 }}>Automate your follow-ups</h2>
-            <p style={{ fontSize: 14, color: T.subtitle, lineHeight: 1.6, marginBottom: 24 }}>
+            <p style={{ fontSize: 14, color: T.text2, lineHeight: 1.6, marginBottom: 24 }}>
               Set rules that fire automatically — request reviews when projects close, re-engage contacts who go quiet, or send follow-ups after payments.
             </p>
 
@@ -156,7 +154,7 @@ export default function AutomationsPage() {
                 >
                   <div>
                     <p style={{ fontSize: 14, fontWeight: 500, color: T.text, margin: 0 }}>{t.name}</p>
-                    <p style={{ fontSize: 12, color: T.subtitle, margin: 0, marginTop: 4 }}>
+                    <p style={{ fontSize: 12, color: T.text2, margin: 0, marginTop: 4 }}>
                       When: {TRIGGER_LABELS[t.trigger]} → {ACTION_LABELS[t.action]}
                     </p>
                   </div>
@@ -176,11 +174,11 @@ export default function AutomationsPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{a.name}</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: a.enabled ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)", color: a.enabled ? T.green : T.subtitle }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 10, background: a.enabled ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)", color: a.enabled ? T.green : T.text2 }}>
                       {a.enabled ? "Active" : "Paused"}
                     </span>
                   </div>
-                  <p style={{ fontSize: 12, color: T.subtitle, margin: 0 }}>
+                  <p style={{ fontSize: 12, color: T.text2, margin: 0 }}>
                     {TRIGGER_LABELS[a.trigger] || a.trigger} → {ACTION_LABELS[a.action] || a.action}
                   </p>
                   {a.last_run_at && (
@@ -192,13 +190,13 @@ export default function AutomationsPage() {
                 <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                   <button
                     onClick={() => toggleEnabled(a.id, a.enabled)}
-                    style={{ fontSize: 12, color: a.enabled ? T.subtitle : T.green, background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}
+                    style={{ fontSize: 12, color: a.enabled ? T.text2 : T.green, background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}
                   >
                     {a.enabled ? "Pause" : "Resume"}
                   </button>
                   <button
                     onClick={() => deleteAutomation(a.id)}
-                    style={{ fontSize: 12, color: T.subtitle, background: "none", border: "none", cursor: "pointer" }}
+                    style={{ fontSize: 12, color: T.text2, background: "none", border: "none", cursor: "pointer" }}
                   >
                     Delete
                   </button>
@@ -216,19 +214,19 @@ export default function AutomationsPage() {
               <h2 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>New Automation</h2>
 
               <label style={{ display: "block", marginBottom: 16 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Name *</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Name *</span>
                 <input value={name} onChange={(e) => setName(e.target.value)} style={inputStyle} placeholder="e.g. Request review after project" />
               </label>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
                 <label style={{ display: "block" }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Trigger</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Trigger</span>
                   <select value={trigger} onChange={(e) => setTrigger(e.target.value)} style={{ ...inputStyle, appearance: "none" as const }}>
                     {Object.entries(TRIGGER_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </label>
                 <label style={{ display: "block" }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Action</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Action</span>
                   <select value={action} onChange={(e) => setAction(e.target.value)} style={{ ...inputStyle, appearance: "none" as const }}>
                     {Object.entries(ACTION_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
@@ -237,24 +235,24 @@ export default function AutomationsPage() {
 
               {action === "send_review_request" ? (
                 <label style={{ display: "block", marginBottom: 16 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Google Review URL (optional)</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Google Review URL (optional)</span>
                   <input value={reviewUrl} onChange={(e) => setReviewUrl(e.target.value)} style={inputStyle} placeholder="https://g.page/r/..." />
                 </label>
               ) : (
                 <>
                   <label style={{ display: "block", marginBottom: 12 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Email Subject *</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Email Subject *</span>
                     <input value={subject} onChange={(e) => setSubject(e.target.value)} style={inputStyle} placeholder="e.g. Checking in..." />
                   </label>
                   <label style={{ display: "block", marginBottom: 16 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: T.subtitle, display: "block", marginBottom: 6 }}>Email Body</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: T.text2, display: "block", marginBottom: 6 }}>Email Body</span>
                     <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} style={{ ...inputStyle, resize: "vertical" }} placeholder="<p>Hi there,</p><p>...</p>" />
                   </label>
                 </>
               )}
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.subtitle, cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowCreate(false)} style={{ padding: "10px 20px", fontSize: 13, background: "none", border: `1px solid ${T.border}`, borderRadius: 8, color: T.text2, cursor: "pointer" }}>Cancel</button>
                 <button onClick={createAutomation} disabled={saving || !name.trim()} style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600, background: CTA_GRAD, border: "none", borderRadius: 8, color: "#09090B", cursor: "pointer", opacity: saving ? 0.6 : 1 }}>
                   {saving ? "Creating..." : "Create Automation"}
                 </button>

@@ -100,7 +100,7 @@ export default function ReportsPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "Weekly AI Reports",
         description: "Automated business progress reports with trends, highlights, and priorities.",

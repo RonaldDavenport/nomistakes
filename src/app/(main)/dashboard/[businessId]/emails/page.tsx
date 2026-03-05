@@ -164,7 +164,7 @@ export default function EmailsPage() {
 
   return (
     <PaywallGate
-      requiredPlan="starter"
+      requiredPlan="solo"
       teaser={{
         headline: "AI Email Sequences",
           description: "Generate complete email flows — welcome, nurture, win-back — ready to send.",
@@ -186,16 +186,16 @@ export default function EmailsPage() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 32 }}>
         <div>
           <h1
-            style={{ color: T.text, fontFamily: T.h, fontSize: 22, fontWeight: 700, marginBottom: 4 }}
+            style={{ color: T.text, fontFamily: T.h, fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px", marginBottom: 4 }}
           >
             Email Sequences
           </h1>
-          <p style={{ color: "#9CA3AF", fontSize: 14, lineHeight: 1.5 }}>
+          <p style={{ color: T.text2, fontSize: 14, lineHeight: 1.5 }}>
             AI-generated email sequences to nurture and convert for {business.name}.
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <span style={{ color: "#52525B", fontSize: 12 }}>
+          <span style={{ color: T.text3, fontSize: 12 }}>
             8 credits
           </span>
           <button
@@ -242,7 +242,7 @@ export default function EmailsPage() {
               </svg>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 500, color: T.text }}>Not enough credits</p>
-                <p style={{ fontSize: 12, color: "#9CA3AF" }}>
+                <p style={{ fontSize: 12, color: T.text2 }}>
                   Email sequences cost 8 credits. You have {credits} remaining.
                 </p>
               </div>
@@ -281,7 +281,7 @@ export default function EmailsPage() {
 
         {/* Create Form */}
         {showForm && (
-          <div style={{ marginBottom: 24, borderBottom: `1px solid #1E1E21`, paddingBottom: 24 }}>
+          <div style={{ marginBottom: 24, borderBottom: `1px solid ${T.border}`, paddingBottom: 24 }}>
             <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: T.text, fontFamily: T.h }}>
               New Email Sequence
             </h3>
@@ -312,7 +312,7 @@ export default function EmailsPage() {
               </div>
               <div>
                 <label style={{ display: "block", fontSize: 12, marginBottom: 6, color: T.text2 }}>
-                  Goal <span style={{ color: "#52525B" }}>(optional)</span>
+                  Goal <span style={{ color: T.text3 }}>(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -377,7 +377,7 @@ export default function EmailsPage() {
                     padding: "8px 16px",
                     borderRadius: 8,
                     fontSize: 14,
-                    color: "#9CA3AF",
+                    color: T.text2,
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -415,7 +415,7 @@ export default function EmailsPage() {
                 How Email Sequences Work
               </h2>
             </div>
-            <p style={{ color: "#9CA3AF", fontSize: 14, lineHeight: 1.7, marginBottom: 28, maxWidth: 600 }}>
+            <p style={{ color: T.text2, fontSize: 14, lineHeight: 1.7, marginBottom: 28, maxWidth: 600 }}>
               An email sequence is a series of automated emails sent over time to nurture leads, onboard new customers, or re-engage inactive users. Each email is timed and written to move the reader toward a specific goal. The AI writes the full sequence for you -- subject lines, preview text, body copy, and CTAs -- based on the type you choose and your business context.
             </p>
 
@@ -458,7 +458,7 @@ export default function EmailsPage() {
                 {
                   label: "Custom",
                   desc: "Describe your goal and the AI will design a sequence structure from scratch.",
-                  color: "#9CA3AF",
+                  color: T.text2,
                   bg: "rgba(255,255,255,0.04)",
                 },
               ].map((item, i, arr) => (
@@ -466,7 +466,7 @@ export default function EmailsPage() {
                   key={item.label}
                   style={{
                     padding: "14px 0",
-                    borderBottom: i < arr.length - 1 ? "1px solid #1E1E21" : undefined,
+                    borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : undefined,
                     display: "flex",
                     alignItems: "flex-start",
                     gap: 12,
@@ -485,8 +485,8 @@ export default function EmailsPage() {
                   />
                   <div>
                     <span style={{ color: T.text, fontSize: 14, fontWeight: 500 }}>{item.label}</span>
-                    <span style={{ color: "#52525B", fontSize: 13, marginLeft: 8 }}> -- </span>
-                    <span style={{ color: "#9CA3AF", fontSize: 13 }}>{item.desc}</span>
+                    <span style={{ color: T.text3, fontSize: 13, marginLeft: 8 }}> -- </span>
+                    <span style={{ color: T.text2, fontSize: 13 }}>{item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -508,7 +508,7 @@ export default function EmailsPage() {
               >
                 Create Your First Sequence
               </button>
-              <p style={{ color: "#52525B", fontSize: 12, marginTop: 10 }}>
+              <p style={{ color: T.text3, fontSize: 12, marginTop: 10 }}>
                 Each sequence costs 8 credits. You have {credits} remaining.
               </p>
             </div>
@@ -525,7 +525,7 @@ export default function EmailsPage() {
                 <div
                   key={seq.id}
                   style={{
-                    borderBottom: seqIdx < sequences.length - 1 ? "1px solid #1E1E21" : undefined,
+                    borderBottom: seqIdx < sequences.length - 1 ? `1px solid ${T.border}` : undefined,
                   }}
                 >
                   {/* Sequence Header */}
@@ -575,7 +575,7 @@ export default function EmailsPage() {
                           {seq.status}
                         </span>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 10, color: "#52525B" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 10, color: T.text3 }}>
                         <span>{emails.length} email{emails.length !== 1 ? "s" : ""}</span>
                         <span>{new Date(seq.created_at).toLocaleDateString()}</span>
                       </div>
@@ -585,7 +585,7 @@ export default function EmailsPage() {
                         width: 16,
                         height: 16,
                         flexShrink: 0,
-                        color: "#9CA3AF",
+                        color: T.text2,
                         transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
                         transition: "transform 0.2s",
                       }}
@@ -644,12 +644,12 @@ export default function EmailsPage() {
                                 <p style={{ fontSize: 14, fontWeight: 500, color: T.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                   {email.subject}
                                 </p>
-                                <p style={{ fontSize: 12, color: "#9CA3AF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                <p style={{ fontSize: 12, color: T.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                   {email.preview_text}
                                 </p>
                               </div>
                               {email.delay_days > 0 && (
-                                <span style={{ fontSize: 10, flexShrink: 0, color: "#52525B" }}>
+                                <span style={{ fontSize: 10, flexShrink: 0, color: T.text3 }}>
                                   +{email.delay_days}d
                                 </span>
                               )}
@@ -658,7 +658,7 @@ export default function EmailsPage() {
                                   width: 12,
                                   height: 12,
                                   flexShrink: 0,
-                                  color: "#9CA3AF",
+                                  color: T.text2,
                                   transform: isEmailExpanded ? "rotate(180deg)" : "rotate(0deg)",
                                   transition: "transform 0.2s",
                                 }}
@@ -673,7 +673,7 @@ export default function EmailsPage() {
                             {isEmailExpanded && (
                               <div style={{ padding: "0 16px 16px", background: "rgba(0,0,0,0.10)" }}>
                                 <div style={{ paddingTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 12, color: "#9CA3AF" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 12, color: T.text2 }}>
                                     {email.delay_days > 0 && (
                                       <span>Sent after {email.delay_days} day{email.delay_days !== 1 ? "s" : ""}</span>
                                     )}
